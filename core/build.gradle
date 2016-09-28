@@ -1,5 +1,4 @@
 apply plugin: 'java'
-apply plugin: 'war'
 apply plugin: 'maven'
 
 repositories {
@@ -8,7 +7,7 @@ repositories {
 
 sourceCompatibility = 1.7
 group = 'sk.turn'
-version = '1.0-alpha'
+version = '1.0-alpha2'
 
 sourceSets {
   main {
@@ -19,14 +18,20 @@ sourceSets {
 }
 
 dependencies {
-  providedCompile 'com.google.gwt:gwt-user:2.7.0'
-  providedCompile 'com.google.gwt:gwt-dev:2.7.0'
+  compile 'com.google.gwt:gwt-user:2.7.0'
+  compile 'com.google.gwt:gwt-dev:2.7.0'
 }
 
 jar {
   manifest {
     attributes 'Implementation-Version': version
   }
+  copy {
+    from 'src'
+    into sourceSets.main.output.classesDir
+  }
+  includes = ['**/*']
+  excludes = []
 }
 
 task myJavadoc(type: Javadoc) {
@@ -34,8 +39,8 @@ task myJavadoc(type: Javadoc) {
 }
 
 task sourcesJar(type: Jar) {
-  from sourceSets.main.java.srcDirs
   classifier = 'sources'
+  from sourceSets.main.java.srcDirs
 }
 
 task javadocJar(type: Jar, dependsOn: myJavadoc) {
