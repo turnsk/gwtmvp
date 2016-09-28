@@ -1,0 +1,45 @@
+apply plugin: 'java'
+apply plugin: 'war'
+apply plugin: 'maven'
+
+repositories {
+  mavenCentral()
+}
+
+sourceCompatibility = 1.7
+group = 'sk.turn'
+version = '1.0-alpha'
+
+sourceSets {
+  main {
+    java {
+      srcDirs = ['src']
+    }
+  }
+}
+
+dependencies {
+  providedCompile 'com.google.gwt:gwt-user:2.7.0'
+  providedCompile 'com.google.gwt:gwt-dev:2.7.0'
+}
+
+jar {
+  manifest {
+    attributes 'Implementation-Version': version
+  }
+}
+
+task sourcesJar(type: Jar) {
+  from sourceSets.main.java.srcDirs
+  classifier = 'sources'
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+  classifier = 'javadoc'
+  from javadoc.destinationDir
+}
+
+artifacts {
+  archives sourcesJar
+  archives javadocJar
+}
