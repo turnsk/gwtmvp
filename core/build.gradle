@@ -29,12 +29,16 @@ jar {
   }
 }
 
+task myJavadoc(type: Javadoc) {
+  source 'src/sk/turn/gwtmvp/client'
+}
+
 task sourcesJar(type: Jar) {
   from sourceSets.main.java.srcDirs
   classifier = 'sources'
 }
 
-task javadocJar(type: Jar, dependsOn: javadoc) {
+task javadocJar(type: Jar, dependsOn: myJavadoc) {
   classifier = 'javadoc'
   from javadoc.destinationDir
 }
