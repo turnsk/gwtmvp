@@ -31,18 +31,14 @@ import com.google.gwt.user.client.History;
  * The centerpiece of the MVP framework, it manages the {@link Presenter}s and handles GWT history
  * changes. Mvp has one root element which is used as the parent for all the {@link View}s from the
  * {@link Presenter}s.
- * 
  * <p>
  * A typical use-case of this class is
- * <code><pre>{@literal @}Override
+ * <pre><code>{@literal @}Override
  *public void onModuleLoad() {
  *  Mvp mvp = new Mvp(DOM.getElementById("mainContainer"));
  *  mvp.addPresenter(new HelloPresenter((HelloView) GWT.create(HelloView.class)));
  *  mvp.start();
- *}</pre></code>
- * </p>
- * 
- * @author tomas
+ *}</code></pre>
  */
 public class Mvp {
 

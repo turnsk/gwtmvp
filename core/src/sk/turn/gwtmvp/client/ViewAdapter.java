@@ -24,16 +24,13 @@ import com.google.gwt.dom.client.Element;
  * Helper class to provide support for lists of reusable {@link View}s. Similar to Android's
  * AdapterView concept, this class is reusing detached views and only updating the content per
  * implementor's use-case.
- * 
  * <p>
  * Anytime you need to show repetitive views (e.g. table rows, (un)ordered lists, etc.) ViewAdapter
  * allows you to remove the complexity and make the task effectively.
- * </p>
- * 
  * <p>
  * Example:
- * <code><pre>// Assuming we have a "TableElement tableElement" and "List&lt;Person> people" variables defined
- *ViewAdapter<Person, PersonView> personAdapter = new ViewAdapter<Person, PersonView>(tableElement) {
+ * <pre><code>// Assuming we have a "TableElement tableElement" and "List&lt;Person&gt; people" variables defined
+ *ViewAdapter&lt;Person, PersonView&gt; personAdapter = new ViewAdapter&lt;Person, PersonView&gt;(tableElement) {
  *  {@literal @}Override
  *  protected PersonView createView() {
  *    return GWT.create(PersonView.class);
@@ -46,24 +43,21 @@ import com.google.gwt.dom.client.Element;
  *    view.getAction().setInnerText("Edit " + item.name);
  *  }
  *};
- *personAdapter.setItem(people);</pre></code>
- * </p>
- * 
- * <p>PersonView.java</p>
- * <code><pre>public interface ListItemView extends View&lt;TableRowElement> {
+ *personAdapter.setItem(people);</code></pre>
+ * <p>
+ * PersonView.java
+ * <pre><code>public interface ListItemView extends View&lt;TableRowElement&gt; {
  *  {@literal @}HtmlElement TableCellElement getName();
  *  {@literal @}HtmlElement TableCellElement getCity();
  *  {@literal @}HtmlElement AnchorElement getAction();
- *}</pre></code>
- * 
- * <p>PersonView.html</p>
- * <code><pre>&lt;tr>
- *  &lt;td data-gwtid="name">&lt;/td>
- *  &lt;td data-gwtid="city">&lt;/td>
- *  &lt;td>&lt;a data-gwtid="action">&lt;/a>&lt;/td>
- *&lt;/tr></pre></code>
- * 
- * @author tomas
+ *}</code></pre>
+ * <p>
+ * PersonView.html
+ * <pre><code>&lt;tr&gt;
+ *  &lt;td data-gwtid="name"&gt;&lt;/td&gt;
+ *  &lt;td data-gwtid="city"&gt;&lt;/td&gt;
+ *  &lt;td&gt;&lt;a data-gwtid="action"&gt;&lt;/a&gt;&lt;/td&gt;
+ *&lt;/tr&gt;</code></pre>
  * 
  * @param <T> Type of the object being displayed.
  * @param <V> Type of the view able to show one instance of class {@code T}

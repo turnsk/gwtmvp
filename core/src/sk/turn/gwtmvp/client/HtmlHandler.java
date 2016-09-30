@@ -22,15 +22,11 @@ import java.lang.annotation.Target;
  * Annotation for methods that handle HTML DOM events. The annotation value lists one or more
  * {@code data-gwtid} attributes that the method should handle the events for. The actual method
  * name does not matter. The type of the event is generated from the method parameter type, e.g.
- * 
  * <p>
- * <code><pre>// Registers ClickHandler on an element with data-gwtid="inputName"
+ * <pre><code>// Registers ClickHandler on an element with data-gwtid="inputName"
  *{@literal @}HtmlHandler("inputName") void setClickHandler(ClickHandler handler);
  *{@literal //} Registers BlurHandler on elements with data-gwtid="inputName" and data-gwtid="inputEmail"
- *{@literal @}HtmlHandler({ "inputName", "inputEmail" }) void setBlurHandlerOnInputs(BlurHandler handler);</pre></code>
- * </p>
- * 
- * @author tomas
+ *{@literal @}HtmlHandler({ "inputName", "inputEmail" }) void setBlurHandlerOnInputs(BlurHandler handler);</code></pre>
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)

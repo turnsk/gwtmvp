@@ -20,10 +20,9 @@ import com.google.gwt.regexp.shared.RegExp;
 /**
  * Base interface for presenters. Every presenter to be registered by {@link Mvp} must implement
  * this interface.
- * 
  * <p>
  * A sample simple implementation may look like following:
- * <code><pre>public class HelloPresenter implements Presenter&lt;HelloView> {
+ * <pre><code>public class HelloPresenter implements Presenter&lt;HelloView&gt; {
  *  private final RegExp tokenRegExp = RegExp.compile("^hello$");
  *  private final HelloView view;
  *  private int counter = 1;
@@ -66,13 +65,10 @@ import com.google.gwt.regexp.shared.RegExp;
  *  }
  *
  *  private String formatCounter() {
- *    return counter + (counter % 10 == 1 && (counter / 10) % 10 != 1 ? "st" : 
- *        counter % 10 == 2 && (counter / 10) % 10 != 1 ? "nd" : "th");
+ *    return counter + (counter % 10 == 1 &amp;&amp; (counter / 10) % 10 != 1 ? "st" : 
+ *        counter % 10 == 2 &amp;&amp; (counter / 10) % 10 != 1 ? "nd" : "th");
  *  }
- *}</pre></code>
- * </p>
- * 
- * @author tomas
+ *}</code></pre>
  *
  * @param <V> The {@link View} class that this presenter works with.
  */
@@ -107,7 +103,7 @@ public interface Presenter<V extends View<? extends Element>> {
    * Called for one-time initialization of this presenter, in most cases the related {@link View}.
    * At the time of calling this method the {@link View} is already attached to the browser DOM.
    * This method is called only once in the lifetime of the presenter and immediately before the
-   * {@link #onShow(MatchResult)} method is called.
+   * {@link Presenter#onShow(MatchResult)} method is called.
    */
   void onViewLoaded();
 

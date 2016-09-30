@@ -1,5 +1,5 @@
 # GWT MVP
-[MVP](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93presenter) library for [GWT](http://www.gwtproject.org/), adding a light-weighted, easy-to-use MVP framework and at the same time taking the complexity off of built-in widgets library.
+[MVP](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93presenter) library for [GWT](http://www.gwtproject.org/), adding a light-weighted, easy-to-use MVP framework, plain HTML-to-Java binding and at the same time taking the complexity off of the built-in widgets library.
 
 ## Assumptions and goals
 Following assumptions were considered when designing this library:
@@ -10,7 +10,7 @@ Following assumptions were considered when designing this library:
 
 What this library is trying to provide:
 * Plain bind-able HTML support within GWT (so that you can write and have full control of the HTML directly and not worry what overhead will a widget generate)
-* Light-weight (read no huge code-base and few classes to learn) and easy-to-use (read as little code overhead as possible) MVP framework
+* Light-weight (read "no huge code-base and few classes to learn") and easy-to-use (read "as little code overhead as possible") MVP framework
 * HTML binding can be used standalone without the MVP part
 
 ## Build configuration

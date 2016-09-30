@@ -19,13 +19,10 @@ import com.google.gwt.dom.client.Element;
  * Base interface for a view. All views must remain interfaces and extend this interface. The GWT
  * compile-time generator expects a .html file with a same name as the view class, e.g. for
  * HomeView.java there must also be a HomeView.html file in the same package.
- * 
  * <p>
  * The .html file must have exactly one root element that must match the element class of this
- * interface, e.g. for <code>interface HomeView extends View&lt;DivElement></code> the root element
- * must be <code>&lt;div></code>.
- * </p>
- * 
+ * interface, e.g. for <code>interface HomeView extends View&lt;DivElement&gt;</code> the root element
+ * must be <code>&lt;div&gt;</code>.
  * <p>
  * Every element in the .html that is either being mapped to a {@link HtmlElement} or
  * {@link HtmlHandler} must be marked with a {@code data-gwtid} attribute, which must be unique
@@ -33,31 +30,22 @@ import com.google.gwt.dom.client.Element;
  * accessor method, see {@link HtmlElement} and/or {@link HtmlHandler}. Note that the
  * {@code data-gwtid} attribute is removed after the element has been mapped, i.e. you won't be able
  * to read the attribute later.
- * </p>
- * 
  * <p>
  * A sample simple implementation may look like following:
- * </p>
- * 
  * <p>
  * HelloView.java
- * <code><pre>public interface HelloView extends View&lt;DivElement> {
+ * <pre><code>public interface HelloView extends View&lt;DivElement&gt; {
  *  {@literal @}HtmlElement InputElement getNameInput();
  *  {@literal @}HtmlElement SpanElement getCounter();
  *  {@literal @}HtmlHandler("greetLink") void setGreetHandler(ClickHandler handler);
- *}</pre></code>
- * </p>
- * 
+ *}</code></pre>
  * <p>
  * HelloView.html
- * <code><pre>&lt;div>
- *  &lt;a href="javascript:void(0)" data-gwtid="greetLink">Greet&lt;/a>
- *  &lt;input type="text" data-gwtid="nameInput"/>
- *  for the &lt;span data-gwtid="counter">&lt;/span> time!
- *&lt;/div></pre></code>
- * </p>
- * 
- * @author tomas
+ * <pre><code>&lt;div&gt;
+ *  &lt;a href="javascript:void(0)" data-gwtid="greetLink"&gt;Greet&lt;/a&gt;
+ *  &lt;input type="text" data-gwtid="nameInput"/&gt;
+ *  for the &lt;span data-gwtid="counter"&gt;&lt;/span&gt; time!
+ *&lt;/div&gt;</code></pre>
  *
  * @param <E> The element class that matches the root element in the corresponding .html file.
  */

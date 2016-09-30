@@ -22,17 +22,11 @@ import java.lang.annotation.Target;
  * Annotation for methods that reference a HTML element in an accompanying .html file. For example,
  * when an {@code input} element has {@code data-gwtid="nameInput"}, the corresponding {@link View}
  * method would be
- * 
  * <p>
- * <code><pre>@HtmlElement InputElement getNameInput();</pre></code>
- * </p>
- * 
+ * <pre><code>@HtmlElement InputElement getNameInput();</code></pre>
  * <p>
  * If you want to have a different method name, use the annotation value, e.g.
- * <code><pre>@HtmlElement("nameInput") InputElement getName();</pre></code>
- * </p>
- * 
- * @author tomas
+ * <pre><code>@HtmlElement("nameInput") InputElement getName();</code></pre>
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
