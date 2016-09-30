@@ -5,5 +5,5 @@
 	<inherits name='com.google.gwt.user.User' />
 	<inherits name="com.google.gwt.logging.Logging" />
 	<inherits name='sk.turn.gwtmvp.GwtMvp' />
-	<entry-point class='sk.turn.gwtmvp.samples.client.SimpleEntryPoint' />
+	<entry-point class='sk.turn.gwtmvp.samples.client.SamplesEntryPoint' />
 </module>

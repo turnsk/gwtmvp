@@ -7,7 +7,7 @@ repositories {
 
 sourceCompatibility = 1.7
 group = 'sk.turn'
-version = '1.0-alpha2'
+version = '1.0-rc1'
 
 sourceSets {
   main {
@@ -23,6 +23,7 @@ dependencies {
 }
 
 jar {
+  baseName 'gwtmvp'
   manifest {
     attributes 'Implementation-Version': version
   }

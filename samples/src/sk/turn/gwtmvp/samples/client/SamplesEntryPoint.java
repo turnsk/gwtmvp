@@ -5,15 +5,15 @@ import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.Document;
 
 import sk.turn.gwtmvp.client.Mvp;
-import sk.turn.gwtmvp.samples.client.presenters.SimplePresenter;
-import sk.turn.gwtmvp.samples.client.views.SimpleView;
+import sk.turn.gwtmvp.samples.client.presenters.HelloPresenter;
+import sk.turn.gwtmvp.samples.client.views.HelloView;
 
-public class SimpleEntryPoint implements EntryPoint {
+public class SamplesEntryPoint implements EntryPoint {
 
+  @Override
   public void onModuleLoad() {
     Mvp mvp = new Mvp(Document.get().getBody());
-    mvp.addPresenter(new SimplePresenter((SimpleView) GWT.create(SimpleView.class)));
+    mvp.addPresenter(new HelloPresenter((HelloView) GWT.create(HelloView.class)));
     mvp.start();
   }
-
 }

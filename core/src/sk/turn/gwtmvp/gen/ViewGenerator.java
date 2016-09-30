@@ -1,7 +1,26 @@
+/*
+ * Copyright 2016 Turn s.r.o.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ */
 package sk.turn.gwtmvp.gen;
 
-import com.google.gwt.core.ext.Generator;
+import java.io.PrintWriter;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import com.google.gwt.core.ext.GeneratorContext;
+import com.google.gwt.core.ext.IncrementalGenerator;
+import com.google.gwt.core.ext.RebindMode;
+import com.google.gwt.core.ext.RebindResult;
 import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.UnableToCompleteException;
 import com.google.gwt.core.ext.typeinfo.JClassType;
@@ -11,30 +30,27 @@ import com.google.gwt.core.ext.typeinfo.JParameterizedType;
 import com.google.gwt.core.ext.typeinfo.TypeOracle;
 import com.google.gwt.event.shared.EventHandler;
 
-import java.io.PrintWriter;
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 import sk.turn.gwtmvp.client.HtmlElement;
 import sk.turn.gwtmvp.client.HtmlHandler;
 import sk.turn.gwtmvp.client.View;
 
-/**
- * Created by tomas on 20/09/16.
- */
-
-public class ViewGenerator extends Generator {
+public class ViewGenerator extends IncrementalGenerator {
+  
+  @Override
+  public long getVersionId() {
+    return 1;
+  }
 
   @Override
-  public String generate(TreeLogger logger, GeneratorContext context, String typeName) throws UnableToCompleteException {
-    TypeOracle typeOracle = context.getTypeOracle();
+  public RebindResult generateIncrementally(TreeLogger logger, GeneratorContext context, String typeName) throws UnableToCompleteException {
     try {
+      TypeOracle typeOracle = context.getTypeOracle();
       JClassType viewType = typeOracle.getType(typeName);
       String packageName = viewType.getPackage().getName();
-      String generatedClassName = viewType.getName().replace('.', '_') + "Gen";
-      PrintWriter writer = context.tryCreate(logger, packageName, generatedClassName);
-      if (writer == null) {
-        return null;
+      String generatedClassName = viewType.getName().replace('.', '_') + "Impl";
+      PrintWriter w = context.tryCreate(logger, packageName, generatedClassName);
+      if (w == null) {
+        return new RebindResult(RebindMode.USE_ALL_CACHED, packageName + "." + generatedClassName);
       }
       JParameterizedType superType = null;
       for (JClassType intfc : viewType.getImplementedInterfaces()) {
@@ -89,90 +105,95 @@ public class ViewGenerator extends Generator {
           }
         }
       }
-      writer.println("package " + packageName + ";");
-      writer.println();
-      writer.println("import com.google.gwt.core.client.GWT;");
-      writer.println("import com.google.gwt.dom.client.Element;");
-      writer.println("import com.google.gwt.dom.client.DivElement;");
-      writer.println("import com.google.gwt.dom.client.Document;");
-      writer.println("import com.google.gwt.dom.client.NodeList;");
-      writer.println("import com.google.gwt.event.dom.client.DomEvent;");
-      writer.println("import com.google.gwt.event.shared.HandlerManager;");
-      writer.println("import com.google.gwt.resources.client.ClientBundle;");
-      writer.println("import com.google.gwt.resources.client.TextResource;");
-      writer.println("import com.google.gwt.user.client.Event;");
-      writer.println("import com.google.gwt.user.client.EventListener;");
-      writer.println("import java.util.HashMap;");
-      writer.println("import java.util.Map;");
-      writer.println("import java.util.logging.Logger;");
-      writer.println();
-      writer.println("public class " + generatedClassName + " implements " + viewType.getQualifiedSourceName() + " {");
-      writer.println("  interface Resources extends ClientBundle {");
-      writer.println("    Resources INSTANCE = GWT.create(Resources.class);");
-      writer.println("    @Source(\"" + viewType.getSimpleSourceName() + ".html\") TextResource htmlContent();");
-      writer.println("  }");
-      writer.println();
-      writer.println("  private static final Logger LOG = Logger.getLogger(\"" + packageName + "." + generatedClassName + "\");");
-      writer.println();
-      writer.println("  private " + rootElementType + " rootElement = null;");
+      w.println("package " + packageName + ";");
+      w.println();
+      w.println("import com.google.gwt.core.client.GWT;");
+      w.println("import com.google.gwt.dom.client.Element;");
+      w.println("import com.google.gwt.dom.client.Document;");
+      w.println("import com.google.gwt.dom.client.NodeList;");
+      w.println("import com.google.gwt.event.dom.client.DomEvent;");
+      w.println("import com.google.gwt.event.shared.HandlerManager;");
+      w.println("import com.google.gwt.resources.client.ClientBundle;");
+      w.println("import com.google.gwt.resources.client.TextResource;");
+      w.println("import com.google.gwt.user.client.Event;");
+      w.println("import com.google.gwt.user.client.EventListener;");
+      w.println("import java.util.HashMap;");
+      w.println("import java.util.Map;");
+      w.println("import java.util.logging.Logger;");
+      w.println();
+      w.println("public class " + generatedClassName + " implements " + viewType.getQualifiedSourceName() + " {");
+      w.println("  interface Resources extends ClientBundle {");
+      w.println("    Resources INSTANCE = GWT.create(Resources.class);");
+      w.println("    @Source(\"" + viewType.getSimpleSourceName() + ".html\") TextResource htmlContent();");
+      w.println("  }");
+      w.println();
+      w.println("  private static final Logger LOG = Logger.getLogger(\"" + packageName + "." + generatedClassName + "\");");
+      w.println();
+      w.println("  private " + rootElementType + " rootElement = null;");
       for (Map.Entry<String, JMethod> entry : fieldsMap.entrySet()) {
-        writer.println("  private " + entry.getValue().getReturnType().getQualifiedSourceName() + " generated_" + entry.getKey() + " = null;");
+        w.println("  private " + entry.getValue().getReturnType().getQualifiedSourceName() + " generated_" + entry.getKey() + " = null;");
       }
-      writer.println("  private final Map<String, HandlerManager> handlerManagers = new HashMap<>();");
-      writer.println();
-      writer.println("  @Override");
-      writer.println("  public " + rootElementType + " getRootElement() {");
-      writer.println("    if (rootElement != null) {");
-      writer.println("      return rootElement;");
-      writer.println("    }");
-      writer.println("    DivElement tempDiv = Document.get().createDivElement();");
-      writer.println("    tempDiv.setInnerHTML(Resources.INSTANCE.htmlContent().getText());");
-      writer.println("    rootElement = (" + rootElementType + ") tempDiv.getFirstChild();");
-      writer.println("    Map<String, Element> elementsMap = new HashMap<>();");
-      writer.println("    addElementToMap(rootElement, elementsMap);");
-      writer.println("    NodeList<Element> elements = rootElement.getElementsByTagName(\"*\");");
-      writer.println("    for (int i = 0; i < elements.getLength(); i++) {");
-      writer.println("      addElementToMap(elements.getItem(i), elementsMap);");
-      writer.println("    }");
-      for (Map.Entry<String, JMethod> entry : fieldsMap.entrySet()) {
-        writer.println("    generated_" + entry.getKey() + " = (" + entry.getValue().getReturnType().getQualifiedSourceName() + ") elementsMap.get(\"" + entry
-            .getKey() + "\");");
-        writer.println("    if (generated_" + entry.getKey() + " == null) {");
-        writer.println("      LOG.severe(\"Could not find element with data-gwtid=\\\"" + entry.getKey() + "\\\" in " + viewType.getSimpleSourceName()
-            + ".html.\");");
-        writer.println("    }");
+      if (handlersMap.size() > 0) {
+        w.println("  private final Map<String, HandlerManager> handlerManagers = new HashMap<>();");
       }
-      for (Map.Entry<String, Map<String, JMethod>> entry : handlersMap.entrySet()) {
-        writer.println("    final Element element_" + entry.getKey() + " = elementsMap.get(\"" + entry.getKey() + "\");");
-        writer.println("    if (element_" + entry.getKey() + " == null) {");
-        writer.println("      LOG.severe(\"Could not find element with data-gwtid=\\\"" + entry.getKey() + "\\\" in " + viewType.getSimpleSourceName()
-            + ".html.\");");
-        writer.println("    } else {");
-        writer.println("      handlerManagers.put(\"" + entry.getKey() + "\", new HandlerManager(element_" + entry.getKey() + "));");
-        for (Map.Entry<String, JMethod> entry2 : entry.getValue().entrySet()) {
-          JClassType paramType = typeOracle.getType(entry2.getKey());
-          if (!paramType.getName().endsWith("Handler")) {
-            throw new Exception("Unexpected type (" + paramType.getQualifiedSourceName() + "), was expecting \"...Handler\".");
-          }
-          writer.println("      Event.sinkEvents(element_" + entry.getKey() + ", Event.ON" + paramType.getName().substring(0, paramType.getName().length() - 7)
-              .toUpperCase() + ");");
+      w.println();
+      w.println("  @Override");
+      w.println("  public " + rootElementType + " getRootElement() {");
+      w.println("    if (rootElement != null) {");
+      w.println("      return rootElement;");
+      w.println("    }");
+      w.println("    Element tempElem = Document.get().create" + (
+          rootElementType.equals("com.google.gwt.dom.client.TableRowElement") ? "Table" :
+            rootElementType.equals("com.google.gwt.dom.client.TableCellElement") ? "TR" : "Div") + "Element();");
+      w.println("    tempElem.setInnerHTML(Resources.INSTANCE.htmlContent().getText());");
+      w.println("    rootElement = (" + rootElementType + ") tempElem.getFirstChild();");
+      if (fieldsMap.size() > 0 || handlersMap.size() > 0) {
+        w.println("    Map<String, Element> elementsMap = new HashMap<>();");
+        w.println("    addElementToMap(rootElement, elementsMap);");
+        w.println("    NodeList<Element> elements = rootElement.getElementsByTagName(\"*\");");
+        w.println("    for (int i = 0; i < elements.getLength(); i++) {");
+        w.println("      addElementToMap(elements.getItem(i), elementsMap);");
+        w.println("    }");
+        for (Map.Entry<String, JMethod> entry : fieldsMap.entrySet()) {
+          w.println("    generated_" + entry.getKey() + " = (" + entry.getValue().getReturnType().getQualifiedSourceName() + ") elementsMap.get(\"" + entry
+              .getKey() + "\");");
+          w.println("    if (generated_" + entry.getKey() + " == null) {");
+          w.println("      LOG.severe(\"Could not find element with data-gwtid=\\\"" + entry.getKey() + "\\\" in " + viewType.getSimpleSourceName()
+              + ".html.\");");
+          w.println("    }");
         }
-        writer.println("      Event.setEventListener(element_" + entry.getKey() + ", new EventListener() {");
-        writer.println("        @Override");
-        writer.println("        public void onBrowserEvent(Event event) {");
-        writer.println("          DomEvent.fireNativeEvent(event, handlerManagers.get(\"" + entry.getKey() + "\"), element_" + entry.getKey() + ");");
-        writer.println("        }");
-        writer.println("      });");
-        writer.println("    }");
+        for (Map.Entry<String, Map<String, JMethod>> entry : handlersMap.entrySet()) {
+          w.println("    final Element element_" + entry.getKey() + " = elementsMap.get(\"" + entry.getKey() + "\");");
+          w.println("    if (element_" + entry.getKey() + " == null) {");
+          w.println("      LOG.severe(\"Could not find element with data-gwtid=\\\"" + entry.getKey() + "\\\" in " + viewType.getSimpleSourceName()
+              + ".html.\");");
+          w.println("    } else {");
+          w.println("      handlerManagers.put(\"" + entry.getKey() + "\", new HandlerManager(element_" + entry.getKey() + "));");
+          for (Map.Entry<String, JMethod> entry2 : entry.getValue().entrySet()) {
+            JClassType paramType = typeOracle.getType(entry2.getKey());
+            if (!paramType.getName().endsWith("Handler")) {
+              throw new Exception("Unexpected type (" + paramType.getQualifiedSourceName() + "), was expecting \"...Handler\".");
+            }
+            w.println("      Event.sinkEvents(element_" + entry.getKey() + ", Event.ON" + paramType.getName().substring(0, paramType.getName().length() - 7)
+                .toUpperCase() + ");");
+          }
+          w.println("      Event.setEventListener(element_" + entry.getKey() + ", new EventListener() {");
+          w.println("        @Override");
+          w.println("        public void onBrowserEvent(Event event) {");
+          w.println("          DomEvent.fireNativeEvent(event, handlerManagers.get(\"" + entry.getKey() + "\"), element_" + entry.getKey() + ");");
+          w.println("        }");
+          w.println("      });");
+          w.println("    }");
+        }
       }
-      writer.println("    return rootElement;");
-      writer.println("  }");
+      w.println("    return rootElement;");
+      w.println("  }");
       for (Map.Entry<String, JMethod> entry : fieldsMap.entrySet()) {
-        writer.println();
-        writer.println("  @Override");
-        writer.println("  public " + entry.getValue().getReturnType().getQualifiedSourceName() + " " + entry.getValue().getName() + "() {");
-        writer.println("    return generated_" + entry.getKey() + ";");
-        writer.println("  }");
+        w.println();
+        w.println("  @Override");
+        w.println("  public " + entry.getValue().getReturnType().getQualifiedSourceName() + " " + entry.getValue().getName() + "() {");
+        w.println("    return generated_" + entry.getKey() + ";");
+        w.println("  }");
       }
       for (JMethod method : viewType.getMethods()) {
         HtmlHandler handlerAnn = method.getAnnotation(HtmlHandler.class);
@@ -180,29 +201,36 @@ public class ViewGenerator extends Generator {
           continue;
         }
         String paramType = method.getParameters()[0].getType().getQualifiedSourceName();
-        writer.println();
-        writer.println("  @Override");
-        writer.println("  public void " + method.getName() + "(" + paramType + " handler) {");
-        writer.println("    HandlerManager hm;");
+        w.println();
+        w.println("  @Override");
+        w.println("  public void " + method.getName() + "(" + paramType + " handler) {");
+        w.println("    HandlerManager hm;");
         for (String id : handlerAnn.value()) {
-          writer.println("    hm = handlerManagers.get(\"" + id + "\");");
-          writer.println("    if (hm != null) {");
-          writer.println("      hm.addHandler(" + paramType.substring(0, paramType.length() - 7) + "Event.getType(), handler);");
-          writer.println("    }");
+          w.println("    hm = handlerManagers.get(\"" + id + "\");");
+          w.println("    if (hm != null) {");
+          w.println("      hm.addHandler(" + paramType.substring(0, paramType.length() - 7) + "Event.getType(), handler);");
+          w.println("    }");
         }
-        writer.println("  }");
+        w.println("  }");
       }
-      writer.println();
-      writer.println("  private void addElementToMap(Element element, Map<String, Element> elementsMap) {");
-      writer.println("    String gwtid = element.getAttribute(\"data-gwtid\");");
-      writer.println("    if (gwtid != null && !gwtid.equals(\"\")) {");
-      writer.println("      element.removeAttribute(\"data-gwtid\");");
-      writer.println("      elementsMap.put(gwtid, element);");
-      writer.println("    }");
-      writer.println("  }");
-      writer.println("}");
-      context.commit(logger, writer);
-      return packageName + "." + generatedClassName;
+      if (fieldsMap.size() > 0 || handlersMap.size() > 0) {
+        w.println();
+        w.println("  private void addElementToMap(Element element, Map<String, Element> elementsMap) {");
+        w.println("    String gwtid = null;");
+        w.println("    try {");
+        w.println("      gwtid = element.getAttribute(\"data-gwtid\");");
+        w.println("    } catch (Exception e) {");
+        w.println("      LOG.warning(\"Unable to call getAttribute on \" + element.getTagName());");
+        w.println("    }");
+        w.println("    if (gwtid != null && !gwtid.equals(\"\")) {");
+        w.println("      element.removeAttribute(\"data-gwtid\");");
+        w.println("      elementsMap.put(gwtid, element);");
+        w.println("    }");
+        w.println("  }");
+      }
+      w.println("}");
+      context.commit(logger, w);
+      return new RebindResult(RebindMode.USE_ALL_NEW, packageName + "." + generatedClassName);
     } catch (Exception e) {
       logger.log(TreeLogger.Type.ERROR, "Failed generating wrapper for class " + typeName, e);
       throw new UnableToCompleteException();
