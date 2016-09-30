@@ -103,7 +103,7 @@ public interface Presenter<V extends View<? extends Element>> {
    * Called for one-time initialization of this presenter, in most cases the related {@link View}.
    * At the time of calling this method the {@link View} is already attached to the browser DOM.
    * This method is called only once in the lifetime of the presenter and immediately before the
-   * {@link #onShow(com.google.gwt.regexp.shared.MatchResult)} method is called.
+   * {@code #onShow(MatchResult)} method is called.
    */
   void onViewLoaded();
 
