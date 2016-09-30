@@ -39,8 +39,8 @@ dependencies {
 ```
 
 ## Resources
-* [Read Javadoc](https://jitpack.io/sk/turn/gwtmvp/1.0-rc1/javadoc/)
-* [Download JAR](https://jitpack.io/sk/turn/gwtmvp/1.0-rc1/gwtmvp-1.0-rc1.jar)
+* [Read Javadoc](https://jitpack.io/sk/turn/gwtmvp/1.0-rc2/javadoc/)
+* [Download JAR](https://jitpack.io/sk/turn/gwtmvp/1.0-rc2/gwtmvp-1.0-rc2.jar)
 
 ## Simple example
 We'll create a simple view that will pop-up a value entered into an `<input>` field.
