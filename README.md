@@ -41,13 +41,13 @@ repositories {
 ```gradle
 dependencies {
   ...
-  providedCompile 'sk.turn:gwtmvp:1.0-rc2'
+  providedCompile 'sk.turn:gwtmvp:1.0.1'
 }
 ```
 
 ## Resources
-* [Read Javadoc](https://jitpack.io/sk/turn/gwtmvp/1.0-rc2/javadoc/)
-* [Download JAR](https://jitpack.io/sk/turn/gwtmvp/1.0-rc2/gwtmvp-1.0-rc2.jar)
+* [Read Javadoc](https://jitpack.io/sk/turn/gwtmvp/1.0.1/javadoc/)
+* [Download JAR](https://jitpack.io/sk/turn/gwtmvp/1.0.1/gwtmvp-1.0.1.jar)
 
 ## Views
 We'll create a simple view that will pop-up a value entered into an `<input>` field.
