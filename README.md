@@ -1,7 +1,14 @@
 # GWT MVP
-[MVP](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93presenter) library for [GWT](http://www.gwtproject.org/), adding a light-weighted, easy-to-use MVP framework, plain HTML-to-Java binding and at the same time taking the complexity off of the built-in widgets library.
+[MVP](https://en.wikipedia.org/wiki/Model-view-presenter) library for [GWT](http://www.gwtproject.org/), adding a light-weighted, easy-to-use MVP framework, plain HTML-to-Java binding and at the same time taking the complexity off of the built-in widgets library.
 
-## Assumptions and goals
+[Assumptions and Goals](#assumptions-and-goals)\
+[Build Configuration](#build-configuration)\
+[Resources](#resources)\
+[Views](#views)\
+[Presenters](#presenters)\
+[Loaders](#loaders)
+
+## Assumptions and Goals
 Following assumptions were considered when designing this library:
 * GWT is a great tool with amazing potential, but at the same time the learning curve is anything but steep
 * We find that one of the most difficult part to comprehend and use effectively is the Widget library
@@ -13,7 +20,7 @@ What this library is trying to provide:
 * Light-weight (read "no huge code-base and few classes to learn") and easy-to-use (read "as little code overhead as possible") MVP framework
 * HTML binding can be used standalone without the MVP part
 
-## Build configuration
+## Build Configuration
 
 ### JAR file
 1. Download the latest JAR file, copy it to your project's libs directory and add it to your project's classpath
@@ -34,7 +41,7 @@ repositories {
 ```gradle
 dependencies {
   ...
-  providedCompile 'sk.turn:gwtmvp:1.0-rc1'
+  providedCompile 'sk.turn:gwtmvp:1.0-rc2'
 }
 ```
 
@@ -42,10 +49,9 @@ dependencies {
 * [Read Javadoc](https://jitpack.io/sk/turn/gwtmvp/1.0-rc2/javadoc/)
 * [Download JAR](https://jitpack.io/sk/turn/gwtmvp/1.0-rc2/gwtmvp-1.0-rc2.jar)
 
-## Simple example
+## Views
 We'll create a simple view that will pop-up a value entered into an `<input>` field.
 
-### HTML and View
 Create a `HelloView.html` that will hold the plain HTML content for our view:
 ```html
 <div>
@@ -86,7 +92,7 @@ helloView.setGreetHandler(new ClickHandler() {
 
 Note that you can work with the view method only after first call to `View.getRootElement()` since that's where all the mapping occurs. Trying to call something on a method (or setting an event handler) before that will result in an `NullPointerException`.
 
-### MVP
+## Presenters
 Now comes the fun part. We'll create a presenter, that will work with the above view and add it to the MVP framework.
 
 **HelloPresenter.java**
@@ -151,3 +157,24 @@ public void onModuleLoad() {
 ```
 
 Here we just create the MVP instance, pass the root element (parent element that will hold all the views) and add as many presenters as we need. As soon we hit the `mvp.start()` method the wheels start turning and from this point the MVP takes over.
+
+## Loaders
+This is an optional helper class to assist with a common task -- showing a loading indicator while one or more background tasks are in progress. The `Loader` class allows you to register one or more HTML elements that represent loaders in your application and you can show/hide them anywhere within your app.
+
+There are two kinds of loaders:
+1. **Non-counted** loader doesn't care how many times you call `show()` method, the first call to `hide()` hides it
+2. whereas **counted** loader will not hide unless you call `hide()` the same number of times as you did call `show()`.
+
+### Sample
+```java
+// Register a counted loader we will use later
+Loader.register(DOM.findElementById("loaderId"), true);
+...
+// Later, before making a server call
+Loader.show();
+...
+// When the call has finished (either successfully or not)
+Loader.hide();
+```
+
+You also may use more than one loader, in such case use the methods that get a tag (identifier) as the first parameter.

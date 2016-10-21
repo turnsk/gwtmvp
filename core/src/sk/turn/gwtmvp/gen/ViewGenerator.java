@@ -143,7 +143,7 @@ public class ViewGenerator extends IncrementalGenerator {
       w.println("      return rootElement;");
       w.println("    }");
       w.println("    Element tempElem = Document.get().create" + (
-          rootElementType.equals("com.google.gwt.dom.client.TableRowElement") ? "Table" :
+          rootElementType.equals("com.google.gwt.dom.client.TableRowElement") ? "TBody" :
             rootElementType.equals("com.google.gwt.dom.client.TableCellElement") ? "TR" : "Div") + "Element();");
       w.println("    tempElem.setInnerHTML(Resources.INSTANCE.htmlContent().getText());");
       w.println("    rootElement = (" + rootElementType + ") tempElem.getFirstChild();");

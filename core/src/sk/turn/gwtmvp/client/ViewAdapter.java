@@ -46,7 +46,7 @@ import com.google.gwt.dom.client.Element;
  *personAdapter.setItem(people);</code></pre>
  * <p>
  * PersonView.java
- * <pre><code>public interface ListItemView extends View&lt;TableRowElement&gt; {
+ * <pre><code>public interface PersonView extends View&lt;TableRowElement&gt; {
  *  {@literal @}HtmlElement TableCellElement getName();
  *  {@literal @}HtmlElement TableCellElement getCity();
  *  {@literal @}HtmlElement AnchorElement getAction();
