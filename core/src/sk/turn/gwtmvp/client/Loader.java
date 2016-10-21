@@ -26,8 +26,8 @@ import com.google.gwt.dom.client.Style;
  * amount of times as you've called {@code show()} before.
  * <p>
  * If you want to use a loader, you have to register it first with a call to
- * {@link #register(com.google.gwt.dom.client.Element, boolean)} passing an element that represents
- * the loader. To use more than one loader use the tagged versions of the methods.
+ * {@code register(Element, boolean)} passing an element that represents the loader. To use more
+ * than one loader use the tagged versions of the methods.
  */
 public class Loader {
 
