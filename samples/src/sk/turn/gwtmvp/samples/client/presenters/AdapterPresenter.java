@@ -14,10 +14,10 @@ import com.google.gwt.user.client.Window;
 
 import sk.turn.gwtmvp.client.Presenter;
 import sk.turn.gwtmvp.client.ViewAdapter;
-import sk.turn.gwtmvp.samples.client.views.ListItemView;
-import sk.turn.gwtmvp.samples.client.views.SimpleView;
+import sk.turn.gwtmvp.samples.client.views.AdapterItemView;
+import sk.turn.gwtmvp.samples.client.views.AdapterView;
 
-public class SimplePresenter implements Presenter<SimpleView> {
+public class AdapterPresenter implements Presenter<AdapterView> {
 
   private static class Person {
     long id;
@@ -27,7 +27,6 @@ public class SimplePresenter implements Presenter<SimpleView> {
     String city;
   }
 
-  //private static final Logger LOG = Logger.getLogger(SimplePresenter.class.getName());
   private static final String[] NAMES = new String[] { "Reginia Weatherholt", "Gwenn Windom", "Evelina Mitchener", "Sibyl Kohler", "Bettyann Evensen", 
       "Mervin Leicht", "Ambrose Prowse", "Lilla Remy", "Windy Diener", "Donna Maggio", "Damien Schimmel", "Andria Down", "Ettie Reveles", "Teodora Copley", 
       "Rebekah Moua", "Angelique Howser", "Lahoma Mcdowell", "Torrie Reynoso", "Dahlia Elder", "Lily Rodney", "Fransisca Dufner", "Hillary Asbell", 
@@ -38,12 +37,12 @@ public class SimplePresenter implements Presenter<SimpleView> {
   private static final String[] CITIES = new String[] { "New York", "Los Angeles", "Chicago", "Houston", "Philadelphia", "Phoenix", "San Antonio", "San Diego", 
       "Dallas", "San Jose" };
 
-  private final RegExp tokenRegExp = RegExp.compile("^(person/([0-9]+))|.*$");
-  private SimpleView view;
-  private ViewAdapter<Person, ListItemView> personAdapter;
+  private final RegExp tokenRegExp = RegExp.compile("^people|(person/([0-9]+))$");
+  private AdapterView view;
+  private ViewAdapter<Person, AdapterItemView> personAdapter;
   private List<Person> people = new ArrayList<>();
 
-  public SimplePresenter(SimpleView view) {
+  public AdapterPresenter(AdapterView view) {
     this.view = view;
   }
 
@@ -53,7 +52,7 @@ public class SimplePresenter implements Presenter<SimpleView> {
   }
 
   @Override
-  public SimpleView getView() {
+  public AdapterView getView() {
     return view;
   }
 
@@ -66,13 +65,13 @@ public class SimplePresenter implements Presenter<SimpleView> {
         event.stopPropagation();
       }
     });
-    personAdapter = new ViewAdapter<Person, ListItemView>(view.getTable()) {
+    personAdapter = new ViewAdapter<Person, AdapterItemView>(view.getTable()) {
       @Override
-      protected ListItemView createView() {
-        return GWT.create(ListItemView.class);
+      protected AdapterItemView createView() {
+        return GWT.create(AdapterItemView.class);
       }
       @Override
-      protected void setViewData(ListItemView view, Person item) {
+      protected void setViewData(AdapterItemView view, final Person item) {
         view.getName().setInnerText(item.name);
         view.getEmail().setInnerText(item.email);
         view.getPhone().setInnerText(item.phone);

@@ -208,7 +208,11 @@ public class ViewGenerator extends IncrementalGenerator {
         for (String id : handlerAnn.value()) {
           w.println("    hm = handlerManagers.get(\"" + id + "\");");
           w.println("    if (hm != null) {");
-          w.println("      hm.addHandler(" + paramType.substring(0, paramType.length() - 7) + "Event.getType(), handler);");
+          String eventType = paramType.substring(0, paramType.length() - 7) + "Event.getType()";
+          w.println("      while (hm.getHandlerCount(" + eventType + ") > 0) {");
+          w.println("        hm.removeHandler(" + eventType + ", hm.getHandler(" + eventType + ", 0));");
+          w.println("      }");
+          w.println("      hm.addHandler(" + eventType + ", handler);");
           w.println("    }");
         }
         w.println("  }");

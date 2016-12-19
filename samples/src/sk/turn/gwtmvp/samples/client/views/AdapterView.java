@@ -9,7 +9,7 @@ import sk.turn.gwtmvp.client.HtmlElement;
 import sk.turn.gwtmvp.client.HtmlHandler;
 import sk.turn.gwtmvp.client.View;
 
-public interface SimpleView extends View<DivElement> {
+public interface AdapterView extends View<DivElement> {
   @HtmlElement HeadingElement getHeading();
   @HtmlElement TableElement getTable();
   @HtmlHandler({ "heading" }) void setHeadingClickHandler(ClickHandler handler);

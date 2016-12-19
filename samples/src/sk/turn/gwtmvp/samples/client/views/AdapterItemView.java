@@ -7,7 +7,7 @@ import com.google.gwt.dom.client.TableRowElement;
 import sk.turn.gwtmvp.client.HtmlElement;
 import sk.turn.gwtmvp.client.View;
 
-public interface ListItemView extends View<TableRowElement> {
+public interface AdapterItemView extends View<TableRowElement> {
   @HtmlElement TableCellElement getName();
   @HtmlElement TableCellElement getEmail();
   @HtmlElement TableCellElement getPhone();
