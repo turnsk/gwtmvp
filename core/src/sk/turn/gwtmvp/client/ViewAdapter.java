@@ -163,6 +163,35 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> {
   }
 
   /**
+   * Returns the count of the items in the adapter.
+   * 
+   * @return Count of the items.
+   */
+  public int getCount() {
+    return entries.size();
+  }
+
+  /**
+   * Returns the item at the specified index.
+   * 
+   * @param index The index of the item to retrieve.
+   * @return The item at the specified index or null if out of bounds.
+   */
+  public T getItem(int index) {
+    return (index >= 0 && index < entries.size() ? entries.get(index).item : null);
+  }
+
+  /**
+   * Returns the view at the specified index.
+   * 
+   * @param index The index of the view to retrieve.
+   * @return The view at the specified index or null if out of bounds.
+   */
+  public V getItemView(int index) {
+    return (index >= 0 && index < entries.size() ? entries.get(index).view : null);
+  }
+
+  /**
    * Removes all the items/views from this adapter.
    */
   public void clear() {
