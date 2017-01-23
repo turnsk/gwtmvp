@@ -203,6 +203,26 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> {
   }
 
   /**
+   * Reloads the views in the adapter, optionally selecting specifying indices to reload.
+   * 
+   * @param indices A list of indices to reload in the list, leave empty to reload all items.
+   */
+  public void reload(Integer... indices) {
+    if (indices.length > 0) {
+      for (int index : indices) {
+        if (index >= 0 && index < entries.size()) {
+          Entry<T, V> entry = entries.get(index);
+          setViewData(entry.view, entry.item);
+        }
+      }
+    } else {
+      for (Entry<T, V> entry : entries) {
+        setViewData(entry.view, entry.item);
+      }
+    }
+  }
+
+  /**
    * Override this method to return a {@link View} instance representing a single adapter item. This
    * method will not be called if there is a currently unused view that will be reused.
    * 
