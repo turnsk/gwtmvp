@@ -38,7 +38,7 @@ public class ViewGenerator extends IncrementalGenerator {
   
   @Override
   public long getVersionId() {
-    return 1;
+    return 2;
   }
 
   @Override
@@ -133,8 +133,8 @@ public class ViewGenerator extends IncrementalGenerator {
       for (Map.Entry<String, JMethod> entry : fieldsMap.entrySet()) {
         w.println("  private " + entry.getValue().getReturnType().getQualifiedSourceName() + " generated_" + entry.getKey() + " = null;");
       }
-      if (handlersMap.size() > 0) {
-        w.println("  private final Map<String, HandlerManager> handlerManagers = new HashMap<>();");
+      if (fieldsMap.size() > 0 || handlersMap.size() > 0) {
+        w.println("  private final Map<String, Element> elementsMap = new HashMap<>();");
       }
       w.println();
       w.println("  @Override");
@@ -148,7 +148,6 @@ public class ViewGenerator extends IncrementalGenerator {
       w.println("    tempElem.setInnerHTML(Resources.INSTANCE.htmlContent().getText());");
       w.println("    rootElement = (" + rootElementType + ") tempElem.getFirstChild();");
       if (fieldsMap.size() > 0 || handlersMap.size() > 0) {
-        w.println("    Map<String, Element> elementsMap = new HashMap<>();");
         w.println("    addElementToMap(rootElement, elementsMap);");
         w.println("    NodeList<Element> elements = rootElement.getElementsByTagName(\"*\");");
         w.println("    for (int i = 0; i < elements.getLength(); i++) {");
@@ -165,24 +164,7 @@ public class ViewGenerator extends IncrementalGenerator {
         for (Map.Entry<String, Map<String, JMethod>> entry : handlersMap.entrySet()) {
           w.println("    final Element element_" + entry.getKey() + " = elementsMap.get(\"" + entry.getKey() + "\");");
           w.println("    if (element_" + entry.getKey() + " == null) {");
-          w.println("      LOG.severe(\"Could not find element with data-gwtid=\\\"" + entry.getKey() + "\\\" in " + viewType.getSimpleSourceName()
-              + ".html.\");");
-          w.println("    } else {");
-          w.println("      handlerManagers.put(\"" + entry.getKey() + "\", new HandlerManager(element_" + entry.getKey() + "));");
-          for (Map.Entry<String, JMethod> entry2 : entry.getValue().entrySet()) {
-            JClassType paramType = typeOracle.getType(entry2.getKey());
-            if (!paramType.getName().endsWith("Handler")) {
-              throw new Exception("Unexpected type (" + paramType.getQualifiedSourceName() + "), was expecting \"...Handler\".");
-            }
-            w.println("      Event.sinkEvents(element_" + entry.getKey() + ", Event.ON" + paramType.getName().substring(0, paramType.getName().length() - 7)
-                .toUpperCase() + ");");
-          }
-          w.println("      Event.setEventListener(element_" + entry.getKey() + ", new EventListener() {");
-          w.println("        @Override");
-          w.println("        public void onBrowserEvent(Event event) {");
-          w.println("          DomEvent.fireNativeEvent(event, handlerManagers.get(\"" + entry.getKey() + "\"), element_" + entry.getKey() + ");");
-          w.println("        }");
-          w.println("      });");
+          w.println("      LOG.severe(\"Could not find element with data-gwtid=\\\"" + entry.getKey() + "\\\" in " + viewType.getSimpleSourceName() + ".html.\");");
           w.println("    }");
         }
       }
@@ -200,19 +182,18 @@ public class ViewGenerator extends IncrementalGenerator {
         if (handlerAnn == null) {
           continue;
         }
-        String paramType = method.getParameters()[0].getType().getQualifiedSourceName();
+        JClassType paramClassType = (JClassType) method.getParameters()[0].getType();
+        String paramType = paramClassType.getQualifiedSourceName();
         w.println();
         w.println("  @Override");
         w.println("  public void " + method.getName() + "(" + paramType + " handler) {");
-        w.println("    HandlerManager hm;");
+        w.println("    Element elem;");
         for (String id : handlerAnn.value()) {
-          w.println("    hm = handlerManagers.get(\"" + id + "\");");
-          w.println("    if (hm != null) {");
+          w.println("    elem = elementsMap.get(\"" + id + "\");");
+          w.println("    if (elem != null) {");
           String eventType = paramType.substring(0, paramType.length() - 7) + "Event.getType()";
-          w.println("      while (hm.getHandlerCount(" + eventType + ") > 0) {");
-          w.println("        hm.removeHandler(" + eventType + ", hm.getHandler(" + eventType + ", 0));");
-          w.println("      }");
-          w.println("      hm.addHandler(" + eventType + ", handler);");
+          w.println("      sk.turn.gwtmvp.client.EventManager.setEventHandler(elem, Event.ON" + paramClassType.getName().substring(0, paramClassType.getName().length() - 7).toUpperCase() + ", " +
+                  eventType + ", handler);");
           w.println("    }");
         }
         w.println("  }");
