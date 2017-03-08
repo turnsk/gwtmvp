@@ -10,17 +10,16 @@ import com.google.gwt.dom.client.TableCellElement;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.regexp.shared.MatchResult;
-import com.google.gwt.regexp.shared.RegExp;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
 
-import sk.turn.gwtmvp.client.Presenter;
+import sk.turn.gwtmvp.client.BasePresenter;
 import sk.turn.gwtmvp.client.TableRowAdapter;
 import sk.turn.gwtmvp.client.ViewAdapter;
 import sk.turn.gwtmvp.samples.client.views.AdapterItemView;
 import sk.turn.gwtmvp.samples.client.views.AdapterView;
 
-public class AdapterPresenter implements Presenter<AdapterView> {
+public class AdapterPresenter extends BasePresenter<AdapterView> {
 
   private static class Person {
     long id;
@@ -43,29 +42,17 @@ public class AdapterPresenter implements Presenter<AdapterView> {
   // There are two possible ways to do this: With a separate view for each item or by filling the table cells in code (no separate View class/html required)
   private static final boolean USE_VIEW_ADAPTER = false;
 
-  private final RegExp tokenRegExp = RegExp.compile("^people|(person/([0-9]+))$");
-  private AdapterView view;
   private ViewAdapter<Person, AdapterItemView> personViewAdapter;
   private TableRowAdapter<Person> personRowAdapter;
   private List<Person> people = new ArrayList<>();
 
   public AdapterPresenter(AdapterView view) {
-    this.view = view;
-  }
-
-  @Override
-  public RegExp getTokenRegExp() {
-    return tokenRegExp;
-  }
-
-  @Override
-  public AdapterView getView() {
-    return view;
+    super("^people|(person/([0-9]+))$", view);
   }
 
   @Override
   public void onViewLoaded() {
-    view.setHeadingClickHandler(new ClickHandler() {
+    getView().setHeadingClickHandler(new ClickHandler() {
       @Override
       public void onClick(ClickEvent event) {
         History.newItem("");
@@ -73,7 +60,7 @@ public class AdapterPresenter implements Presenter<AdapterView> {
       }
     });
     if (USE_VIEW_ADAPTER) {
-      personViewAdapter = new ViewAdapter<Person, AdapterItemView>(view.getTable()) {
+      personViewAdapter = new ViewAdapter<Person, AdapterItemView>(getView().getTable()) {
         @Override
         protected AdapterItemView createView() {
           return GWT.create(AdapterItemView.class);
@@ -89,7 +76,7 @@ public class AdapterPresenter implements Presenter<AdapterView> {
         }
       };
     } else {
-      personRowAdapter = new TableRowAdapter<Person>(view.getTable(), 5) {
+      personRowAdapter = new TableRowAdapter<Person>(getView().getTable(), 5) {
         @Override
         protected void setTableCell(int column, TableCellElement elem, Person item) {
           if (column < 4) {
@@ -124,12 +111,12 @@ public class AdapterPresenter implements Presenter<AdapterView> {
         Window.alert("Couldn't find person with id " + personId);
         History.newItem("");
       } else {
-        view.getHeading().setInnerText(person.name + " (" + person.city + ")");
-        view.getTable().getStyle().setDisplay(Style.Display.NONE);
+        getView().getHeading().setInnerText(person.name + " (" + person.city + ")");
+        getView().getTable().getStyle().setDisplay(Style.Display.NONE);
       }
     } else {
-      view.getHeading().setInnerText("People working their asses off in Turn");
-      view.getTable().getStyle().setDisplay(Style.Display.INITIAL);
+      getView().getHeading().setInnerText("People working their asses off in Turn");
+      getView().getTable().getStyle().setDisplay(Style.Display.INITIAL);
       if (people.size() == 0) {
         for (int i = 0; i < 10; i++) {
           people.add(getRandomPerson());
@@ -141,10 +128,6 @@ public class AdapterPresenter implements Presenter<AdapterView> {
         }
       }
     }
-  }
-
-  @Override
-  public void onHide() {
   }
 
   private Person getRandomPerson() {

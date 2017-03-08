@@ -7,7 +7,7 @@ repositories {
 
 sourceCompatibility = 1.7
 group = 'sk.turn'
-version = '1.0.5'
+version = '1.0.6'
 
 sourceSets {
   main {
