@@ -34,6 +34,7 @@ jar {
 task myJavadoc(type: Javadoc) {
   title 'GWT MVP Library'
   source 'src/sk/turn/gwtmvp/client'
+  exclude '**/*.html'
 }
 
 task sourcesJar(type: Jar) {
