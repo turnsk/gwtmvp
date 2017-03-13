@@ -46,7 +46,7 @@ import com.google.gwt.dom.client.TableSectionElement;
  *    if (column != 2) {
  *      super.setTableCell(column, elem, item);
  *    } else {
- *      AnchorElement a = (AnchorElement) (elem.getChildCount() > 0 ? elem.getChild(0) :
+ *      AnchorElement a = (AnchorElement) (elem.getChildCount() &gt; 0 ? elem.getChild(0) :
  *          elem.appendChild(elem.getOwnerDocument().createAnchorElement()));
  *      a.setInnerText("Edit " + item.name);
  *      a.setHref("#person/" + item.id);

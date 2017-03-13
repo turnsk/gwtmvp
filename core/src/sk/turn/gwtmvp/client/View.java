@@ -58,4 +58,11 @@ public interface View<E extends Element> {
    * @return The root element of this view.
    */
   E getRootElement();
+
+  /**
+   * Tries to find an element with a specific {@code data-gwtid} and returns it.
+   * @param gwtId The ID of the element to find
+   * @return The found Element or null if no such element exists in the HTML file
+   */
+  <E2 extends Element> E2 getElement(String gwtId);
 }

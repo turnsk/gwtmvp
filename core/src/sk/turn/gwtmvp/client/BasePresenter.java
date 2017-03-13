@@ -23,7 +23,7 @@ import sk.turn.gwtmvp.client.View;
 /**
  * Basic implementation of {@link Presenter} interface. This class is a convenient and preferred way to use {@code Presenter}s. 
  * All you need to do is call the super constructor with proper parameters and override one or more of the event methods: 
- * {@link #onViewLoaded()}, {@link #onShow(com.google.gwt.regexp.shared.MatchResult)} and/or {@link #onHide()}.
+ * {@code onViewLoaded()}, {@code onShow(MatchResult)} and/or {@code onHide()}.
  * <p>
  * An implementation may look like following:
  * <pre><code>public class HelloPresenter extends BasePresenter&lt;HelloView&gt; {

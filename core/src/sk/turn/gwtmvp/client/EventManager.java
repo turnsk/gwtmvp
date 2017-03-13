@@ -39,6 +39,9 @@ public class EventManager {
    * @param handler The handler that handler the event
    */
   public static <H extends EventHandler> void setEventHandler(final Element element, DomEvent.Type<H> eventType, H handler) {
+    if (element == null) {
+      return;
+    }
     HandlerManager hm = handlerManagers.get(element);
     if (hm == null) {
       handlerManagers.put(element, hm = new HandlerManager(element));

@@ -133,9 +133,7 @@ public class ViewGenerator extends IncrementalGenerator {
       for (Map.Entry<String, JMethod> entry : fieldsMap.entrySet()) {
         w.println("  private " + entry.getValue().getReturnType().getQualifiedSourceName() + " generated_" + entry.getKey() + " = null;");
       }
-      if (fieldsMap.size() > 0 || handlersMap.size() > 0) {
-        w.println("  private final Map<String, Element> elementsMap = new HashMap<>();");
-      }
+      w.println("  private final Map<String, Element> elementsMap = new HashMap<>();");
       w.println();
       w.println("  @Override");
       w.println("  public " + rootElementType + " getRootElement() {");
@@ -147,28 +145,30 @@ public class ViewGenerator extends IncrementalGenerator {
             rootElementType.equals("com.google.gwt.dom.client.TableCellElement") ? "TR" : "Div") + "Element();");
       w.println("    tempElem.setInnerHTML(Resources.INSTANCE.htmlContent().getText());");
       w.println("    rootElement = (" + rootElementType + ") tempElem.getFirstChild();");
-      if (fieldsMap.size() > 0 || handlersMap.size() > 0) {
-        w.println("    addElementToMap(rootElement, elementsMap);");
-        w.println("    NodeList<Element> elements = rootElement.getElementsByTagName(\"*\");");
-        w.println("    for (int i = 0; i < elements.getLength(); i++) {");
-        w.println("      addElementToMap(elements.getItem(i), elementsMap);");
+      w.println("    addElementToMap(rootElement, elementsMap);");
+      w.println("    NodeList<Element> elements = rootElement.getElementsByTagName(\"*\");");
+      w.println("    for (int i = 0; i < elements.getLength(); i++) {");
+      w.println("      addElementToMap(elements.getItem(i), elementsMap);");
+      w.println("    }");
+      for (Map.Entry<String, JMethod> entry : fieldsMap.entrySet()) {
+        w.println("    generated_" + entry.getKey() + " = (" + entry.getValue().getReturnType().getQualifiedSourceName() + ") elementsMap.get(\"" + entry
+            .getKey() + "\");");
+        w.println("    if (generated_" + entry.getKey() + " == null) {");
+        w.println("      LOG.severe(\"Could not find element with data-gwtid=\\\"" + entry.getKey() + "\\\" in " + viewType.getSimpleSourceName()
+            + ".html.\");");
         w.println("    }");
-        for (Map.Entry<String, JMethod> entry : fieldsMap.entrySet()) {
-          w.println("    generated_" + entry.getKey() + " = (" + entry.getValue().getReturnType().getQualifiedSourceName() + ") elementsMap.get(\"" + entry
-              .getKey() + "\");");
-          w.println("    if (generated_" + entry.getKey() + " == null) {");
-          w.println("      LOG.severe(\"Could not find element with data-gwtid=\\\"" + entry.getKey() + "\\\" in " + viewType.getSimpleSourceName()
-              + ".html.\");");
-          w.println("    }");
-        }
-        for (Map.Entry<String, Map<String, JMethod>> entry : handlersMap.entrySet()) {
-          w.println("    final Element element_" + entry.getKey() + " = elementsMap.get(\"" + entry.getKey() + "\");");
-          w.println("    if (element_" + entry.getKey() + " == null) {");
-          w.println("      LOG.severe(\"Could not find element with data-gwtid=\\\"" + entry.getKey() + "\\\" in " + viewType.getSimpleSourceName() + ".html.\");");
-          w.println("    }");
-        }
+      }
+      for (Map.Entry<String, Map<String, JMethod>> entry : handlersMap.entrySet()) {
+        w.println("    if (elementsMap.get(\"" + entry.getKey() + "\") == null) {");
+        w.println("      LOG.severe(\"Could not find element with data-gwtid=\\\"" + entry.getKey() + "\\\" in " + viewType.getSimpleSourceName() + ".html.\");");
+        w.println("    }");
       }
       w.println("    return rootElement;");
+      w.println("  }");
+      w.println();
+      w.println("  @Override");
+      w.println("  public <E2 extends Element> E2 getElement(String gwtId) {");
+      w.println("    return (E2) elementsMap.get(gwtId);");
       w.println("  }");
       for (Map.Entry<String, JMethod> entry : fieldsMap.entrySet()) {
         w.println();
@@ -182,36 +182,29 @@ public class ViewGenerator extends IncrementalGenerator {
         if (handlerAnn == null) {
           continue;
         }
-        JClassType paramClassType = (JClassType) method.getParameters()[0].getType();
-        String paramType = paramClassType.getQualifiedSourceName();
+        String paramType = method.getParameters()[0].getType().getQualifiedSourceName();
+        String eventType = paramType.substring(0, paramType.length() - 7) + "Event.getType()";
         w.println();
         w.println("  @Override");
         w.println("  public void " + method.getName() + "(" + paramType + " handler) {");
-        w.println("    Element elem;");
         for (String id : handlerAnn.value()) {
-          w.println("    elem = elementsMap.get(\"" + id + "\");");
-          w.println("    if (elem != null) {");
-          String eventType = paramType.substring(0, paramType.length() - 7) + "Event.getType()";
-          w.println("      sk.turn.gwtmvp.client.EventManager.setEventHandler(elem, " + eventType + ", handler);");
-          w.println("    }");
+          w.println("    sk.turn.gwtmvp.client.EventManager.setEventHandler(getElement(\"" + id + "\"), " + eventType + ", handler);");
         }
         w.println("  }");
       }
-      if (fieldsMap.size() > 0 || handlersMap.size() > 0) {
-        w.println();
-        w.println("  private void addElementToMap(Element element, Map<String, Element> elementsMap) {");
-        w.println("    String gwtid = null;");
-        w.println("    try {");
-        w.println("      gwtid = element.getAttribute(\"data-gwtid\");");
-        w.println("    } catch (Exception e) {");
-        w.println("      LOG.warning(\"Unable to call getAttribute on \" + element.getTagName());");
-        w.println("    }");
-        w.println("    if (gwtid != null && !gwtid.equals(\"\")) {");
-        w.println("      element.removeAttribute(\"data-gwtid\");");
-        w.println("      elementsMap.put(gwtid, element);");
-        w.println("    }");
-        w.println("  }");
-      }
+      w.println();
+      w.println("  private void addElementToMap(Element element, Map<String, Element> elementsMap) {");
+      w.println("    String gwtid = null;");
+      w.println("    try {");
+      w.println("      gwtid = element.getAttribute(\"data-gwtid\");");
+      w.println("    } catch (Exception e) {");
+      w.println("      LOG.warning(\"Unable to call getAttribute on \" + element.getTagName());");
+      w.println("    }");
+      w.println("    if (gwtid != null && !gwtid.equals(\"\")) {");
+      w.println("      element.removeAttribute(\"data-gwtid\");");
+      w.println("      elementsMap.put(gwtid, element);");
+      w.println("    }");
+      w.println("  }");
       w.println("}");
       context.commit(logger, w);
       return new RebindResult(RebindMode.USE_ALL_NEW, packageName + "." + generatedClassName);
