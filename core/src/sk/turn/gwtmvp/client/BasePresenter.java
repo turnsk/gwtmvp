@@ -20,6 +20,45 @@ import com.google.gwt.regexp.shared.RegExp;
 import sk.turn.gwtmvp.client.Presenter;
 import sk.turn.gwtmvp.client.View;
 
+/**
+ * Basic implementation of {@link Presenter} interface. This class is a convenient and preferred way to use {@code Presenter}s. 
+ * All you need to do is call the super constructor with proper parameters and override one or more of the event methods: 
+ * {@link #onViewLoaded()}, {@link #onShow(com.google.gwt.regexp.shared.MatchResult)} and/or {@link #onHide()}.
+ * <p>
+ * An implementation may look like following:
+ * <pre><code>public class HelloPresenter extends BasePresenter&lt;HelloView&gt; {
+ *  private int counter = 1;
+ *
+ *  public HelloPresenter(HelloView view) {
+ *    super("^hello$", view);
+ *  }
+ *
+ *  {@literal @}Override
+ *  public void onViewLoaded() {
+ *    getView().setGreetHandler(new ClickHandler() {
+ *      {@literal @}Override
+ *      public void onClick(ClickEvent e) {
+ *        Window.alert("Hello " + getView().getNameInput().getValue() + " for the " + 
+ *            formatCounter() + " time!");
+ *        counter++;
+ *        getView().getCounter().setInnerText(formatCounter());
+ *      }
+ *    });
+ *  }
+ *
+ *  {@literal @}Override
+ *  public void onShow(MatchResult matchResult) {
+ *    getView().getCounter().setInnerText(formatCounter());
+ *  }
+ *
+ *  private String formatCounter() {
+ *    return counter + (counter % 10 == 1 &amp;&amp; (counter / 10) % 10 != 1 ? "st" : 
+ *        counter % 10 == 2 &amp;&amp; (counter / 10) % 10 != 1 ? "nd" : "th");
+ *  }
+ *}</code></pre>
+ * 
+ * @param <V> The {@link View} class that this presenter works with.
+ */
 public abstract class BasePresenter<V extends View<? extends Element>> implements Presenter<V> {
 
   private RegExp regExp;
@@ -55,6 +94,10 @@ public abstract class BasePresenter<V extends View<? extends Element>> implement
     // Nothing to do here
   }
 
+  /**
+   * Allows to change the history token regular expression at runtime.
+   * @param regExp The new regular expression to use with this Presenter.
+   */
   public void setTokenRegExp(String regExp) {
     this.regExp = RegExp.compile(regExp);
   }

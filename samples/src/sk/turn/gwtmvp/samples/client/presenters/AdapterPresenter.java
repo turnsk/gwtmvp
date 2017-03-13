@@ -78,16 +78,16 @@ public class AdapterPresenter extends BasePresenter<AdapterView> {
     } else {
       personRowAdapter = new TableRowAdapter<Person>(getView().getTable(), 5) {
         @Override
+        protected String getCellText(int column, Person item) {
+          return (column == 0 ? item.name : column == 1 ? item.email : column == 2 ? item.phone : item.city);
+        }
+        @Override
         protected void setTableCell(int column, TableCellElement elem, Person item) {
-          if (column < 4) {
-            elem.setInnerText(column == 0 ? item.name : column == 1 ? item.email : column == 2 ? item.phone : item.city);
+          if (column != 4) {
+            super.setTableCell(column, elem, item);
           } else {
-            AnchorElement a;
-            if (elem.getChildCount() > 0) {
-              a = (AnchorElement) elem.getChild(0);
-            } else {
-              elem.appendChild(a = elem.getOwnerDocument().createAnchorElement());
-            }
+            AnchorElement a = (AnchorElement) (elem.getChildCount() > 0 ? elem.getChild(0) : 
+              elem.appendChild(elem.getOwnerDocument().createAnchorElement()));
             a.setInnerText("Edit " + item.name);
             a.setHref("#person/" + item.id);
           }

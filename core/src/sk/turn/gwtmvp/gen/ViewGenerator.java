@@ -192,8 +192,7 @@ public class ViewGenerator extends IncrementalGenerator {
           w.println("    elem = elementsMap.get(\"" + id + "\");");
           w.println("    if (elem != null) {");
           String eventType = paramType.substring(0, paramType.length() - 7) + "Event.getType()";
-          w.println("      sk.turn.gwtmvp.client.EventManager.setEventHandler(elem, Event.ON" + paramClassType.getName().substring(0, paramClassType.getName().length() - 7).toUpperCase() + ", " +
-                  eventType + ", handler);");
+          w.println("      sk.turn.gwtmvp.client.EventManager.setEventHandler(elem, " + eventType + ", handler);");
           w.println("    }");
         }
         w.println("  }");

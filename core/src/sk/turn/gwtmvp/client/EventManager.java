@@ -21,31 +21,46 @@ import com.google.gwt.event.dom.client.DomEvent;
 import com.google.gwt.event.shared.EventHandler;
 import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.event.shared.HandlerManager;
+import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.EventListener;
 
+/**
+ * Helper class to bind and unbind native browser events.
+ */
 public class EventManager {
 
   private static final Map<Element, HandlerManager> handlerManagers = new HashMap<>();
 
-  public static <H extends EventHandler> void setEventHandler(final Element element, int event, GwtEvent.Type<H> eventType, H handler) {
+  /**
+   * Sets an event handler for an {@code Element}. All previous event handlers of this type of event are removed.
+   * @param element The element to bind the event handler for
+   * @param eventType The event type (e.g. {@code ClickEvent.getType()})
+   * @param handler The handler that handler the event
+   */
+  public static <H extends EventHandler> void setEventHandler(final Element element, DomEvent.Type<H> eventType, H handler) {
     HandlerManager hm = handlerManagers.get(element);
     if (hm == null) {
       handlerManagers.put(element, hm = new HandlerManager(element));
-      Event.setEventListener(element, new EventListener() {
+      DOM.setEventListener(element, new EventListener() {
         @Override
         public void onBrowserEvent(Event event) {
           DomEvent.fireNativeEvent(event, handlerManagers.get(element), element);
         }
       });
     }
-    Event.sinkEvents(element, event);
+    DOM.sinkBitlessEvent(element, eventType.getName());
     while (hm.getHandlerCount(eventType) > 0) {
       hm.removeHandler(eventType, hm.getHandler(eventType, 0));
     }
     hm.addHandler(eventType, handler);
   }
 
+  /**
+   * Clears all event handlers of a specific event type from an element.
+   * @param element The element to clear the event handlers from
+   * @param eventType The event type
+   */
   public static <H extends EventHandler> void clearEventHandlers(Element element, GwtEvent.Type<H> eventType) {
     HandlerManager hm = handlerManagers.get(element);
     while (hm != null && hm.getHandlerCount(eventType) > 0) {
