@@ -70,7 +70,7 @@ public interface HelloView extends View<DivElement> {
 }
 ```
 
-In order to automatically map HTML elements onto the generated methods, we need to keep the `data-gwtid` and the method name the same, e.g. `nameInput` element will be mapped onto `getNameInput()` method. If (for some reason) you need to name the method differently, you can set the element ID in the annotation: `@HtmlElement("nameInput") InputElement getName();`.
+In order to automatically map HTML elements onto the generated methods, we need to keep the `data-gwtid` and the method name the same, e.g. `nameInput` element will be mapped onto `getNameInput()` method. If (for some reason) you need to name the method differently, you can set the element ID in the annotation: `@HtmlElement("nameInput") InputElement getName();`. You can also access HTML elements using the `View.getElement(String gwtId)` method, without the need to declare them in the interface.
 
 The `@HtmlHandler` annotation allows you to easily bind DOM events onto your handler implementations. In this particular case calling `setGreetHandler()` will allow you to capture all click events on the anchor element, see sample below.
 
@@ -90,7 +90,7 @@ helloView.setGreetHandler(new ClickHandler() {
 });
 ```
 
-Note that you can work with the view method only after first call to `View.getRootElement()` since that's where all the mapping occurs. Trying to call something on a method (or setting an event handler) before that will result in an `NullPointerException`.
+Note that you can work with the view method only after first call to `View.getRootElement()` since that's where all the mapping occurs. Trying to call something on a method (or setting an event handler) before that will result in a `NullPointerException`.
 
 ## Presenters
 Now comes the fun part. We'll create a presenter, that will work with the above view and add it to the MVP framework.
@@ -138,6 +138,8 @@ public void onModuleLoad() {
 ```
 
 Here we just create the MVP instance, pass the root element (parent element that will hold all the views) and add as many presenters as we need. As soon we hit the `mvp.start()` method the wheels start turning and from this point the MVP takes over.
+
+See [SamplesEntryPoint.java](https://github.com/turnsk/gwtmvp/blob/master/samples/src/sk/turn/gwtmvp/samples/client/SamplesEntryPoint.java), [HelloPresenter.java](https://github.com/turnsk/gwtmvp/blob/master/samples/src/sk/turn/gwtmvp/samples/client/presenters/HelloPresenter.java) and [HelloView.java](https://github.com/turnsk/gwtmvp/blob/master/samples/src/sk/turn/gwtmvp/samples/client/views/HelloView.java) for the sample source files.
 
 ## Loaders
 This is an optional helper class to assist with a common task -- showing a loading indicator while one or more background tasks are in progress. The `Loader` class allows you to register one or more HTML elements that represent loaders in your application and you can show/hide them anywhere within your app.

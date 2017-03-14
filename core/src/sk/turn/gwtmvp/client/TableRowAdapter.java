@@ -14,6 +14,8 @@
 package sk.turn.gwtmvp.client;
 
 import com.google.gwt.core.shared.GWT;
+import com.google.gwt.dom.client.AnchorElement;
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NodeList;
 import com.google.gwt.dom.client.TableCellElement;
 import com.google.gwt.dom.client.TableElement;
@@ -114,7 +116,26 @@ public abstract class TableRowAdapter<T> extends ViewAdapter<T, TableRowView> {
    * @param item The item for this row
    */
   protected void setTableCell(int column, TableCellElement elem, T item) {
-    elem.setInnerText(getCellText(column, item));
+    String text = getCellText(column, item);
+    String historyToken = getCellHistoryToken(column, item);
+    if (historyToken == null) {
+      Element child;
+      while ((child = elem.getFirstChildElement()) != null) {
+        elem.removeChild(child);
+      }
+      elem.setInnerText(text);
+    } else {
+      Element child = elem.getFirstChildElement();
+      if (child != null && !(child instanceof AnchorElement)) {
+        while ((child = elem.getFirstChildElement()) != null) {
+          elem.removeChild(child);
+        }
+      }
+      AnchorElement a = (AnchorElement) (child != null && child instanceof AnchorElement ? child : 
+        elem.appendChild(elem.getOwnerDocument().createAnchorElement()));
+      a.setInnerText(text);
+      a.setHref("#" + historyToken);
+    }
   }
 
   /**
@@ -124,5 +145,16 @@ public abstract class TableRowAdapter<T> extends ViewAdapter<T, TableRowView> {
    * @return Value (inner text) that should be populated into the table cell
    */
   protected abstract String getCellText(int column, T item);
+
+  /**
+   * Override this method to set links in cell(s), return a valid history token for a specific column or 
+   * null to make the cell plain text.
+   * @param column The column index of the table cell (0-based)
+   * @param item The item for this row
+   * @return Valid history token or null to make the cell plain text.
+   */
+  protected String getCellHistoryToken(int column, T item) {
+    return null;
+  }
 
 }
