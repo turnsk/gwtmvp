@@ -66,7 +66,8 @@ import com.google.gwt.regexp.shared.RegExp;
  *
  *  private String formatCounter() {
  *    return counter + (counter % 10 == 1 &amp;&amp; (counter / 10) % 10 != 1 ? "st" : 
- *        counter % 10 == 2 &amp;&amp; (counter / 10) % 10 != 1 ? "nd" : "th");
+ *        counter % 10 == 2 &amp;&amp; (counter / 10) % 10 != 1 ? "nd" : 
+ *        counter % 10 == 3 &amp;&amp; (counter / 10) % 10 != 1 ? "rd" : "th");
  *  }
  *}</code></pre>
  *

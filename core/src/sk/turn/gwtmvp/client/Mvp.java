@@ -25,6 +25,7 @@ import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.regexp.shared.MatchResult;
+import com.google.gwt.regexp.shared.RegExp;
 import com.google.gwt.user.client.History;
 
 /**
@@ -50,7 +51,11 @@ public class Mvp {
       Presenter<? extends View<? extends Element>> matchingPresenter = null;
       MatchResult matchResult = null;
       for (Presenter<? extends View<? extends Element>> presenter : presenters) {
-        matchResult = presenter.getTokenRegExp().exec(event.getValue());
+        RegExp regExp = presenter.getTokenRegExp();
+        if (regExp == null) {
+          continue;
+        }
+        matchResult = regExp.exec(event.getValue());
         if (matchResult != null) {
           matchingPresenter = presenter;
           break;
@@ -74,7 +79,11 @@ public class Mvp {
             initializedPresenters.add(currentPresenter);
           }
         }
-        currentPresenter.onShow(matchResult);
+        if (currentPresenter instanceof BasePresenter) {
+          ((BasePresenter<?>) currentPresenter).onPresenterShown(matchResult);
+        } else {
+          currentPresenter.onShow(matchResult);
+        }
       } catch (Exception e) {
         LOG.log(Level.SEVERE, "Call to Presenter.onShow(MatchResult) failed.", e);
       }
@@ -156,7 +165,11 @@ public class Mvp {
       return;
     }
     try {
-      currentPresenter.onHide();
+      if (currentPresenter instanceof BasePresenter) {
+        ((BasePresenter<?>) currentPresenter).onPresenterHidden();
+      } else {
+        currentPresenter.onHide();
+      }
     } catch (Exception e) {
       LOG.log(Level.SEVERE, "Call to Presenter.onHide() failed.", e);
     }

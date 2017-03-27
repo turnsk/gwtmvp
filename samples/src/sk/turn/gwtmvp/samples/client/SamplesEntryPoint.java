@@ -1,25 +1,32 @@
 package sk.turn.gwtmvp.samples.client;
 
 import com.google.gwt.core.client.EntryPoint;
-import com.google.gwt.core.shared.GWT;
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.Element;
 
+import sk.turn.gwtmvp.client.BasePresenter;
 import sk.turn.gwtmvp.client.Mvp;
-import sk.turn.gwtmvp.samples.client.presenters.HelloPresenter;
-import sk.turn.gwtmvp.samples.client.presenters.LoadersPresenter;
-import sk.turn.gwtmvp.samples.client.presenters.AdapterPresenter;
-import sk.turn.gwtmvp.samples.client.views.HelloView;
-import sk.turn.gwtmvp.samples.client.views.LoadersView;
-import sk.turn.gwtmvp.samples.client.views.AdapterView;
+import sk.turn.gwtmvp.client.View;
+import sk.turn.gwtmvp.samples.client.adapter.PeoplePresenter;
+import sk.turn.gwtmvp.samples.client.adapter.PersonPresenter;
+import sk.turn.gwtmvp.samples.client.hello.HelloPresenter;
+import sk.turn.gwtmvp.samples.client.loader.LoadersPresenter;
 
 public class SamplesEntryPoint implements EntryPoint {
 
+  interface SamplesView extends View<Element> {
+  }
+
   @Override
   public void onModuleLoad() {
-    Mvp mvp = new Mvp(Document.get().getBody());
-    mvp.addPresenter(new HelloPresenter((HelloView) GWT.create(HelloView.class)));
-    mvp.addPresenter(new LoadersPresenter((LoadersView) GWT.create(LoadersView.class)));
-    mvp.addPresenter(new AdapterPresenter((AdapterView) GWT.create(AdapterView.class)));
+    Mvp mvp = new Mvp(Document.get().getElementById("container"));
+    mvp.addPresenter(new HelloPresenter());
+    mvp.addPresenter(new LoadersPresenter());
+    mvp.addPresenter(new PeoplePresenter());
+    mvp.addPresenter(new PersonPresenter());
+    // This last presenter catches any history token that hasn't been caught by other presenters
+    mvp.addPresenter(new BasePresenter<SamplesView>(".*", (SamplesView) GWT.create(SamplesView.class)));
     mvp.start();
   }
 

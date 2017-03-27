@@ -60,7 +60,8 @@ public interface View<E extends Element> {
   E getRootElement();
 
   /**
-   * Tries to find an element with a specific {@code data-gwtid} and returns it.
+   * Tries to find an element with a specific {@code data-gwtid} and returns it. We strongly encourage 
+   * you to define the element in the View, though for one-time element usage this may help code brevity.
    * @param gwtId The ID of the element to find
    * @return The found Element or null if no such element exists in the HTML file
    */

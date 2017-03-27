@@ -14,11 +14,14 @@
 package sk.turn.gwtmvp.client;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.event.dom.client.DomEvent;
 
 /**
  * Helper class to provide support for lists of reusable {@link View}s. Similar to Android's
@@ -70,10 +73,12 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> {
   }
 
   private static final Logger LOG = Logger.getLogger(ViewAdapter.class.getName());
+  private static final String ROOT_CLASS = "__gwtMvpRootElement";
 
   private final Element parentElement;
   private List<Entry<T, V>> entries = new ArrayList<>();
   private final List<V> availableViews = new ArrayList<>();
+  private final Map<Element, Integer> rootElementsToIndexMap = new HashMap<>();
 
   /**
    * Creates a new instance of ViewAdapter with a specific parent element for all the sub-views.
@@ -102,8 +107,13 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> {
       entry.view = availableViews.remove(0);
     } else {
       entry.view = createView();
+      // Mark the root element with a class name for later easier identification
+      entry.view.getRootElement().addClassName(ROOT_CLASS);
+      // Allow the implementor to do any one-time initialization
+      onViewLoaded(entry.view);
     }
     parentElement.appendChild(entry.view.getRootElement());
+    rootElementsToIndexMap.put(entry.view.getRootElement(), entries.size() - 1);
     entries.add(entry);
     try {
       setViewData(entry.view, entry.item);
@@ -125,6 +135,7 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> {
     }
     Entry<T, V> entry = entries.remove(index);
     entry.view.getRootElement().removeFromParent();
+    rootElementsToIndexMap.remove(entry.view.getRootElement());
     availableViews.add(entry.view);
     return entry.item;
   }
@@ -200,6 +211,7 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> {
       availableViews.add(entry.view);
     }
     entries.clear();
+    rootElementsToIndexMap.clear();
   }
 
   /**
@@ -223,12 +235,41 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> {
   }
 
   /**
+   * Returns the item that is related to an event fired from within an item view. If the event is not 
+   * fired from a sub-view of the item or the view is no longer attached in the hierarchy, it returns null.
+   * @param event The event from the event handler.
+   * @return The item associated with the event or null if the event was not fired from this {@code ViewAdapter}.
+   */
+  public T getItemFromEvent(DomEvent<?> event) {
+    Element e = event.getNativeEvent().getCurrentEventTarget().cast();
+    while (e != null && !e.hasClassName(ROOT_CLASS)) {
+      e = e.getParentElement();
+    }
+    if (e == null) {
+      return null;
+    }
+    Integer index = rootElementsToIndexMap.get(e);
+    return (index == null ? null : getItem(index));
+  }
+
+  /**
    * Override this method to return a {@link View} instance representing a single adapter item. This
-   * method will not be called if there is a currently unused view that will be reused.
+   * method will not be called if there is a currently unused view that will be reused. For any one-time 
+   * initialization of the view override the {@link #onViewLoaded(View)} method.
    * 
    * @return Instance of a {@link View} sub-interface.
    */
   protected abstract V createView();
+
+  /**
+   * Override this method to do one-time initialization of the created view. This method is called 
+   * after the view has been loaded so it's safe to set your handlers here.
+   * 
+   * @param view Instance of the view.
+   */
+  protected void onViewLoaded(V view) {
+    // Empty implementation
+  }
 
   /**
    * Override this method to update the view with the data from the object.

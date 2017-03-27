@@ -57,7 +57,6 @@ Create a `HelloView.html` that will hold the plain HTML content for our view:
 <div>
   <a href="javascript:void(0)" data-gwtid="greetLink">Greet</a>
   <input type="text" value="John Doe" data-gwtid="nameInput"/>
-  for the <span data-gwtid="counter"></span> time!
 </div>
 ```
 
@@ -65,7 +64,6 @@ Noticed the `data-gwtid` attributes? That's how we tell the compiler how to bind
 ```java
 public interface HelloView extends View<DivElement> {
   @HtmlElement InputElement getNameInput();
-  @HtmlElement SpanElement getCounter();
   @HtmlHandler("greetLink") void setGreetHandler(ClickHandler handler);
 }
 ```
@@ -97,9 +95,15 @@ Now comes the fun part. We'll create a presenter, that will work with the above 
 
 **HelloPresenter.java**
 ```java
-public class HelloPresenter extends BasePresenter<HelloView> {
-  public HelloPresenter(HelloView view) {
-    super("^(|greet/(.*))$", view);
+public class HelloPresenter extends BasePresenter<HelloPresenter.HelloView> {
+  interface HelloView extends View<DivElement> {
+    @HtmlElement InputElement getNameInput();
+    @HtmlHandler("greetLink") void setGreetHandler(ClickHandler handler);
+  }
+
+  public HelloPresenter() {
+    // The regex matches empty history token or the form "greet/(something)"
+    super("^(|greet/(.*))$", (HelloView) GWT.create(HelloView.class));
   }
 
   // One-time view initialization shall go here
@@ -107,7 +111,7 @@ public class HelloPresenter extends BasePresenter<HelloView> {
     getView().setGreetHandler(new ClickHandler() {
       @Override
       public void onClick(ClickEvent e) {
-        Window.alert("Hello " + view.getNameInput().getValue());
+        Window.alert("Hello " + getView().getNameInput().getValue());
       }
     });
   }
@@ -132,14 +136,15 @@ The `onShow(MatchResult)` method is called every time the history token changes 
 @Override
 public void onModuleLoad() {
   Mvp mvp = new Mvp(Document.get().getBody());
-  mvp.addPresenter(new HelloPresenter((HelloView) GWT.create(HelloView.class)));
+  mvp.addPresenter(new HelloPresenter());
+  // You can add more presenters here
   mvp.start();
 }
 ```
 
 Here we just create the MVP instance, pass the root element (parent element that will hold all the views) and add as many presenters as we need. As soon we hit the `mvp.start()` method the wheels start turning and from this point the MVP takes over.
 
-See [SamplesEntryPoint.java](https://github.com/turnsk/gwtmvp/blob/master/samples/src/sk/turn/gwtmvp/samples/client/SamplesEntryPoint.java), [HelloPresenter.java](https://github.com/turnsk/gwtmvp/blob/master/samples/src/sk/turn/gwtmvp/samples/client/presenters/HelloPresenter.java) and [HelloView.java](https://github.com/turnsk/gwtmvp/blob/master/samples/src/sk/turn/gwtmvp/samples/client/views/HelloView.java) for the sample source files.
+See [SamplesEntryPoint.java](https://github.com/turnsk/gwtmvp/blob/master/samples/src/sk/turn/gwtmvp/samples/client/SamplesEntryPoint.java) and [HelloPresenter.java](https://github.com/turnsk/gwtmvp/blob/master/samples/src/sk/turn/gwtmvp/samples/client/hello/HelloPresenter.java) for the sample source files.
 
 ## Loaders
 This is an optional helper class to assist with a common task -- showing a loading indicator while one or more background tasks are in progress. The `Loader` class allows you to register one or more HTML elements that represent loaders in your application and you can show/hide them anywhere within your app.
@@ -151,7 +156,7 @@ There are two kinds of loaders:
 ### Sample
 ```java
 // Register a counted loader we will use later
-Loader.register(DOM.findElementById("loaderId"), true);
+Loader.register(DOM.findElementById("loaderId"), true /* false for non-counted loader */);
 ...
 // Later, before making a server call
 Loader.show();

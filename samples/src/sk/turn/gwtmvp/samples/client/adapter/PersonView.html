@@ -1,0 +1,55 @@
+<div class="row">
+  <div class="col-md-12">
+    <h1>
+      <small><a href="javascipr:void(0)" data-gwtid="back"><span class="glyphicon glyphicon-menu-left"></span></a></small>
+      <span data-gwtid="name"></span>
+      <small>ID: <span data-gwtid="id"></span></small>
+    </h1>
+  </div>
+  <div class="col-md-2 text-right"><b>Email</b></div>
+  <div class="col-md-10" data-gwtid="email"></div>
+  <div class="col-md-2 text-right"><b>Phone</b></div>
+  <div class="col-md-10" data-gwtid="phone"></div>
+  <div class="col-md-2 text-right"><b>City</b></div>
+  <div class="col-md-10" data-gwtid="city"></div>
+  <!-- Source code -->
+  <div class="col-md-12">
+    <h2><small><a href="https://github.com/turnsk/gwtmvp/blob/master/samples/src/sk/turn/gwtmvp/samples/client/adapter/PersonPresenter.java" target="_blank">PersonPresenter.java</a></small></h2>
+    <pre class="pre-scrollable" style="max-height: 500px;">
+public class PersonPresenter extends BasePresenter&lt;PersonPresenter.PersonView&gt; {
+
+  interface PersonView extends View&lt;Element&gt; {
+    @HtmlHandler("back") void setBackHandler(ClickHandler handler);
+  }
+
+  public PersonPresenter() {
+    super("^person/([0-9]+)$", (PersonView) GWT.create(PersonView.class));
+  }
+
+  @Override
+  public void onViewLoaded() {
+    getView().setBackHandler(new ClickHandler() {
+      @Override
+      public void onClick(ClickEvent event) {
+        History.back();
+      }
+    });
+  }
+
+  @Override
+  public void onShow(MatchResult matchResult) {
+    Person person = DataProvider.getPerson(Long.parseLong(matchResult.getGroup(1)));
+    if (person == null) {
+      // The person does not exist
+      History.back();
+    }
+    setElementText("name", person.name);
+    setElementText("id", String.valueOf(person.id));
+    setElementText("phone", person.phone);
+    setElementText("email", person.email);
+    setElementText("city", person.city);
+  }
+
+}</pre>
+  </div>
+</div>

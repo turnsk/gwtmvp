@@ -17,9 +17,6 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.regexp.shared.RegExp;
 
-import sk.turn.gwtmvp.client.Presenter;
-import sk.turn.gwtmvp.client.View;
-
 /**
  * Basic implementation of {@link Presenter} interface. This class is a convenient and preferred way to use {@code Presenter}s. 
  * All you need to do is call the super constructor with proper parameters and override one or more of the event methods: 
@@ -59,10 +56,11 @@ import sk.turn.gwtmvp.client.View;
  * 
  * @param <V> The {@link View} class that this presenter works with.
  */
-public abstract class BasePresenter<V extends View<? extends Element>> implements Presenter<V> {
+public class BasePresenter<V extends View<? extends Element>> implements Presenter<V> {
 
   private RegExp regExp;
   private final V view;
+  private MatchResult currentMatchResult;
 
   public BasePresenter(String regExp, V view) {
     setTokenRegExp(regExp);
@@ -81,17 +79,33 @@ public abstract class BasePresenter<V extends View<? extends Element>> implement
 
   @Override
   public void onViewLoaded() {
-    // Nothing to do here
+    // Empty implementation
   }
 
   @Override
   public void onShow(MatchResult matchResult) {
-    // Nothing to do here
+    // Empty implementation
   }
 
   @Override
   public void onHide() {
-    // Nothing to do here
+    // Empty implementation
+  }
+
+  /**
+   * Returns the current visibility state of this presenter.
+   * @return True if this presenter is currently visible (active), false otherwise.
+   */
+  public boolean isVisible() {
+    return currentMatchResult != null;
+  }
+
+  /**
+   * Returns the current history token {@code MatchResult} that this presenter is showing or null if the presenter is hidden (inactive).
+   * @return Current history token {@code RegExp} match or null if presenter is hidden (inactive).
+   */
+  public MatchResult getCurrentMatchResult() {
+    return currentMatchResult;
   }
 
   /**
@@ -99,7 +113,30 @@ public abstract class BasePresenter<V extends View<? extends Element>> implement
    * @param regExp The new regular expression to use with this Presenter.
    */
   public void setTokenRegExp(String regExp) {
-    this.regExp = RegExp.compile(regExp);
+    this.regExp = (regExp != null ? RegExp.compile(regExp) : null);
+  }
+
+  /**
+   * Shorthand method to set inner text of a HTML element, the element has to have {@code data-gwtid} attribute. 
+   * It calls {@code getView().getElement(gwtId).setInnerText(text)}.
+   * @param gwtId The {@code data-gwtid} attribute of the element.
+   * @param text The text to set as inner text of the element.
+   */
+  public void setElementText(String gwtId, String text) {
+    Element e = getView().getElement(gwtId);
+    if (e != null) {
+      e.setInnerText(text);
+    }
+  }
+
+  void onPresenterShown(MatchResult matchResult) {
+    currentMatchResult = matchResult;
+    onShow(matchResult);
+  }
+
+  void onPresenterHidden() {
+    currentMatchResult = null;
+    onHide();
   }
 
 }
