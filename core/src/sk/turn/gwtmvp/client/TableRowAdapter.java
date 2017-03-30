@@ -13,7 +13,6 @@
  */
 package sk.turn.gwtmvp.client;
 
-import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.AnchorElement;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NodeList;
@@ -21,6 +20,7 @@ import com.google.gwt.dom.client.TableCellElement;
 import com.google.gwt.dom.client.TableElement;
 import com.google.gwt.dom.client.TableRowElement;
 import com.google.gwt.dom.client.TableSectionElement;
+import com.google.gwt.user.client.DOM;
 
 /**
  * Subclass of {@link ViewAdapter} to show items in a table row without the need to create {@link View} for it.
@@ -59,7 +59,22 @@ import com.google.gwt.dom.client.TableSectionElement;
  *
  * @param <T> Type of the object being displayed.
  */
-public abstract class TableRowAdapter<T> extends ViewAdapter<T, TableRowView> {
+public abstract class TableRowAdapter<T> extends ViewAdapter<T, TableRowAdapter.TableRowView> {
+
+  static class TableRowView implements View<TableRowElement> {
+    private TableRowElement rootElement;
+    @Override
+    public TableRowElement getRootElement() {
+      if (rootElement == null) {
+        rootElement = DOM.createTR().cast();
+      }
+      return rootElement;
+    }
+    @Override
+    public <E2 extends Element> E2 getElement(String gwtId) {
+      return null;
+    }
+  }
 
   private final int columns;
 
@@ -89,7 +104,7 @@ public abstract class TableRowAdapter<T> extends ViewAdapter<T, TableRowView> {
    */
   @Override
   public TableRowView createView() {
-    TableRowView row = GWT.create(TableRowView.class);
+    TableRowView row = new TableRowView();
     TableRowElement rowElement = row.getRootElement();
     for (int i = 0; i < columns; i++) {
       rowElement.appendChild(rowElement.getOwnerDocument().createTDElement());

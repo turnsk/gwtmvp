@@ -113,13 +113,9 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> {
       onViewLoaded(entry.view);
     }
     parentElement.appendChild(entry.view.getRootElement());
-    rootElementsToIndexMap.put(entry.view.getRootElement(), entries.size() - 1);
+    rootElementsToIndexMap.put(entry.view.getRootElement(), entries.size());
     entries.add(entry);
-    try {
-      setViewData(entry.view, entry.item);
-    } catch (Exception e) {
-      LOG.log(Level.SEVERE, "Call to ViewAdapter.setViewData(V, T) failed.", e);
-    }
+    safeSetViewData(entry);
   }
 
   /**
@@ -166,10 +162,22 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> {
    * @param items List of items to set to the adapter.
    */
   public void setItems(Iterable<T> items) {
-    // TODO Make the update more intelligent
-    clear();
+    int index = 0;
     for (T item : items) {
-      addItem(item);
+      if (index < entries.size()) {
+        // Reuse existing entry
+        Entry<T, V> entry = entries.get(index);
+        entry.item = item;
+        safeSetViewData(entry);
+      } else {
+        // Add new entry
+        addItem(item);
+      }
+      index++;
+    }
+    // Remove all excessive entries
+    while (index < entries.size()) {
+      removeAt(index);
     }
   }
 
@@ -219,7 +227,7 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> {
    * 
    * @param indices A list of indices to reload in the list, leave empty to reload all items.
    */
-  public void reload(Integer... indices) {
+  public void reload(int... indices) {
     if (indices.length > 0) {
       for (int index : indices) {
         if (index >= 0 && index < entries.size()) {
@@ -235,21 +243,32 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> {
   }
 
   /**
+   * Returns the item index that is related to an event fired from within an item view. If the event is not 
+   * fired from a sub-view of the item or the view is no longer attached in the hierarchy, it returns -1.
+   * @param event The event from the event handler.
+   * @return The item index associated with the event or -1 if the event was not fired from this {@code ViewAdapter}.
+   */
+  public int getItemIndexFromEvent(DomEvent<?> event) {
+    Element e = event.getNativeEvent().getCurrentEventTarget().cast();
+    while (e != null && !e.hasClassName(ROOT_CLASS)) {
+      e = e.getParentElement();
+    }
+    if (e == null) {
+      return -1;
+    }
+    Integer index = rootElementsToIndexMap.get(e);
+    return (index == null ? -1 : index);
+  }
+
+  /**
    * Returns the item that is related to an event fired from within an item view. If the event is not 
    * fired from a sub-view of the item or the view is no longer attached in the hierarchy, it returns null.
    * @param event The event from the event handler.
    * @return The item associated with the event or null if the event was not fired from this {@code ViewAdapter}.
    */
   public T getItemFromEvent(DomEvent<?> event) {
-    Element e = event.getNativeEvent().getCurrentEventTarget().cast();
-    while (e != null && !e.hasClassName(ROOT_CLASS)) {
-      e = e.getParentElement();
-    }
-    if (e == null) {
-      return null;
-    }
-    Integer index = rootElementsToIndexMap.get(e);
-    return (index == null ? null : getItem(index));
+    int index = getItemIndexFromEvent(event);
+    return (index == -1 ? null : getItem(index));
   }
 
   /**
@@ -278,5 +297,13 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> {
    * @param item Object to populate into the view.
    */
   protected abstract void setViewData(V view, T item);
+
+  private void safeSetViewData(Entry<T, V> entry) {
+    try {
+      setViewData(entry.view, entry.item);
+    } catch (Exception e) {
+      LOG.log(Level.SEVERE, "Call to ViewAdapter.setViewData(V, T) failed.", e);
+    }
+  }
 
 }
