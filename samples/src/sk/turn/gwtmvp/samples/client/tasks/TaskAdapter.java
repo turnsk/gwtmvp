@@ -38,8 +38,10 @@ public class TaskAdapter extends ViewAdapter<Task, TaskAdapter.TaskAdapterView> 
   }
 
   public void addTask() {
+    Task task = Task.createObject().<Task>cast();
+    task.setName("");
     JsArrayIterable<Task> tasks = Dao.getTasks();
-    tasks.push(Task.createObject().<Task>cast());
+    tasks.push(task);
     Dao.setTasks(tasks);
     setItems(tasks);
     startEdit(tasks.length() - 1);
