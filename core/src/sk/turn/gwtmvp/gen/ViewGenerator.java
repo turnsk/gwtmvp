@@ -30,6 +30,7 @@ import com.google.gwt.core.ext.typeinfo.JParameterizedType;
 import com.google.gwt.core.ext.typeinfo.TypeOracle;
 import com.google.gwt.event.shared.EventHandler;
 
+import sk.turn.gwtmvp.client.HandlerView;
 import sk.turn.gwtmvp.client.HtmlElement;
 import sk.turn.gwtmvp.client.HtmlHandler;
 import sk.turn.gwtmvp.client.View;
@@ -53,9 +54,13 @@ public class ViewGenerator extends IncrementalGenerator {
         return new RebindResult(RebindMode.USE_ALL_CACHED, packageName + "." + generatedClassName);
       }
       JParameterizedType superType = null;
+      String handlerType = null;
       for (JClassType intfc : viewType.getImplementedInterfaces()) {
-        if (intfc.getQualifiedSourceName().equals(View.class.getName())) {
+        if (intfc.getQualifiedSourceName().equals(View.class.getName()) || intfc.getQualifiedSourceName().equals(HandlerView.class.getName())) {
           superType = intfc.isParameterized();
+          if (intfc.getQualifiedSourceName().equals(HandlerView.class.getName())) {
+            handlerType = superType.getTypeArgs()[1].getQualifiedSourceName();
+          }
           break;
         }
       }
@@ -134,6 +139,9 @@ public class ViewGenerator extends IncrementalGenerator {
         w.println("  private " + entry.getValue().getReturnType().getQualifiedSourceName() + " generated_" + entry.getKey() + " = null;");
       }
       w.println("  private final Map<String, Element> elementsMap = new HashMap<>();");
+      if (handlerType != null) {
+        w.println("  private " + handlerType + " handler;");
+      }
       w.println();
       w.println("  @Override");
       w.println("  public " + rootElementType + " getRootElement() {");
@@ -163,6 +171,33 @@ public class ViewGenerator extends IncrementalGenerator {
         w.println("      LOG.severe(\"Could not find element with data-gwtid=\\\"" + entry.getKey() + "\\\" in " + viewType.getSimpleSourceName() + ".html.\");");
         w.println("    }");
       }
+      if (handlerType != null) {
+        // Map @HtmlHandlers of enclosing class
+        JClassType enclosingType = viewType.getEnclosingType();
+        JMethod[] methods = (enclosingType != null ? enclosingType.getMethods() : new JMethod[] { });
+        for (JMethod method : methods) {
+          HtmlHandler handlerAnnotation = method.getAnnotation(HtmlHandler.class);
+          if (handlerAnnotation == null) {
+            continue;
+          }
+          String eventType = method.getParameters()[0].getType().getQualifiedSourceName();
+          String eventHandlerType = eventType.substring(0, eventType.length() - 5) + "Handler";
+          String handlerMethod = "on" + eventType.substring(0, eventType.length() - 5).substring(eventType.lastIndexOf('.') + 1);
+          for (String elemId : handlerAnnotation.value()) {
+            w.println("    sk.turn.gwtmvp.client.EventManager.setEventHandler(getElement(\"" + elemId + "\"), " + eventType + ".getType(), new " + eventHandlerType + "() {");
+            w.println("      @Override");
+            w.println("      public void " + handlerMethod + "(" + eventType + " event) {");
+            w.println("        if (handler != null) {");
+            w.println("          try { handler." + method.getName() + "(event); }");
+            w.println("          catch (Exception e) { LOG.severe(\"Invoke of " + enclosingType.getName() + "." + method.getName() + " failed: \" + e); }");
+            w.println("        } else {");
+            w.println("          LOG.severe(\"Ignoring " + enclosingType.getName() + "." + method.getName() + " - no HandlerView.handler set\");");
+            w.println("        }");
+            w.println("      }");
+            w.println("    });");
+          }
+        }
+      }
       w.println("    return rootElement;");
       w.println("  }");
       w.println();
@@ -170,6 +205,13 @@ public class ViewGenerator extends IncrementalGenerator {
       w.println("  public <E2 extends Element> E2 getElement(String gwtId) {");
       w.println("    return (E2) elementsMap.get(gwtId);");
       w.println("  }");
+      if (handlerType != null) {
+        w.println();
+        w.println("  @Override");
+        w.println("  public void setHandler(" + handlerType + " handler) {");
+        w.println("    this.handler = handler;");
+        w.println("  }");
+      }
       for (Map.Entry<String, JMethod> entry : fieldsMap.entrySet()) {
         w.println();
         w.println("  @Override");
