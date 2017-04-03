@@ -18,22 +18,12 @@
     <pre class="pre-scrollable" style="max-height: 500px;">
 public class PersonPresenter extends BasePresenter&lt;PersonPresenter.PersonView&gt; {
 
-  interface PersonView extends View&lt;Element&gt; {
-    @HtmlHandler("back") void setBackHandler(ClickHandler handler);
+  interface PersonView extends HandlerView&lt;Element, PersonPresenter&gt; {
   }
 
   public PersonPresenter() {
     super("^person/([0-9]+)$", (PersonView) GWT.create(PersonView.class));
-  }
-
-  @Override
-  public void onViewLoaded() {
-    getView().setBackHandler(new ClickHandler() {
-      @Override
-      public void onClick(ClickEvent event) {
-        History.back();
-      }
-    });
+    getView().setHandler(this);
   }
 
   @Override
@@ -48,6 +38,11 @@ public class PersonPresenter extends BasePresenter&lt;PersonPresenter.PersonView
     setElementText("phone", person.phone);
     setElementText("email", person.email);
     setElementText("city", person.city);
+  }
+
+  @HtmlHandler("back")
+  void onBackClicked(ClickEvent event) {
+    History.back();
   }
 
 }</pre>

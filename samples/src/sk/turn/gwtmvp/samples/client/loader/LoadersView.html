@@ -21,14 +21,10 @@
     <pre class="pre-scrollable" style="max-height: 500px;">
 public class LoadersPresenter extends BasePresenter&lt;LoadersPresenter.LoadersView&gt; {
 
-  interface LoadersView extends View&lt;DivElement&gt; {
+  interface LoadersView extends HandlerView&lt;DivElement, LoadersPresenter&gt; {
     @HtmlElement SpanElement getLoader();
-    @HtmlHandler("showButton") void setShowHandler(ClickHandler handler);
-    @HtmlHandler("hideButton") void setHideHandler(ClickHandler handler);
     @HtmlElement SpanElement getCountedLoader();
     @HtmlElement SpanElement getLoadCount();
-    @HtmlHandler("showCountedButton") void setShowCountedHandler(ClickHandler handler);
-    @HtmlHandler("hideCountedButton") void setHideCountedHandler(ClickHandler handler);
   }
 
   private int loadCount = 0;
@@ -39,39 +35,35 @@ public class LoadersPresenter extends BasePresenter&lt;LoadersPresenter.LoadersV
 
   @Override
   public void onViewLoaded() {
+    getView().setHandler(this);
     // Register global (non-counted) loader
     Loader.register(getView().getLoader(), false);
     // Register named (counted) loader
     Loader.register("counted", getView().getCountedLoader(), true);
-    // Configure button handlers
-    getView().setShowHandler(new ClickHandler() {
-      @Override
-      public void onClick(ClickEvent event) {
-        Loader.show();
-      }
-    });
-    getView().setHideHandler(new ClickHandler() {
-      @Override
-      public void onClick(ClickEvent event) {
-        Loader.hide();
-      }
-    });
-    getView().setShowCountedHandler(new ClickHandler() {
-      @Override
-      public void onClick(ClickEvent event) {
-        Loader.show("counted");
-        getView().getLoadCount().setInnerText(String.valueOf(++loadCount));
-      }
-    });
-    getView().setHideCountedHandler(new ClickHandler() {
-      @Override
-      public void onClick(ClickEvent event) {
-        Loader.hide("counted");
-        if (loadCount &gt; 0) {
-          getView().getLoadCount().setInnerText(String.valueOf(--loadCount));
-        }
-      }
-    });
+  }
+
+  @HtmlHandler("showButton")
+  void onShowClicked(ClickEvent event) {
+    Loader.show();
+  }
+
+  @HtmlHandler("hideButton")
+  void onHideClicked(ClickEvent event) {
+    Loader.hide();
+  }
+
+  @HtmlHandler("showCountedButton")
+  void onShowCountedClicked(ClickEvent event) {
+    Loader.show("counted");
+    getView().getLoadCount().setInnerText(String.valueOf(++loadCount));
+  }
+
+  @HtmlHandler("hideCountedButton")
+  void onHideCountedClicked(ClickEvent event) {
+    Loader.hide("counted");
+    if (loadCount &gt; 0) {
+      getView().getLoadCount().setInnerText(String.valueOf(--loadCount));
+    }
   }
 
 }</pre>

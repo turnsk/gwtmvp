@@ -1,0 +1,93 @@
+<div class="row">
+  <div class="col-md-offset-4 col-md-4">
+    <h1>Tasks Login</h1>
+    <label>Username</label>
+    <input type="text" class="form-control" data-gwtid="username"/>
+    <p class="help-block">Type any username you want...</p>
+    <div class="text-right">
+      <button class="btn btn-primary" data-gwtid="login">Login</button>
+    </div>
+    <div class="progress hidden" data-gwtid="progress"><div class="progress-bar progress-bar-striped active" style="width: 100%;"></div></div>
+  </div>
+  <!-- Source code -->
+  <div class="col-md-12">
+    <h2><small><a href="https://github.com/turnsk/gwtmvp/blob/master/samples/src/sk/turn/gwtmvp/samples/client/tasks/TasksLoginPresenter.java" target="_blank">TasksLoginPresenter.java</a></small></h2>
+    <pre class="pre-scrollable" style="max-height: 500px;">
+public class TasksLoginPresenter extends BasePresenter&lt;TasksLoginPresenter.TasksLoginView&gt; {
+
+  interface TasksLoginView extends HandlerView&lt;Element, TasksLoginPresenter&gt; {
+    @HtmlElement InputElement getUsername();
+  }
+
+  private static final String REGEXP = "^tasks/.*$";
+
+  public TasksLoginPresenter() {
+    super(Dao.getUsername() != null ? null : REGEXP, (TasksLoginView) GWT.create(TasksLoginView.class));
+    // Add a handler for user login/logout
+    Dao.addOnUserChangedHandler(new Dao.OnUserChangedHandler() {
+      @Override
+      public void onUserChanged(String username) {
+        // Update this Presenter's RegExp to either handle all history tokens or none
+        setTokenRegExp(username != null ? null : REGEXP);
+        // Force MVP to update current presenter
+        History.fireCurrentHistoryState();
+      }
+    });
+  }
+
+  @Override
+  public void onViewLoaded() {
+    getView().setHandler(this);
+  }
+
+  @Override
+  public void onShow(MatchResult matchResult) {
+    // Give the username input focus
+    getView().getUsername().focus();
+  }
+
+  @HtmlHandler("login")
+  void onLogin(ClickEvent event) {
+    final String username = getView().getUsername().getValue();
+    if (username.length() == 0) {
+      return;
+    }
+    // You may want to validate the username (and password) here, we'll just grab the list of tasks from server
+    // See if we have the tasks already loaded or stored
+    if (Dao.getTasks() != null) {
+      Dao.setUsername(username);
+      return;
+    }
+    try {
+      showProgess(true);
+      new RequestBuilder(RequestBuilder.GET, GWT.getModuleBaseForStaticFiles() + "tasks.json").sendRequest(null, new RequestCallback() {
+        @Override
+        public void onResponseReceived(Request request, Response response) {
+          showProgess(false);
+          if (response.getStatusCode() == 200) {
+            Dao.setTasks(JsonUtils.&lt;JsArray&lt;Task&gt;&gt;safeEval(response.getText()));
+            Dao.setUsername(username);
+          } else {
+            onError(request, new Exception("Invalid response status code: " + response.getStatusCode()));
+          }
+        }
+        @Override
+        public void onError(Request request, Throwable exception) {
+          showProgess(false);
+          Window.alert("Failed logging in: " + exception);
+        }
+      });
+    } catch (RequestException e) {
+      showProgess(false);
+      Window.alert("Failed logging in: " + e);
+    }
+  }
+
+  private void showProgess(boolean show) {
+    getView().getElement(show ? "login" : "progress").addClassName("hidden");
+    getView().getElement(show ? "progress" : "login").removeClassName("hidden");
+  }
+
+}&lt;/pre&gt;
+  </div>
+</div>

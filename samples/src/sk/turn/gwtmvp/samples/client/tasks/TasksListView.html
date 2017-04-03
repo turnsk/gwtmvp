@@ -1,0 +1,293 @@
+<div class="row">
+  <style>.finished { text-decoration: line-through; color: #aaa; }</style>
+  <div class="col-md-offset-3 col-md-6">
+    <h1>
+      <span style="float: right;"><a href="javascript:void(0)" class="btn btn-default" data-gwtid="addButton"><span class="glyphicon glyphicon-plus"></span></a></span>
+      <span data-gwtid="username"></span> Tasks
+      <small>(<a href="javascript:void(0)" data-gwtid="logout">logout</a>)</small>
+    </h1>
+  </div>
+  <div class="col-md-offset-3 col-md-6 well" data-gwtid="tasksContainer">
+  </div>
+  <!-- Source code -->
+  <div class="col-md-12">
+    <h2><small><a href="https://github.com/turnsk/gwtmvp/blob/master/samples/src/sk/turn/gwtmvp/samples/client/tasks/TasksListPresenter.java" target="_blank">TasksListPresenter.java</a></small></h2>
+    <pre class="pre-scrollable" style="max-height: 500px;">
+public class TasksListPresenter extends BasePresenter&lt;TasksListPresenter.TasksListView&gt; implements Dao.OnUserChangedHandler {
+
+  interface TasksListView extends HandlerView&lt;Element, TasksListPresenter&gt; {
+    @HtmlElement SpanElement getUsername();
+    @HtmlElement Element getTasksContainer();
+  }
+
+  public TasksListPresenter() {
+    super("^tasks/list$", (TasksListView) GWT.create(TasksListView.class));
+  }
+
+  private TaskAdapter taskAdapter;
+
+  @Override
+  public void onViewLoaded() {
+    getView().setHandler(this);
+    Dao.addOnUserChangedHandler(this);
+    onUserChanged(Dao.getUsername());
+    taskAdapter = new TaskAdapter(getView().getTasksContainer());
+  }
+
+  @Override
+  public void onShow(MatchResult matchResult) {
+    taskAdapter.setItems(Dao.getTasks());
+  }
+
+  @Override
+  public void onUserChanged(String username) {
+    getView().getUsername().setInnerText(username != null ? username + (username.endsWith("s") ? "'" : "'s") : "");
+  }
+
+  @HtmlHandler("addButton")
+  void onAddTask(ClickEvent event) {
+    taskAdapter.addTask();
+  }
+
+  @HtmlHandler("logout")
+  void onLogout(ClickEvent event) {
+    if (Window.confirm("Logging out also clears your task list, proceed?")) {
+      Dao.setTasks(null);
+      Dao.setUsername(null);
+    }
+  }
+
+}</pre>
+  </div>
+  <div class="col-md-12">
+    <h2><small><a href="https://github.com/turnsk/gwtmvp/blob/master/samples/src/sk/turn/gwtmvp/samples/client/tasks/Task.java" target="_blank">Task.java</a></small></h2>
+    <pre>
+public class Task extends JavaScriptObject {
+  protected Task() { }
+
+  public final native String getName() /*-{ return this.name; }-*/;
+  public final native void setName(String name) /*-{ this.name = name; }-*/;
+  public final native boolean isFinished() /*-{ return this.finished; }-*/;
+  public final native void setFinished(boolean finished) /*-{ this.finished = finished; }-*/;
+}</pre>
+  </div>
+  <div class="col-md-12">
+    <h2><small><a href="https://github.com/turnsk/gwtmvp/blob/master/samples/src/sk/turn/gwtmvp/samples/client/tasks/TaskAdapter.java" target="_blank">TaskAdapter.java</a></small></h2>
+    <pre class="pre-scrollable" style="max-height: 500px;">
+public class TaskAdapter extends ViewAdapter&lt;Task, TaskAdapter.TaskAdapterView&gt; {
+
+  interface TaskAdapterView extends HandlerView&lt;Element, TaskAdapter&gt; {
+    @HtmlElement DivElement getRoot();
+    @HtmlElement InputElement getCheck();
+    @HtmlElement DivElement getName();
+    @HtmlElement InputElement getNameInput();
+    @HtmlElement AnchorElement getEditButton();
+    @HtmlElement AnchorElement getRemoveButton();
+  }
+
+  public TaskAdapter(Element parentElement) {
+    super(parentElement);
+  }
+
+  public void addTask() {
+    JsArrayIterable&lt;Task&gt; tasks = Dao.getTasks();
+    tasks.push(Task.createObject().&lt;Task&gt;cast());
+    Dao.setTasks(tasks);
+    setItems(tasks);
+    startEdit(tasks.length() - 1);
+  }
+
+  @Override
+  protected TaskAdapterView createView() {
+    TaskAdapterView view = GWT.create(TaskAdapterView.class);
+    view.setHandler(this);
+    return view;
+  }
+
+  @Override
+  protected void setViewData(TaskAdapterView view, Task item) {
+    view.getCheck().setChecked(item.isFinished());
+    view.getName().setInnerText(item.getName());
+    if (item.isFinished()) {
+      view.getName().addClassName("finished");
+      view.getEditButton().addClassName("hidden");
+    } else {
+      view.getName().removeClassName("finished");
+      view.getEditButton().removeClassName("hidden");
+    }
+  }
+
+  @HtmlHandler("root")
+  void onMouseOver(MouseOverEvent event) {
+    TaskAdapterView view = getItemView(getItemIndexFromEvent(event));
+    view.getEditButton().getStyle().setVisibility(Visibility.VISIBLE);
+    view.getRemoveButton().getStyle().setVisibility(Visibility.VISIBLE);
+  }
+
+  @HtmlHandler("root")
+  void onMouseOut(MouseOutEvent event) {
+    TaskAdapterView view = getItemView(getItemIndexFromEvent(event));
+    view.getEditButton().getStyle().setVisibility(Visibility.HIDDEN);
+    view.getRemoveButton().getStyle().setVisibility(Visibility.HIDDEN);
+  }
+
+  @HtmlHandler("check")
+  void onCheckChange(ChangeEvent event) {
+    int index = getItemIndexFromEvent(event);
+    getItem(index).setFinished(getItemView(index).getCheck().isChecked());
+    rearrangeTasks();
+  }
+
+  @HtmlHandler("nameInput")
+  void onNameKeyUp(KeyUpEvent event) {
+    if (event.getNativeKeyCode() == KeyCodes.KEY_ENTER || event.getNativeKeyCode() == KeyCodes.KEY_ESCAPE) {
+      finishEdit(event, event.getNativeKeyCode() == KeyCodes.KEY_ENTER);
+    }
+  }
+
+  @HtmlHandler("nameInput")
+  void onNameBlur(BlurEvent event) {
+    finishEdit(event, true);
+  }
+
+  private void finishEdit(DomEvent&lt;?&gt; event, boolean save) {
+    int index = getItemIndexFromEvent(event);
+    Task task = getItem(index);
+    TaskAdapterView view = getItemView(index);
+    if (save) {
+      if (view.getNameInput().getValue().trim().length() == 0) {
+        removeTask(index);
+      } else {
+        task.setName(view.getNameInput().getValue());
+        view.getName().setInnerText(task.getName());
+        Dao.onTasksChanged();
+      }
+    }
+    view.getEditButton().removeClassName("hidden");
+    view.getRemoveButton().removeClassName("hidden");
+    view.getName().removeClassName("hidden");
+    view.getNameInput().addClassName("hidden");
+  }
+
+  @HtmlHandler("editButton")
+  void onEditClick(ClickEvent event) {
+    startEdit(getItemIndexFromEvent(event));
+  }
+
+  private void startEdit(int index) {
+    Task task = getItem(index);
+    TaskAdapterView view = getItemView(index);
+    view.getEditButton().addClassName("hidden");
+    view.getRemoveButton().addClassName("hidden");
+    view.getName().addClassName("hidden");
+    view.getNameInput().removeClassName("hidden");
+    view.getNameInput().setValue(task.getName());
+    view.getNameInput().focus();
+  }
+
+  @HtmlHandler("removeButton")
+  void onClick(ClickEvent event) {
+    removeTask(getItemIndexFromEvent(event));
+  }
+
+  private void removeTask(int index) {
+    JsArray&lt;Task&gt; tasks = Dao.getTasks();
+    JsArrayIterable&lt;Task&gt; newTasks = JavaScriptObject.createArray().cast();
+    // Copy the tasks but for the current
+    for (int i = 0; i &lt; tasks.length(); i++) {
+      if (i != index) {
+        newTasks.push(tasks.get(i));
+      }
+    }
+    Dao.setTasks(newTasks);
+    setItems(newTasks);
+  }
+
+  private void rearrangeTasks() {
+    JsArrayIterable&lt;Task&gt; newTasks = JavaScriptObject.createArray().cast();
+    JsArrayIterable&lt;Task&gt; oldTasks = Dao.getTasks();
+    for (Task task : oldTasks) {
+      if (!task.isFinished()) {
+        newTasks.push(task);
+      }
+    }
+    for (Task task : oldTasks) {
+      if (task.isFinished()) {
+        newTasks.push(task);
+      }
+    }
+    Dao.setTasks(newTasks);
+    setItems(newTasks);
+  }
+
+}</pre>
+  </div>
+  <div class="col-md-12">
+    <h2><small><a href="https://github.com/turnsk/gwtmvp/blob/master/samples/src/sk/turn/gwtmvp/samples/client/tasks/Dao.java" target="_blank">Dao.java</a></small></h2>
+    <pre class="pre-scrollable" style="max-height: 500px;">
+public class Dao {
+
+  interface OnUserChangedHandler {
+    void onUserChanged(String username);
+  }
+
+  interface OnTasksLoadedCallback {
+    void onTasksLoaded(JsArray&lt;Task&gt; tasks);
+  }
+
+  private static final Storage localStorage = Storage.getLocalStorageIfSupported();
+  private static String username = (localStorage != null ? localStorage.getItem("username") : null);
+  private static final List&lt;OnUserChangedHandler&gt; onUserChangedHandlers = new ArrayList&lt;&gt;();
+  private static JsArrayIterable&lt;Task&gt; tasks;
+
+  public static String getUsername() {
+    return username;
+  }
+
+  public static void setUsername(String username) {
+    Dao.username = username;
+    if (localStorage != null) {
+      if (username == null) {
+        localStorage.removeItem("username");
+        localStorage.removeItem("tasks");
+      } else {
+        localStorage.setItem("username", username);
+      }
+    }
+    for (OnUserChangedHandler handler : onUserChangedHandlers) {
+      handler.onUserChanged(username);
+    }
+  }
+
+  public static void addOnUserChangedHandler(OnUserChangedHandler handler) {
+    onUserChangedHandlers.add(handler);
+  }
+
+  public static JsArrayIterable&lt;Task&gt; getTasks() {
+    if (tasks == null &amp;&amp; localStorage != null) {
+      String tasksJson = localStorage.getItem("tasks");
+      if (tasksJson != null) {
+        tasks = JsonUtils.&lt;JsArrayIterable&lt;Task&gt;&gt;safeEval(tasksJson);
+      }
+    }
+    return tasks;
+  }
+
+  public static void setTasks(JsArray&lt;Task&gt; tasks) {
+    Dao.tasks = (tasks != null ? tasks.&lt;JsArrayIterable&lt;Task&gt;&gt;cast() : null);
+    onTasksChanged();
+  }
+
+  public static void onTasksChanged() {
+    if (localStorage != null) {
+      if (tasks != null) {
+        localStorage.setItem("tasks", JsonUtils.stringify(tasks));
+      } else {
+        localStorage.removeItem("tasks");
+      }
+    }
+  }
+
+}</pre>
+  </div>
+</div>

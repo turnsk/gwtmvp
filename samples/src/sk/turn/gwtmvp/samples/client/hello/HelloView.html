@@ -13,35 +13,16 @@
     <pre class="pre-scrollable" style="max-height: 500px;">
 public class HelloPresenter extends BasePresenter&lt;HelloPresenter.HelloView&gt; {
 
-  interface HelloView extends View&lt;DivElement&gt; {
+  interface HelloView extends HandlerView&lt;DivElement, HelloPresenter&gt; {
     @HtmlElement InputElement getNameInput();
     @HtmlElement SpanElement getCounter();
-    @HtmlHandler("nameInput") void setInputKeyPressHandler(KeyPressHandler handler);
-    @HtmlHandler("greetLink") void setGreetHandler(ClickHandler handler);
   }
 
   private int counter = 1;
 
   public HelloPresenter() {
     super("^hello$", (HelloView) GWT.create(HelloView.class));
-  }
-
-  @Override
-  public void onViewLoaded() {
-    getView().setInputKeyPressHandler(new KeyPressHandler() {
-      @Override
-      public void onKeyPress(KeyPressEvent event) {
-        if (event.getCharCode() == KeyCodes.KEY_ENTER) {
-          greet();
-        }
-      }
-    });
-    getView().setGreetHandler(new ClickHandler() {
-      @Override
-      public void onClick(ClickEvent e) {
-        greet();
-      }
-    });
+    getView().setHandler(this);
   }
 
   @Override
@@ -50,7 +31,15 @@ public class HelloPresenter extends BasePresenter&lt;HelloPresenter.HelloView&gt
     getView().getNameInput().focus();
   }
 
-  private void greet() {
+  @HtmlHandler("nameInput")
+  void onNameKeyPress(KeyPressEvent event) {
+    if (event.getCharCode() == KeyCodes.KEY_ENTER) {
+      onGreetClick(null);
+    }
+  }
+
+  @HtmlHandler("greetLink")
+  void onGreetClick(ClickEvent event) {
     String name = getView().getNameInput().getValue();
     Window.alert("Hello " + (name.length() == 0 ? "Mr. Nobody" : name) + " for the " + formatCounter() + " time!");
     counter++;

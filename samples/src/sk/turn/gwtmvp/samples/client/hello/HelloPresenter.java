@@ -5,49 +5,28 @@ import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.dom.client.InputElement;
 import com.google.gwt.dom.client.SpanElement;
 import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyPressEvent;
-import com.google.gwt.event.dom.client.KeyPressHandler;
 import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.user.client.Window;
 
 import sk.turn.gwtmvp.client.BasePresenter;
+import sk.turn.gwtmvp.client.HandlerView;
 import sk.turn.gwtmvp.client.HtmlElement;
 import sk.turn.gwtmvp.client.HtmlHandler;
-import sk.turn.gwtmvp.client.View;
 
 public class HelloPresenter extends BasePresenter<HelloPresenter.HelloView> {
 
-  interface HelloView extends View<DivElement> {
+  interface HelloView extends HandlerView<DivElement, HelloPresenter> {
     @HtmlElement InputElement getNameInput();
     @HtmlElement SpanElement getCounter();
-    @HtmlHandler("nameInput") void setInputKeyPressHandler(KeyPressHandler handler);
-    @HtmlHandler("greetLink") void setGreetHandler(ClickHandler handler);
   }
 
   private int counter = 1;
 
   public HelloPresenter() {
     super("^hello$", (HelloView) GWT.create(HelloView.class));
-  }
-
-  @Override
-  public void onViewLoaded() {
-    getView().setInputKeyPressHandler(new KeyPressHandler() {
-      @Override
-      public void onKeyPress(KeyPressEvent event) {
-        if (event.getCharCode() == KeyCodes.KEY_ENTER) {
-          greet();
-        }
-      }
-    });
-    getView().setGreetHandler(new ClickHandler() {
-      @Override
-      public void onClick(ClickEvent e) {
-        greet();
-      }
-    });
+    getView().setHandler(this);
   }
 
   @Override
@@ -56,7 +35,15 @@ public class HelloPresenter extends BasePresenter<HelloPresenter.HelloView> {
     getView().getNameInput().focus();
   }
 
-  private void greet() {
+  @HtmlHandler("nameInput")
+  void onNameKeyPress(KeyPressEvent event) {
+    if (event.getCharCode() == KeyCodes.KEY_ENTER) {
+      onGreetClick(null);
+    }
+  }
+
+  @HtmlHandler("greetLink")
+  void onGreetClick(ClickEvent event) {
     String name = getView().getNameInput().getValue();
     Window.alert("Hello " + (name.length() == 0 ? "Mr. Nobody" : name) + " for the " + formatCounter() + " time!");
     counter++;
