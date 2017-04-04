@@ -1,13 +1,19 @@
 # GWT MVP
 [MVP](https://en.wikipedia.org/wiki/Model-view-presenter) library for [GWT](http://www.gwtproject.org/), adding a light-weighted, easy-to-use MVP framework, plain HTML-to-Java binding and at the same time taking the complexity off of the built-in widgets library.
 
+* [GWT MVP Showcase](https://turnsk.github.io/gwtmvp/)
+* [Read Javadoc](https://jitpack.io/sk/turn/gwtmvp/1.1/javadoc/)
+* [Download JAR](https://jitpack.io/sk/turn/gwtmvp/1.1/gwtmvp-1.1.jar)
+
+## Contents
 * [Assumptions and Goals](#assumptions-and-goals)
 * [Build Configuration](#build-configuration)
-* [Resources](#resources)
 * [Views](#views)
 * [Presenters](#presenters)
 * [Standalone View usage](#standalone-view-usage)
 * [Loaders](#loaders)
+* [View adapters](#view-adapters)
+* [Table adapters](#table-adapters)
 
 ## Assumptions and Goals
 Following assumptions were considered when designing this library:
@@ -42,13 +48,9 @@ repositories {
 ```gradle
 dependencies {
   ...
-  providedCompile 'sk.turn:gwtmvp:1.0.7'
+  providedCompile 'sk.turn:gwtmvp:1.1'
 }
 ```
-
-## Resources
-* [Read Javadoc](https://jitpack.io/sk/turn/gwtmvp/1.0.7/javadoc/)
-* [Download JAR](https://jitpack.io/sk/turn/gwtmvp/1.0.7/gwtmvp-1.0.7.jar)
 
 ## Views
 We'll create a simple view that will pop-up a value entered into an `<input>` field.
@@ -63,7 +65,7 @@ Create a `HelloView.html` that will hold the plain HTML content for our view:
 
 Noticed the `data-gwtid` attributes? That's how we tell the compiler how to bind this HTML onto the following `View` interface:
 ```java
-public interface HelloView extends View<Element> {
+public interface HelloView extends View<DivElement> {
   @HtmlElement InputElement getNameInput();
   @HtmlHandler("greetLink") void setGreetHandler(ClickHandler handler);
 }
@@ -73,7 +75,7 @@ In order to automatically map HTML elements onto the generated methods, we need 
 
 The `@HtmlHandler` annotation allows you to easily bind DOM events onto your handler implementations. In this particular case calling `setGreetHandler()` will allow you to capture all click events on the anchor element, see sample below.
 
-That's it! That's all that's necessary to use the library HTML to GWT binding mechanism. To use this particular view in the MVP framework, we need to crate a Presenter.
+We'll get on with creating a Presenter for this view.
 
 ## Presenters
 Now comes the fun part. We'll create a presenter, that will work with the above view and add it to the MVP framework.
@@ -81,41 +83,41 @@ Now comes the fun part. We'll create a presenter, that will work with the above 
 **HelloPresenter.java**
 ```java
 public class HelloPresenter extends BasePresenter<HelloPresenter.HelloView> {
-  interface HelloView extends View<Element> {
+  interface HelloView extends HandlerView<DivElement, HelloPresenter> {
     @HtmlElement InputElement getNameInput();
-    @HtmlHandler("greetLink") void setGreetHandler(ClickHandler handler);
+    // Event handler is directly in HelloPresenter now
   }
 
   public HelloPresenter() {
     super("^greet(/(.+))?$", (HelloView) GWT.create(HelloView.class));
-  }
-
-  // One-time view initialization shall go here
-  public void onViewLoaded() {
-    getView().setGreetHandler(new ClickHandler() {
-      @Override
-      public void onClick(ClickEvent e) {
-        Window.alert("Hello " + getView().getNameInput().getValue());
-      }
-    });
+    getView().setHandler(this); // Let the view know that we're handling all the events
   }
 
   // This method is called everytime the history token changes and this presenter's regex matches it
+  @Override
   public void onShow(MatchResult matchResult) {
     String name = (matchResult.getGroupCount() >= 3 ? matchResult.getGroup(2) : null);
     if (name != null) {
       getView().getNameInput().setValue(name);
     }
   }
+
+  // This method is automatically bound to click events of "greetLink" thanks to HandlerView
+  @HtmlHandler("greetLink")
+  void onGreetClick(ClickEvent event) {
+    Window.alert("Hello " + getView().getNameInput().getValue());
+  }
 }
 ```
 We have defined a class that is (extends) a presenter that presents the `HelloView`. For code brewity we've included the view as an internal interface of the Presenter. We've extended the `BasePresenter` which already has some basic implementation and logic, though if you need more control over you can implement the `Presenter` interface directly.
 
+The view interface extends from `HandlerView` as opposed from `View` as it was in the previous section. Although coupling View with a Presenter is a deviation from the MVP principles, in this case it removes the necessity to bind the event handlers manually in `Presenter.onViewLoaded()`. Should you need strict separation of Views (for unit testing or any other reason) extend your view from `View` interface and bind the handlers manually.
+
 Every presenter has its regular expression that is validated against the current GWT history token (if you're not familiar with how GWT history works [read here](http://www.gwtproject.org/doc/latest/DevGuideCodingBasicsHistory.html)), so that the MVP framework can find the best presenter for the current state. In this case, the `HelloPresenter` handles `greet` tokens or ones matching the pattern `greet/(name)`.
 
-`onViewLoaded()` serves as a one-time initialization, in most cases for the view. Since the view fields and methods are only usable once the `View.getRootElement()` method has been called this is the right place for any view initialization. And since `onShow()` may be called many times it's also recommended that the presenter itself does one-time initialization here (as opposed to constructor), as it might avoid the initialization completely in case the presenter is never shown.
-
 The `onShow(MatchResult)` method is called every time the history token changes and this presenter's token regex matches it. The `MatchResult` argument has the regex matching result of the current history token, so if you define groups in your regex, those are already populated in the argument. In most cases this method will fetch some identifiers from the history token and load/show the corresponding data in its view. Here we check whether a name was included in the token and if so populate the input field.
+
+The method `onGreetClick` annotated with `@HtmlHandler` gets called everytime the element with `data-gwtid="greetLink"` is clicked. Should you need to handle other events, just create annotated methods with appropriate event classes as the parameter, `HandlerView` generator will take care of the rest. Though, don't forget to call `HandlerView.setHandler` method to wire it all up.
 
 **EntryPoint.java**
 ```java
@@ -171,3 +173,127 @@ Loader.hide();
 ```
 
 You also may use more than one loader, in such case use the methods that get a tag (identifier) as the first parameter.
+
+### LoaderAsyncCallback
+`LoaderAsyncCallback` is a helper `AsyncCallback` implementation that will display a loader prior making the async request and then hide it when a response (either successful or an exception) is received. The constructor can optionally take an identifier of a registered loader to use, otherwise it'll use the global loader. A sample usage of this class:
+```java
+customServiceAsync.getSomeData(param1, param2, new LoaderAsyncCallback<String>() {
+  @Override
+  public void onSuccess(String result) {
+    super.onSuccess(result);
+    // Handle the result
+  }
+  @Override
+  public void onFailure(Throwable caught) {
+    super.onFailure(result);
+    // Handle the excpetion
+  }
+});
+```
+
+## View adapters
+View adapters come in handy when you need to display repetitive data, most of the time lists or tables. It also had the advantage that is reuses old views so it's also effective and doesn't waste resources. You define which view and how will be used for showing the data.
+
+**PersonView.html**
+```html
+<div>
+  <a href="javascript:void(0)" style="float:right;" data-gwtid="delete">&times;</a>
+  <a data-gwtid="name"></a>
+</div>
+```
+
+**PersonAdapter.java**
+```java
+class PersonAdapter extends ViewAdapter<PersonAdapter.PersonView, Person> {
+  interface PersonView extends HandlerView<DivElement, PersonAdapter> {
+    @HtmlElement AnchorElement getName();
+  }
+  public PersonAdapter(Element parentElement) {
+    super(parentElement);
+  }
+  @Override
+  protected PersonView createView() {
+    PersonView view = GWT.create(PersonView.class);
+    view.setHandler(this);
+    return view;
+  }
+  @Override
+  protected void setViewData(PersonView view, Person item) {
+    view.getName().setInnerText(item.getName());
+    view.getName().setHref("person/" + item.getId());
+  }
+  @HtmlHandler("delete")
+  void onRemoveClicked(ClickEvent event) {
+    int index = getItemIndexFromEvent(event);
+    Person person = getItemFromEvent(event);
+    // Remove either based on index or person object directly
+    // Update the items in the adapter
+  }
+}
+```
+
+We first define the interface of view representing each of the adapter items. A constructor that defines the parent of all item views has to be retained.
+
+Then we implement methods that
+1. create an instance of the view (only called when a previously created view cannot be reused)
+2. update the view to match the data object (this method may be called for a single view many times with different objects)
+
+The last event handler shows how to get either an item index (`ViewAdapter.getItemIndexFromEvent`) or the item object itself (`ViewAdapter.getItemFromEvent`) from any event object. There's also method `ViewAdapter.getItemViewFromEvent` that'll return the view associated with the event.
+
+To use a view adapter in a Presenter, you'd create an instance with a parent element and set the data as needed:
+```java
+public class SomePresenter extends BasePresenter<SomeView> {
+  ...
+  private PersonAdapter adapter;
+  ...
+  @Override
+  public void onViewLoaded() {
+    adapter = new PersonAdapter(getView().getPersonContainer());
+    ...
+  }
+  @Override
+  public void onShow(MatchResult matchResult) {
+    List<Person> people;
+    // Load the person list
+    adapter.setItems(people);
+  }
+}
+```
+
+## Table adapters
+Since a very common scenario is to list data in a table and creating a separate view for every type of object may be tedious and flood the project with similar java/HTML files, we've created a `TableRowAdapter` class that takes the load off. It is a `ViewAdapter` in the end, though it creates the table rows at runtime and allows you to format the data anyway you need.
+```java
+personAdapter = new TableRowAdapter<Person>(getView().getTable(), 2) {
+  @Override
+  protected String getCellText(int column, Person item) {
+    switch (column) {
+      case 0:
+        return item.getName();
+      case 1:
+        return item.getEmail();
+    }
+    return null;
+  }
+  @Override
+  protected String getCellHistoryToken(int column, Person item) {
+    return (column == 0 ? "person/" + item.id : null);
+  }
+};
+```
+
+Here we've created a table-row adapter with a parent table element and each row will have two columns. `TableRowAdapter.getCellText` is called for every column and every object letting you to choose the appropriate values. Should you want to have links in a cell `getCellHistoryToken` lets you to choose GWT history tokens for individual columns (`null` means the cell should have no link).
+
+There are cases where you may need to customize the cell even further, in that case override `TableRowAdapter.setTableCell` method:
+```java
+  ...
+  @Override
+  protected void setTableCell(int column, TableCellElement elem, Person item) {
+    // You may decide not to call the super-method, in which case you have full control of the cell yourself
+    super.setTableCell(column, elem, item);
+    if (column == 1) {
+      // Right-align content in the second column
+      elem.getStyle().setTextAlign(Style.TextAlign.RIGHT);
+    }
+  }
+  ...
+```
