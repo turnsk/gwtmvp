@@ -30,11 +30,11 @@ import com.google.gwt.dom.client.Element;
  *});</code></pre>
  * <p>
  * In {@code HandlerView} you define the class that will implement the handler methods for this view
- * <pre><code>interface MyView extends HandlerView<DivElement, MyEventHandler></code></pre>
+ * <pre><code>interface MyView extends HandlerView&lt;DivElement, MyEventHandler&gt;</code></pre>
  * Add the handlers directly in the class implementation
  * <pre><code>class MyEventHandler { // This may as well (and often will) be the Presenter itself
  *  ...
- *  @{literal @}HtmlHandler("link") // Here goes the data-gwtid attribute(s) for which to handle the event
+ *  {@literal @}HtmlHandler("link") // Here goes the data-gwtid attribute(s) for which to handle the event
  *  void onLinkClicked(ClickEvent event) { // The method name does not matter, the only one parameter must be a DomEvent<?> class.
  *    // Implementation here
  *  }
