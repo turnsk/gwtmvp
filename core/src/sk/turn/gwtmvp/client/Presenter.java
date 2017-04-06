@@ -14,7 +14,6 @@
 package sk.turn.gwtmvp.client;
 
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.regexp.shared.RegExp;
 
 /**
@@ -55,7 +54,7 @@ import com.google.gwt.regexp.shared.RegExp;
  *  }
  *
  *  {@literal @}Override
- *  public void onShow(MatchResult matchResult) {
+ *  public void onShow(String... groups) {
  *    view.getCounter().setInnerText(formatCounter());
  *  }
  *
@@ -104,7 +103,7 @@ public interface Presenter<V extends View<? extends Element>> {
    * Called for one-time initialization of this presenter, in most cases the related {@link View}.
    * At the time of calling this method the {@link View} is already attached to the browser DOM.
    * This method is called only once in the lifetime of the presenter and immediately before the
-   * {@code #onShow(MatchResult)} method is called.
+   * {@code #onShow(String...)} method is called.
    */
   void onViewLoaded();
 
@@ -114,10 +113,11 @@ public interface Presenter<V extends View<? extends Element>> {
    * same presenter matches the token, this method is called without de- and re-attaching the
    * {@link View}.
    * 
-   * @param matchResult The match result of the regular expression validation, see
-   *          {@link #getTokenRegExp()}.
+   * @param groups The match result groups of the regular expression validation, see
+   *          {@link #getTokenRegExp()}. For optional groups the value may be null or empty string, 
+   *          depending on the browser implementation. To be safe, you should check for both.
    */
-  void onShow(MatchResult matchResult);
+  void onShow(String... groups);
 
   /**
    * Called when this presenter is about to be hidden. At the time of calling this method the

@@ -2,8 +2,8 @@
 [MVP](https://en.wikipedia.org/wiki/Model-view-presenter) library for [GWT](http://www.gwtproject.org/), adding a light-weighted, easy-to-use MVP framework, plain HTML-to-Java binding and at the same time taking the complexity off of the built-in widgets library.
 
 * [GWT MVP Showcase](https://turnsk.github.io/gwtmvp/)
-* [Read Javadoc](https://jitpack.io/sk/turn/gwtmvp/1.1/javadoc/)
-* [Download JAR](https://jitpack.io/sk/turn/gwtmvp/1.1/gwtmvp-1.1.jar)
+* [Read Javadoc](https://jitpack.io/sk/turn/gwtmvp/1.2/javadoc/)
+* [Download JAR](https://jitpack.io/sk/turn/gwtmvp/1.2/gwtmvp-1.2.jar)
 
 ## Contents
 * [Assumptions and Goals](#assumptions-and-goals)
@@ -48,7 +48,7 @@ repositories {
 ```gradle
 dependencies {
   ...
-  providedCompile 'sk.turn:gwtmvp:1.1'
+  providedCompile 'sk.turn:gwtmvp:1.2'
 }
 ```
 
@@ -95,10 +95,9 @@ public class HelloPresenter extends BasePresenter<HelloPresenter.HelloView> {
 
   // This method is called everytime the history token changes and this presenter's regex matches it
   @Override
-  public void onShow(MatchResult matchResult) {
-    String name = (matchResult.getGroupCount() >= 3 ? matchResult.getGroup(2) : null);
-    if (name != null) {
-      getView().getNameInput().setValue(name);
+  public void onShow(String... groups) {
+    if (groups[2] != null) {
+      getView().getNameInput().setValue(groups[2]);
     }
   }
 
@@ -115,7 +114,7 @@ The view interface extends from `HandlerView` as opposed from `View` as it was i
 
 Every presenter has its regular expression that is validated against the current GWT history token (if you're not familiar with how GWT history works [read here](http://www.gwtproject.org/doc/latest/DevGuideCodingBasicsHistory.html)), so that the MVP framework can find the best presenter for the current state. In this case, the `HelloPresenter` handles `greet` tokens or ones matching the pattern `greet/(name)`.
 
-The `onShow(MatchResult)` method is called every time the history token changes and this presenter's token regex matches it. The `MatchResult` argument has the regex matching result of the current history token, so if you define groups in your regex, those are already populated in the argument. In most cases this method will fetch some identifiers from the history token and load/show the corresponding data in its view. Here we check whether a name was included in the token and if so populate the input field.
+The `onShow(String...)` method is called every time the history token changes and this presenter's token regex matches it. The `MatchResult` argument has the regex matching result of the current history token, so if you define groups in your regex, those are already populated in the argument. In most cases this method will fetch some identifiers from the history token and load/show the corresponding data in its view. Here we check whether a name was included in the token and if so populate the input field.
 
 The method `onGreetClick` annotated with `@HtmlHandler` gets called everytime the element with `data-gwtid="greetLink"` is clicked. Should you need to handle other events, just create annotated methods with appropriate event classes as the parameter, `HandlerView` generator will take care of the rest. Though, don't forget to call `HandlerView.setHandler` method to wire it all up.
 
@@ -252,7 +251,7 @@ public class SomePresenter extends BasePresenter<SomeView> {
     ...
   }
   @Override
-  public void onShow(MatchResult matchResult) {
+  public void onShow(String... groups) {
     List<Person> people;
     // Load the person list
     adapter.setItems(people);

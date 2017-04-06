@@ -26,7 +26,7 @@ public class HelloPresenter extends BasePresenter&lt;HelloPresenter.HelloView&gt
   }
 
   @Override
-  public void onShow(MatchResult matchResult) {
+  public void onShow(String... groups) {
     getView().getCounter().setInnerText(formatCounter());
     getView().getNameInput().focus();
   }

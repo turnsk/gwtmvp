@@ -4,7 +4,6 @@ import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.SpanElement;
 import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.user.client.Window;
 
 import sk.turn.gwtmvp.client.BasePresenter;
@@ -34,7 +33,7 @@ public class TasksListPresenter extends BasePresenter<TasksListPresenter.TasksLi
   }
 
   @Override
-  public void onShow(MatchResult matchResult) {
+  public void onShow(String... groups) {
     taskAdapter.setItems(Dao.getTasks());
   }
 

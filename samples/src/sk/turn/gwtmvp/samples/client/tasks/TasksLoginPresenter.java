@@ -11,7 +11,6 @@ import com.google.gwt.http.client.RequestBuilder;
 import com.google.gwt.http.client.RequestCallback;
 import com.google.gwt.http.client.RequestException;
 import com.google.gwt.http.client.Response;
-import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
 
@@ -48,7 +47,7 @@ public class TasksLoginPresenter extends BasePresenter<TasksLoginPresenter.Tasks
   }
 
   @Override
-  public void onShow(MatchResult matchResult) {
+  public void onShow(String... groups) {
     // Give the username input focus
     getView().getUsername().focus();
   }

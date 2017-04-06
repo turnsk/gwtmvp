@@ -3,7 +3,6 @@ package sk.turn.gwtmvp.samples.client.adapter;
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.dom.client.TableElement;
-import com.google.gwt.regexp.shared.MatchResult;
 
 import sk.turn.gwtmvp.client.BasePresenter;
 import sk.turn.gwtmvp.client.HtmlElement;
@@ -48,7 +47,7 @@ public class PeoplePresenter extends BasePresenter<PeoplePresenter.PeopleView> {
   }
 
   @Override
-  public void onShow(MatchResult matchResult) {
+  public void onShow(String... groups) {
     personRowAdapter.setItems(DataProvider.getPeople());
   }
 

@@ -3,7 +3,6 @@ package sk.turn.gwtmvp.samples.client.adapter;
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.user.client.History;
 
 import sk.turn.gwtmvp.client.BasePresenter;
@@ -22,8 +21,8 @@ public class PersonPresenter extends BasePresenter<PersonPresenter.PersonView> {
   }
 
   @Override
-  public void onShow(MatchResult matchResult) {
-    Person person = DataProvider.getPerson(Long.parseLong(matchResult.getGroup(1)));
+  public void onShow(String... groups) {
+    Person person = (groups[1] == null || groups[1].length() == 0 ? null : DataProvider.getPerson(Long.parseLong(groups[1])));
     if (person == null) {
       // The person does not exist
       History.back();

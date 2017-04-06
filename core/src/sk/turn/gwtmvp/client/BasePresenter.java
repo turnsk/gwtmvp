@@ -14,13 +14,12 @@
 package sk.turn.gwtmvp.client;
 
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.regexp.shared.RegExp;
 
 /**
  * Basic implementation of {@link Presenter} interface. This class is a convenient and preferred way to use {@code Presenter}s. 
  * All you need to do is call the super constructor with proper parameters and override one or more of the event methods: 
- * {@code onViewLoaded()}, {@code onShow(MatchResult)} and/or {@code onHide()}.
+ * {@code onViewLoaded()}, {@code onShow(String...)} and/or {@code onHide()}.
  * <p>
  * An implementation may look like following:
  * <pre><code>public class HelloPresenter extends BasePresenter&lt;HelloView&gt; {
@@ -44,7 +43,7 @@ import com.google.gwt.regexp.shared.RegExp;
  *  }
  *
  *  {@literal @}Override
- *  public void onShow(MatchResult matchResult) {
+ *  public void onShow(String... groups) {
  *    getView().getCounter().setInnerText(formatCounter());
  *  }
  *
@@ -60,7 +59,7 @@ public class BasePresenter<V extends View<? extends Element>> implements Present
 
   private RegExp regExp;
   private final V view;
-  private MatchResult currentMatchResult;
+  private String[] currentGroups;
 
   public BasePresenter(String regExp, V view) {
     setTokenRegExp(regExp);
@@ -83,7 +82,7 @@ public class BasePresenter<V extends View<? extends Element>> implements Present
   }
 
   @Override
-  public void onShow(MatchResult matchResult) {
+  public void onShow(String... groups) {
     // Empty implementation
   }
 
@@ -97,15 +96,15 @@ public class BasePresenter<V extends View<? extends Element>> implements Present
    * @return True if this presenter is currently visible (active), false otherwise.
    */
   public boolean isVisible() {
-    return currentMatchResult != null;
+    return currentGroups != null;
   }
 
   /**
-   * Returns the current history token {@code MatchResult} that this presenter is showing or null if the presenter is hidden (inactive).
-   * @return Current history token {@code RegExp} match or null if presenter is hidden (inactive).
+   * Returns the current history token groups that this presenter is showing or null if the presenter is hidden (inactive).
+   * @return Current history token matched groups or null if presenter is hidden (inactive).
    */
-  public MatchResult getCurrentMatchResult() {
-    return currentMatchResult;
+  public String[] getCurrentGroups() {
+    return currentGroups;
   }
 
   /**
@@ -129,13 +128,13 @@ public class BasePresenter<V extends View<? extends Element>> implements Present
     }
   }
 
-  void onPresenterShown(MatchResult matchResult) {
-    currentMatchResult = matchResult;
-    onShow(matchResult);
+  void onPresenterShown(String... groups) {
+    currentGroups = groups;
+    onShow(groups);
   }
 
   void onPresenterHidden() {
-    currentMatchResult = null;
+    currentGroups = null;
     onHide();
   }
 

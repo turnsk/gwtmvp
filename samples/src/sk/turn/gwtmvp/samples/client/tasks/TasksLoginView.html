@@ -41,7 +41,7 @@ public class TasksLoginPresenter extends BasePresenter&lt;TasksLoginPresenter.Ta
   }
 
   @Override
-  public void onShow(MatchResult matchResult) {
+  public void onShow(String... groups) {
     // Give the username input focus
     getView().getUsername().focus();
   }

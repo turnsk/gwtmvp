@@ -46,7 +46,7 @@ public class PeoplePresenter extends BasePresenter&lt;PeoplePresenter.PeopleView
   }
 
   @Override
-  public void onShow(MatchResult matchResult) {
+  public void onShow(String... groups) {
     personRowAdapter.setItems(DataProvider.getPeople());
   }
 

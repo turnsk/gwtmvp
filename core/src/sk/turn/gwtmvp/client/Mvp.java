@@ -79,13 +79,17 @@ public class Mvp {
             initializedPresenters.add(currentPresenter);
           }
         }
+        String[] groups = new String[matchResult.getGroupCount()];
+        for (int i = 0; i < matchResult.getGroupCount(); i++) {
+          groups[i] = matchResult.getGroup(i);
+        }
         if (currentPresenter instanceof BasePresenter) {
-          ((BasePresenter<?>) currentPresenter).onPresenterShown(matchResult);
+          ((BasePresenter<?>) currentPresenter).onPresenterShown(groups);
         } else {
-          currentPresenter.onShow(matchResult);
+          currentPresenter.onShow(groups);
         }
       } catch (Exception e) {
-        LOG.log(Level.SEVERE, "Call to Presenter.onShow(MatchResult) failed.", e);
+        LOG.log(Level.SEVERE, "Call to Presenter.onShow(String...) failed.", e);
       }
     }
 

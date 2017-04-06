@@ -7,7 +7,6 @@ import com.google.gwt.dom.client.SpanElement;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyPressEvent;
-import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.user.client.Window;
 
 import sk.turn.gwtmvp.client.BasePresenter;
@@ -30,7 +29,7 @@ public class HelloPresenter extends BasePresenter<HelloPresenter.HelloView> {
   }
 
   @Override
-  public void onShow(MatchResult matchResult) {
+  public void onShow(String... groups) {
     getView().getCounter().setInnerText(formatCounter());
     getView().getNameInput().focus();
   }

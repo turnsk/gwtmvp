@@ -27,8 +27,8 @@ public class PersonPresenter extends BasePresenter&lt;PersonPresenter.PersonView
   }
 
   @Override
-  public void onShow(MatchResult matchResult) {
-    Person person = DataProvider.getPerson(Long.parseLong(matchResult.getGroup(1)));
+  public void onShow(String... groups) {
+    Person person = (groups[1] == null || groups[1].length() == 0 ? null : DataProvider.getPerson(Long.parseLong(groups[1])));
     if (person == null) {
       // The person does not exist
       History.back();

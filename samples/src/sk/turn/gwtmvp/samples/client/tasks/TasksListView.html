@@ -35,7 +35,7 @@ public class TasksListPresenter extends BasePresenter&lt;TasksListPresenter.Task
   }
 
   @Override
-  public void onShow(MatchResult matchResult) {
+  public void onShow(String... groups) {
     taskAdapter.setItems(Dao.getTasks());
   }
 
