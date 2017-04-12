@@ -69,7 +69,7 @@ public class Mvp {
         if (currentPresenter != matchingPresenter) {
           hideCurrentPresenter();
           currentPresenter = matchingPresenter;
-          rootElement.appendChild(currentPresenter.getView().getRootElement());
+          attachView(currentPresenter.getView());
           if (!initializedPresenters.contains(currentPresenter)) {
             try {
               currentPresenter.onViewLoaded();
@@ -164,6 +164,14 @@ public class Mvp {
     hideCurrentPresenter();
   }
 
+  protected void attachView(View<? extends Element> view) {
+    rootElement.appendChild(view.getRootElement());
+  }
+
+  protected void detachView(View<? extends Element> view) {
+    view.getRootElement().removeFromParent();
+  }
+
   private void hideCurrentPresenter() {
     if (currentPresenter == null) {
       return;
@@ -177,7 +185,7 @@ public class Mvp {
     } catch (Exception e) {
       LOG.log(Level.SEVERE, "Call to Presenter.onHide() failed.", e);
     }
-    currentPresenter.getView().getRootElement().removeFromParent();
+    detachView(currentPresenter.getView());
     currentPresenter = null;
   }
 
