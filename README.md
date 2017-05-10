@@ -309,7 +309,7 @@ public interface Dictionary extends com.google.gwt.i18n.client.Constants {
 }
 ```
 
-In order to use the dictionary values in a view HTML file, first define the dictionary class in the root element's attribute `data-mvpDict` and the use placeholders in the form `{mvpDict.identifier}` anywhere in the HTML file, e.g.
+In order to use the dictionary values in a view HTML file, first define the dictionary class in the root element's attribute `data-mvpDict` and then use placeholders in the form `{mvpDict.identifier}` anywhere in the HTML file, e.g.
 ```html
 <div data-mvpDict="com.sample.project.Dictionary">
   <p title="{mvpDict.helloWorld}">{mvpDict.helloWorld}</p>
