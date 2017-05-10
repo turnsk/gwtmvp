@@ -172,7 +172,6 @@ public class ViewGenerator extends IncrementalGenerator {
       w.println("    String html = Resources.INSTANCE.htmlContent().getText();");
       // Replace any dictionary entries
       if (dictClass != null) {
-        w.println("    rootElement.removeAttribute(\"data-mvpDict\");");
         w.println("    " + dictClass + " dict = GWT.create(" + dictClass + ".class);");
         dictMatcher = Pattern.compile("\\{mvpDict\\.([^}]+)\\}").matcher(html);
         Set<String> replacedEntries = new HashSet<>();
@@ -188,6 +187,9 @@ public class ViewGenerator extends IncrementalGenerator {
             rootElementType.equals("com.google.gwt.dom.client.TableCellElement") ? "TR" : "Div") + "Element();");
       w.println("    tempElem.setInnerHTML(html);");
       w.println("    rootElement = (" + rootElementType + ") tempElem.getFirstChild();");
+      if (dictClass != null) {
+        w.println("    rootElement.removeAttribute(\"data-mvpDict\");");
+      }
       w.println("    addElementToMap(rootElement, elementsMap);");
       w.println("    NodeList<Element> elements = rootElement.getElementsByTagName(\"*\");");
       w.println("    for (int i = 0; i < elements.getLength(); i++) {");
