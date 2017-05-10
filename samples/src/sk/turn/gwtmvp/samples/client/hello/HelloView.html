@@ -2,9 +2,9 @@
   <div class="col-md-12 form-inline">
     <div class="form-group well">
       <label>Name</label>
-      <input type="text" value="John Doe" class="form-control" data-gwtid="nameInput"/>
-      <button class="btn btn-default" data-gwtid="greetLink">Greet</button>
-      for the <span data-gwtid="counter"></span> time!
+      <input type="text" value="John Doe" class="form-control" data-mvpId="nameInput"/>
+      <button class="btn btn-default" data-mvpId="greetLink">Greet</button>
+      for the <span data-mvpId="counter"></span> time!
     </div>
   </div>
   <!-- Source code -->
@@ -21,14 +21,14 @@ public class HelloPresenter extends BasePresenter&lt;HelloPresenter.HelloView&gt
   private int counter = 1;
 
   public HelloPresenter() {
-    super("^hello$", (HelloView) GWT.create(HelloView.class));
-    getView().setHandler(this);
+    super("^hello$", GWT.&lt;HelloView&gt;create(HelloView.class));
+    view.setHandler(this);
   }
 
   @Override
   public void onShow(String... groups) {
-    getView().getCounter().setInnerText(formatCounter());
-    getView().getNameInput().focus();
+    view.getCounter().setInnerText(formatCounter());
+    view.getNameInput().focus();
   }
 
   @HtmlHandler("nameInput")
@@ -40,10 +40,10 @@ public class HelloPresenter extends BasePresenter&lt;HelloPresenter.HelloView&gt
 
   @HtmlHandler("greetLink")
   void onGreetClick(ClickEvent event) {
-    String name = getView().getNameInput().getValue();
+    String name = view.getNameInput().getValue();
     Window.alert("Hello " + (name.length() == 0 ? "Mr. Nobody" : name) + " for the " + formatCounter() + " time!");
     counter++;
-    getView().getCounter().setInnerText(formatCounter());
+    view.getCounter().setInnerText(formatCounter());
   }
 
   private String formatCounter() {

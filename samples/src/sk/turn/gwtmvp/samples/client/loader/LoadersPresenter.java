@@ -27,11 +27,11 @@ public class LoadersPresenter extends BasePresenter<LoadersPresenter.LoadersView
 
   @Override
   public void onViewLoaded() {
-    getView().setHandler(this);
+    view.setHandler(this);
     // Register global (non-counted) loader
-    Loader.register(getView().getLoader(), false);
+    Loader.register(view.getLoader(), false);
     // Register named (counted) loader
-    Loader.register("counted", getView().getCountedLoader(), true);
+    Loader.register("counted", view.getCountedLoader(), true);
   }
 
   @HtmlHandler("showButton")
@@ -47,14 +47,14 @@ public class LoadersPresenter extends BasePresenter<LoadersPresenter.LoadersView
   @HtmlHandler("showCountedButton")
   void onShowCountedClicked(ClickEvent event) {
     Loader.show("counted");
-    getView().getLoadCount().setInnerText(String.valueOf(++loadCount));
+    view.getLoadCount().setInnerText(String.valueOf(++loadCount));
   }
 
   @HtmlHandler("hideCountedButton")
   void onHideCountedClicked(ClickEvent event) {
     Loader.hide("counted");
     if (loadCount > 0) {
-      getView().getLoadCount().setInnerText(String.valueOf(--loadCount));
+      view.getLoadCount().setInnerText(String.valueOf(--loadCount));
     }
   }
 

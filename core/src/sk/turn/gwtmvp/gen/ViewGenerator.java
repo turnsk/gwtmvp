@@ -14,8 +14,12 @@
 package sk.turn.gwtmvp.gen;
 
 import java.io.PrintWriter;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.google.gwt.core.ext.GeneratorContext;
 import com.google.gwt.core.ext.IncrementalGenerator;
@@ -28,6 +32,8 @@ import com.google.gwt.core.ext.typeinfo.JMethod;
 import com.google.gwt.core.ext.typeinfo.JParameter;
 import com.google.gwt.core.ext.typeinfo.JParameterizedType;
 import com.google.gwt.core.ext.typeinfo.TypeOracle;
+import com.google.gwt.dev.resource.Resource;
+import com.google.gwt.dev.util.Util;
 import com.google.gwt.event.shared.EventHandler;
 
 import sk.turn.gwtmvp.client.HandlerView;
@@ -66,6 +72,11 @@ public class ViewGenerator extends IncrementalGenerator {
       }
       if (superType == null) {
         throw new Exception(typeName + " does not inherit from " + View.class.getName());
+      }
+      // Make sure the view HTML file exists
+      Resource htmlResource = context.getResourcesOracle().getResource(packageName.replace('.', '/') + "/" + viewType.getSimpleSourceName() + ".html");
+      if (htmlResource == null) {
+        throw new Exception("Cannot find " + viewType.getSimpleSourceName() + ".html");
       }
       String rootElementType = superType.getTypeArgs()[0].getQualifiedSourceName();
       // Map all annotated methods
@@ -110,6 +121,16 @@ public class ViewGenerator extends IncrementalGenerator {
           }
         }
       }
+      // Check whether dictionary class is defined
+      String html = Util.readStreamAsString(htmlResource.openContents());
+      Matcher dictMatcher = Pattern.compile("^<[^<]+data-mvpDict=\"(.+)\"").matcher(html);
+      String dictClass = null;
+      if (dictMatcher.find()) {
+        dictClass = dictMatcher.group(1);
+        if (typeOracle.getType(dictClass) == null) {
+          throw new Exception("Dictionary type " + dictClass + " does not exist");
+        }
+      }
       w.println("package " + packageName + ";");
       w.println();
       w.println("import com.google.gwt.core.client.GWT;");
@@ -148,10 +169,24 @@ public class ViewGenerator extends IncrementalGenerator {
       w.println("    if (rootElement != null) {");
       w.println("      return rootElement;");
       w.println("    }");
+      w.println("    String html = Resources.INSTANCE.htmlContent().getText();");
+      // Replace any dictionary entries
+      if (dictClass != null) {
+        w.println("    rootElement.removeAttribute(\"data-mvpDict\");");
+        w.println("    " + dictClass + " dict = GWT.create(" + dictClass + ".class);");
+        dictMatcher = Pattern.compile("\\{mvpDict\\.([^}]+)\\}").matcher(html);
+        Set<String> replacedEntries = new HashSet<>();
+        while (dictMatcher.find()) {
+          if (!replacedEntries.contains(dictMatcher.group(1))) {
+            w.println("    html = html.replace(\"" + dictMatcher.group(0) + "\", dict." + dictMatcher.group(1) + "());");
+            replacedEntries.add(dictMatcher.group(1));
+          }
+        }
+      }
       w.println("    Element tempElem = Document.get().create" + (
           rootElementType.equals("com.google.gwt.dom.client.TableRowElement") ? "TBody" :
             rootElementType.equals("com.google.gwt.dom.client.TableCellElement") ? "TR" : "Div") + "Element();");
-      w.println("    tempElem.setInnerHTML(Resources.INSTANCE.htmlContent().getText());");
+      w.println("    tempElem.setInnerHTML(html);");
       w.println("    rootElement = (" + rootElementType + ") tempElem.getFirstChild();");
       w.println("    addElementToMap(rootElement, elementsMap);");
       w.println("    NodeList<Element> elements = rootElement.getElementsByTagName(\"*\");");
@@ -162,13 +197,13 @@ public class ViewGenerator extends IncrementalGenerator {
         w.println("    generated_" + entry.getKey() + " = (" + entry.getValue().getReturnType().getQualifiedSourceName() + ") elementsMap.get(\"" + entry
             .getKey() + "\");");
         w.println("    if (generated_" + entry.getKey() + " == null) {");
-        w.println("      LOG.severe(\"Could not find element with data-gwtid=\\\"" + entry.getKey() + "\\\" in " + viewType.getSimpleSourceName()
+        w.println("      LOG.severe(\"Could not find element with data-mvpId=\\\"" + entry.getKey() + "\\\" in " + viewType.getSimpleSourceName()
             + ".html.\");");
         w.println("    }");
       }
       for (Map.Entry<String, Map<String, JMethod>> entry : handlersMap.entrySet()) {
         w.println("    if (elementsMap.get(\"" + entry.getKey() + "\") == null) {");
-        w.println("      LOG.severe(\"Could not find element with data-gwtid=\\\"" + entry.getKey() + "\\\" in " + viewType.getSimpleSourceName() + ".html.\");");
+        w.println("      LOG.severe(\"Could not find element with data-mvpId=\\\"" + entry.getKey() + "\\\" in " + viewType.getSimpleSourceName() + ".html.\");");
         w.println("    }");
       }
       if (handlerType != null) {
@@ -202,8 +237,8 @@ public class ViewGenerator extends IncrementalGenerator {
       w.println("  }");
       w.println();
       w.println("  @Override");
-      w.println("  public <E2 extends Element> E2 getElement(String gwtId) {");
-      w.println("    return (E2) elementsMap.get(gwtId);");
+      w.println("  public <E2 extends Element> E2 getElement(String mvpId) {");
+      w.println("    return (E2) elementsMap.get(mvpId);");
       w.println("  }");
       if (handlerType != null) {
         w.println();
@@ -236,15 +271,14 @@ public class ViewGenerator extends IncrementalGenerator {
       }
       w.println();
       w.println("  private void addElementToMap(Element element, Map<String, Element> elementsMap) {");
-      w.println("    String gwtid = null;");
-      w.println("    try {");
-      w.println("      gwtid = element.getAttribute(\"data-gwtid\");");
-      w.println("    } catch (Exception e) {");
-      w.println("      LOG.warning(\"Unable to call getAttribute on \" + element.getTagName());");
+      w.println("    String attrName = (element.hasAttribute(\"data-mvpId\") ? \"data-mvpId\" : element.hasAttribute(\"data-gwtid\") ? \"data-gwtid\" : null);");
+      w.println("    if (attrName == null) {");
+      w.println("      return;");
       w.println("    }");
-      w.println("    if (gwtid != null && !gwtid.equals(\"\")) {");
-      w.println("      element.removeAttribute(\"data-gwtid\");");
-      w.println("      elementsMap.put(gwtid, element);");
+      w.println("    String mvpId = element.getAttribute(attrName);");
+      w.println("    if (!mvpId.equals(\"\")) {");
+      w.println("      element.removeAttribute(attrName);");
+      w.println("      elementsMap.put(mvpId, element);");
       w.println("    }");
       w.println("  }");
       w.println("}");

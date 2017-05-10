@@ -24,14 +24,14 @@ public class HelloPresenter extends BasePresenter<HelloPresenter.HelloView> {
   private int counter = 1;
 
   public HelloPresenter() {
-    super("^hello$", (HelloView) GWT.create(HelloView.class));
-    getView().setHandler(this);
+    super("^hello$", GWT.<HelloView>create(HelloView.class));
+    view.setHandler(this);
   }
 
   @Override
   public void onShow(String... groups) {
-    getView().getCounter().setInnerText(formatCounter());
-    getView().getNameInput().focus();
+    view.getCounter().setInnerText(formatCounter());
+    view.getNameInput().focus();
   }
 
   @HtmlHandler("nameInput")
@@ -43,10 +43,10 @@ public class HelloPresenter extends BasePresenter<HelloPresenter.HelloView> {
 
   @HtmlHandler("greetLink")
   void onGreetClick(ClickEvent event) {
-    String name = getView().getNameInput().getValue();
+    String name = view.getNameInput().getValue();
     Window.alert("Hello " + (name.length() == 0 ? "Mr. Nobody" : name) + " for the " + formatCounter() + " time!");
     counter++;
-    getView().getCounter().setInnerText(formatCounter());
+    view.getCounter().setInnerText(formatCounter());
   }
 
   private String formatCounter() {

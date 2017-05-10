@@ -1,17 +1,17 @@
 <div class="row">
   <div class="col-md-12">
     <h1>
-      <small><a href="javascipr:void(0)" data-gwtid="back"><span class="glyphicon glyphicon-menu-left"></span></a></small>
-      <span data-gwtid="name"></span>
-      <small>ID: <span data-gwtid="id"></span></small>
+      <small><a href="javascipr:void(0)" data-mvpId="back"><span class="glyphicon glyphicon-menu-left"></span></a></small>
+      <span data-mvpId="name"></span>
+      <small>ID: <span data-mvpId="id"></span></small>
     </h1>
   </div>
   <div class="col-md-2 text-right"><b>Email</b></div>
-  <div class="col-md-10" data-gwtid="email"></div>
+  <div class="col-md-10" data-mvpId="email"></div>
   <div class="col-md-2 text-right"><b>Phone</b></div>
-  <div class="col-md-10" data-gwtid="phone"></div>
+  <div class="col-md-10" data-mvpId="phone"></div>
   <div class="col-md-2 text-right"><b>City</b></div>
-  <div class="col-md-10" data-gwtid="city"></div>
+  <div class="col-md-10" data-mvpId="city"></div>
   <!-- Source code -->
   <div class="col-md-12">
     <h2><small><a href="https://github.com/turnsk/gwtmvp/blob/master/samples/src/sk/turn/gwtmvp/samples/client/adapter/PersonPresenter.java" target="_blank">PersonPresenter.java</a></small></h2>
@@ -19,11 +19,16 @@
 public class PersonPresenter extends BasePresenter&lt;PersonPresenter.PersonView&gt; {
 
   interface PersonView extends HandlerView&lt;Element, PersonPresenter&gt; {
+    @HtmlElement Element getName();
+    @HtmlElement Element getId();
+    @HtmlElement Element getPhone();
+    @HtmlElement Element getEmail();
+    @HtmlElement Element getCity();
   }
 
   public PersonPresenter() {
     super("^person/([0-9]+)$", (PersonView) GWT.create(PersonView.class));
-    getView().setHandler(this);
+    view.setHandler(this);
   }
 
   @Override
@@ -33,11 +38,11 @@ public class PersonPresenter extends BasePresenter&lt;PersonPresenter.PersonView
       // The person does not exist
       History.back();
     }
-    setElementText("name", person.name);
-    setElementText("id", String.valueOf(person.id));
-    setElementText("phone", person.phone);
-    setElementText("email", person.email);
-    setElementText("city", person.city);
+    view.getName().setInnerText(person.name);
+    view.getId().setInnerText(String.valueOf(person.id));
+    view.getPhone().setInnerText(person.phone);
+    view.getEmail().setInnerText(person.email);
+    view.getCity().setInnerText(person.city);
   }
 
   @HtmlHandler("back")

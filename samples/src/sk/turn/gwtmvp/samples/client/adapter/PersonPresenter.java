@@ -7,17 +7,23 @@ import com.google.gwt.user.client.History;
 
 import sk.turn.gwtmvp.client.BasePresenter;
 import sk.turn.gwtmvp.client.HandlerView;
+import sk.turn.gwtmvp.client.HtmlElement;
 import sk.turn.gwtmvp.client.HtmlHandler;
 import sk.turn.gwtmvp.samples.client.adapter.DataProvider.Person;
 
 public class PersonPresenter extends BasePresenter<PersonPresenter.PersonView> {
 
   interface PersonView extends HandlerView<Element, PersonPresenter> {
+    @HtmlElement Element getName();
+    @HtmlElement Element getId();
+    @HtmlElement Element getPhone();
+    @HtmlElement Element getEmail();
+    @HtmlElement Element getCity();
   }
 
   public PersonPresenter() {
     super("^person/([0-9]+)$", (PersonView) GWT.create(PersonView.class));
-    getView().setHandler(this);
+    view.setHandler(this);
   }
 
   @Override
@@ -27,11 +33,11 @@ public class PersonPresenter extends BasePresenter<PersonPresenter.PersonView> {
       // The person does not exist
       History.back();
     }
-    setElementText("name", person.name);
-    setElementText("id", String.valueOf(person.id));
-    setElementText("phone", person.phone);
-    setElementText("email", person.email);
-    setElementText("city", person.city);
+    view.getName().setInnerText(person.name);
+    view.getId().setInnerText(String.valueOf(person.id));
+    view.getPhone().setInnerText(person.phone);
+    view.getEmail().setInnerText(person.email);
+    view.getCity().setInnerText(person.city);
   }
 
   @HtmlHandler("back")

@@ -2,8 +2,8 @@
 [MVP](https://en.wikipedia.org/wiki/Model-view-presenter) library for [GWT](http://www.gwtproject.org/), adding a light-weighted, easy-to-use MVP framework, plain HTML-to-Java binding and at the same time taking the complexity off of the built-in widgets library.
 
 * [GWT MVP Showcase](https://turnsk.github.io/gwtmvp/)
-* [Read Javadoc](https://jitpack.io/sk/turn/gwtmvp/1.2/javadoc/)
-* [Download JAR](https://jitpack.io/sk/turn/gwtmvp/1.2/gwtmvp-1.2.jar)
+* [Read Javadoc](https://jitpack.io/sk/turn/gwtmvp/1.3/javadoc/)
+* [Download JAR](https://jitpack.io/sk/turn/gwtmvp/1.3/gwtmvp-1.3.jar)
 
 ## Contents
 * [Assumptions and Goals](#assumptions-and-goals)
@@ -14,6 +14,7 @@
 * [Loaders](#loaders)
 * [View adapters](#view-adapters)
 * [Table adapters](#table-adapters)
+* [Internationalization](#internationalization)
 
 ## Assumptions and Goals
 Following assumptions were considered when designing this library:
@@ -48,7 +49,7 @@ repositories {
 ```gradle
 dependencies {
   ...
-  providedCompile 'sk.turn:gwtmvp:1.2'
+  providedCompile 'sk.turn:gwtmvp:1.3'
 }
 ```
 
@@ -58,12 +59,12 @@ We'll create a simple view that will pop-up a value entered into an `<input>` fi
 Create a `HelloView.html` that will hold the plain HTML content for our view:
 ```html
 <div>
-  <a href="javascript:void(0)" data-gwtid="greetLink">Greet</a>
-  <input type="text" value="John Doe" data-gwtid="nameInput"/>
+  <a href="javascript:void(0)" data-mvpId="greetLink">Greet</a>
+  <input type="text" value="John Doe" data-mvpId="nameInput"/>
 </div>
 ```
 
-Noticed the `data-gwtid` attributes? That's how we tell the compiler how to bind this HTML onto the following `View` interface:
+Noticed the `data-mvpId` attributes? That's how we tell the compiler how to bind this HTML onto the following `View` interface:
 ```java
 public interface HelloView extends View<DivElement> {
   @HtmlElement InputElement getNameInput();
@@ -71,7 +72,7 @@ public interface HelloView extends View<DivElement> {
 }
 ```
 
-In order to automatically map HTML elements onto the generated methods, we need to keep the `data-gwtid` and the method name the same, e.g. `nameInput` element will be mapped onto `getNameInput()` method. If (for some reason) you need to name the method differently, you can set the element ID in the annotation: `@HtmlElement("nameInput") InputElement getName();`. You can also access HTML elements using the `View.getElement(String gwtId)` method without the need to declare them in the interface, although to retain code readability we encourage you to use the mapping as much as possible.
+In order to automatically map HTML elements onto the generated methods, we need to keep the `data-mvpId` and the method name the same, e.g. `nameInput` element will be mapped onto `getNameInput()` method. If (for some reason) you need to name the method differently, you can set the element ID in the annotation: `@HtmlElement("nameInput") InputElement getName();`. You can also access HTML elements using the `View.getElement(String mvpId)` method without the need to declare them in the interface, although to retain code readability we encourage you to use the mapping as much as possible.
 
 The `@HtmlHandler` annotation allows you to easily bind DOM events onto your handler implementations. In this particular case calling `setGreetHandler()` will allow you to capture all click events on the anchor element, see sample below.
 
@@ -116,7 +117,7 @@ Every presenter has its regular expression that is validated against the current
 
 The `onShow(String...)` method is called every time the history token changes and this presenter's token regex matches it. The `MatchResult` argument has the regex matching result of the current history token, so if you define groups in your regex, those are already populated in the argument. In most cases this method will fetch some identifiers from the history token and load/show the corresponding data in its view. Here we check whether a name was included in the token and if so populate the input field.
 
-The method `onGreetClick` annotated with `@HtmlHandler` gets called everytime the element with `data-gwtid="greetLink"` is clicked. Should you need to handle other events, just create annotated methods with appropriate event classes as the parameter, `HandlerView` generator will take care of the rest. Though, don't forget to call `HandlerView.setHandler` method to wire it all up.
+The method `onGreetClick` annotated with `@HtmlHandler` gets called everytime the element with `data-mvpId="greetLink"` is clicked. Should you need to handle other events, just create annotated methods with appropriate event classes as the parameter, `HandlerView` generator will take care of the rest. Though, don't forget to call `HandlerView.setHandler` method to wire it all up.
 
 **EntryPoint.java**
 ```java
@@ -196,8 +197,8 @@ View adapters come in handy when you need to display repetitive data, most of th
 **PersonView.html**
 ```html
 <div>
-  <a href="javascript:void(0)" style="float:right;" data-gwtid="delete">&times;</a>
-  <a data-gwtid="name"></a>
+  <a href="javascript:void(0)" style="float:right;" data-mvpId="delete">&times;</a>
+  <a data-mvpId="name"></a>
 </div>
 ```
 
@@ -295,4 +296,22 @@ There are cases where you may need to customize the cell even further, in that c
     }
   }
   ...
+```
+
+## Internationalization
+GWT MVP supports GWT's built-in internationalization tools. Suppose you have the following dictionary interface:
+```java
+package com.sample.project;
+
+public interface Dictionary extends com.google.gwt.i18n.client.Constants {
+  @DefaultStringValue("Hello world!")
+  String helloWorld();
+}
+```
+
+In order to use the dictionary values in a view HTML file, first define the dictionary class in the root element's attribute `data-mvpDict` and the use placeholders in the form `{mvpDict.identifier}` anywhere in the HTML file, e.g.
+```html
+<div data-mvpDict="com.sample.project.Dictionary">
+  <p title="{mvpDict.helloWorld}">{mvpDict.helloWorld}</p>
+</div>
 ```

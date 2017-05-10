@@ -15,6 +15,7 @@ package sk.turn.gwtmvp.client;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -57,26 +58,35 @@ import com.google.gwt.event.dom.client.DomEvent;
  * <p>
  * PersonView.html
  * <pre><code>&lt;tr&gt;
- *  &lt;td data-gwtid="name"&gt;&lt;/td&gt;
- *  &lt;td data-gwtid="city"&gt;&lt;/td&gt;
- *  &lt;td&gt;&lt;a data-gwtid="action"&gt;&lt;/a&gt;&lt;/td&gt;
+ *  &lt;td data-mvpId="name"&gt;&lt;/td&gt;
+ *  &lt;td data-mvpId="city"&gt;&lt;/td&gt;
+ *  &lt;td&gt;&lt;a data-mvpId="action"&gt;&lt;/a&gt;&lt;/td&gt;
  *&lt;/tr&gt;</code></pre>
  * 
  * @param <T> Type of the object being displayed.
  * @param <V> Type of the view able to show one instance of class {@code T}
  */
-public abstract class ViewAdapter<T, V extends View<? extends Element>> {
+public abstract class ViewAdapter<T, V extends View<? extends Element>> implements Iterable<ViewAdapter.ItemView<T, V>> {
 
-  private static class Entry<T, V extends View<? extends Element>> {
-    T item;
-    V view;
+  public interface ItemView<T, V extends View<? extends Element>> {
+    T getItem();
+    V getView();
+  }
+
+  private static class Entry<T, V extends View<? extends Element>> implements ItemView<T, V> {
+    private T item;
+    private V view;
+    public Entry(T item) {
+      this.item = item;
+    }
+    public T getItem() { return item; }
+    public V getView() { return view; }
   }
 
   private static final Logger LOG = Logger.getLogger(ViewAdapter.class.getName());
-  private static final String ROOT_CLASS = "__gwtMvpRootElement";
 
   private final Element parentElement;
-  private List<Entry<T, V>> entries = new ArrayList<>();
+  private List<ItemView<T, V>> entries = new ArrayList<>();
   private final List<V> availableViews = new ArrayList<>();
   private final Map<Element, Integer> rootElementsToIndexMap = new HashMap<>();
 
@@ -92,6 +102,16 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> {
   }
 
   /**
+   * Returns an iterator over item-view pairs of this adapter.
+   * 
+   * @return An iterator.
+   */
+  @Override
+  public Iterator<ItemView<T, V>> iterator() {
+    return entries.iterator();
+  }
+
+  /**
    * Adds a single item to the adapter, either creating a new view or reusing an old one and
    * immediately attaching the view to the parent.
    * 
@@ -101,14 +121,11 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> {
     if (item == null) {
       return;
     }
-    Entry<T, V> entry = new Entry<>();
-    entry.item = item;
+    Entry<T, V> entry = new Entry<>(item);
     if (availableViews.size() > 0) {
       entry.view = availableViews.remove(0);
     } else {
       entry.view = createView();
-      // Mark the root element with a class name for later easier identification
-      entry.view.getRootElement().addClassName(ROOT_CLASS);
       // Allow the implementor to do any one-time initialization
       onViewLoaded(entry.view);
     }
@@ -129,11 +146,11 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> {
     if (index < 0 || index >= entries.size()) {
       return null;
     }
-    Entry<T, V> entry = entries.remove(index);
-    entry.view.getRootElement().removeFromParent();
-    rootElementsToIndexMap.remove(entry.view.getRootElement());
-    availableViews.add(entry.view);
-    return entry.item;
+    ItemView<T, V> entry = entries.remove(index);
+    entry.getView().getRootElement().removeFromParent();
+    rootElementsToIndexMap.remove(entry.getView().getRootElement());
+    availableViews.add(entry.getView());
+    return entry.getItem();
   }
 
   /**
@@ -148,7 +165,7 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> {
       return false;
     }
     for (int i = 0; i < entries.size(); i++) {
-      if (item.equals(entries.get(i).item)) {
+      if (item.equals(entries.get(i).getItem())) {
         removeAt(i);
         return true;
       }
@@ -166,7 +183,7 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> {
     for (T item : items) {
       if (index < entries.size()) {
         // Reuse existing entry
-        Entry<T, V> entry = entries.get(index);
+        Entry<T, V> entry = (Entry<T, V>) entries.get(index);
         entry.item = item;
         safeSetViewData(entry);
       } else {
@@ -197,7 +214,7 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> {
    * @return The item at the specified index or null if out of bounds.
    */
   public T getItem(int index) {
-    return (index >= 0 && index < entries.size() ? entries.get(index).item : null);
+    return (index >= 0 && index < entries.size() ? entries.get(index).getItem() : null);
   }
 
   /**
@@ -207,16 +224,16 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> {
    * @return The view at the specified index or null if out of bounds.
    */
   public V getItemView(int index) {
-    return (index >= 0 && index < entries.size() ? entries.get(index).view : null);
+    return (index >= 0 && index < entries.size() ? entries.get(index).getView() : null);
   }
 
   /**
    * Removes all the items/views from this adapter.
    */
   public void clear() {
-    for (Entry<T, V> entry : entries) {
-      entry.view.getRootElement().removeFromParent();
-      availableViews.add(entry.view);
+    for (ItemView<T, V> entry : entries) {
+      entry.getView().getRootElement().removeFromParent();
+      availableViews.add(entry.getView());
     }
     entries.clear();
     rootElementsToIndexMap.clear();
@@ -231,13 +248,13 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> {
     if (indices.length > 0) {
       for (int index : indices) {
         if (index >= 0 && index < entries.size()) {
-          Entry<T, V> entry = entries.get(index);
-          setViewData(entry.view, entry.item);
+          ItemView<T, V> entry = entries.get(index);
+          setViewData(entry.getView(), entry.getItem());
         }
       }
     } else {
-      for (Entry<T, V> entry : entries) {
-        setViewData(entry.view, entry.item);
+      for (ItemView<T, V> entry : entries) {
+        setViewData(entry.getView(), entry.getItem());
       }
     }
   }
@@ -250,7 +267,7 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> {
    */
   public int getItemIndexFromEvent(DomEvent<?> event) {
     Element e = event.getNativeEvent().getCurrentEventTarget().cast();
-    while (e != null && !e.hasClassName(ROOT_CLASS)) {
+    while (e != null && e.getParentElement() != parentElement) {
       e = e.getParentElement();
     }
     if (e == null) {

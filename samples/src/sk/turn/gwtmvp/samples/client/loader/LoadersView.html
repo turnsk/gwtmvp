@@ -2,17 +2,17 @@
   <div class="col-md-6">
     <h1>Non-counted loader</h1>
     <p>
-      <span class="progress-bar progress-bar-striped active" data-gwtid="loader" style="float:right; display:none; width: 33%;">Something is loading...</span>
-      <button class="btn btn-primary" data-gwtid="showButton">Show loader</button>
-      <button class="btn btn-danger" data-gwtid="hideButton">Hide loader</button>
+      <span class="progress-bar progress-bar-striped active" data-mvpId="loader" style="float:right; display:none; width: 33%;">Something is loading...</span>
+      <button class="btn btn-primary" data-mvpId="showButton">Show loader</button>
+      <button class="btn btn-danger" data-mvpId="hideButton">Hide loader</button>
     </p>
   </div>
   <div class="col-md-6">
     <h1>Counted loader</h1>
     <p>
-      <span class="progress-bar progress-bar-striped active" data-gwtid="countedLoader" style="float:right; display:none; width: 33%;"><span data-gwtid="loadCount"></span> item(s) loading...</span>
-      <button class="btn btn-primary" data-gwtid="showCountedButton">Show counted loader</button>
-      <button class="btn btn-danger" data-gwtid="hideCountedButton">Hide counted loader</button>
+      <span class="progress-bar progress-bar-striped active" data-mvpId="countedLoader" style="float:right; display:none; width: 33%;"><span data-mvpId="loadCount"></span> item(s) loading...</span>
+      <button class="btn btn-primary" data-mvpId="showCountedButton">Show counted loader</button>
+      <button class="btn btn-danger" data-mvpId="hideCountedButton">Hide counted loader</button>
     </p>
   </div>
   <!-- Source code -->
@@ -35,11 +35,11 @@ public class LoadersPresenter extends BasePresenter&lt;LoadersPresenter.LoadersV
 
   @Override
   public void onViewLoaded() {
-    getView().setHandler(this);
+    view.setHandler(this);
     // Register global (non-counted) loader
-    Loader.register(getView().getLoader(), false);
+    Loader.register(view.getLoader(), false);
     // Register named (counted) loader
-    Loader.register("counted", getView().getCountedLoader(), true);
+    Loader.register("counted", view.getCountedLoader(), true);
   }
 
   @HtmlHandler("showButton")
@@ -55,14 +55,14 @@ public class LoadersPresenter extends BasePresenter&lt;LoadersPresenter.LoadersV
   @HtmlHandler("showCountedButton")
   void onShowCountedClicked(ClickEvent event) {
     Loader.show("counted");
-    getView().getLoadCount().setInnerText(String.valueOf(++loadCount));
+    view.getLoadCount().setInnerText(String.valueOf(++loadCount));
   }
 
   @HtmlHandler("hideCountedButton")
   void onHideCountedClicked(ClickEvent event) {
     Loader.hide("counted");
     if (loadCount &gt; 0) {
-      getView().getLoadCount().setInnerText(String.valueOf(--loadCount));
+      view.getLoadCount().setInnerText(String.valueOf(--loadCount));
     }
   }
 

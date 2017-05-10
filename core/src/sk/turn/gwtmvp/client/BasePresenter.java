@@ -31,20 +31,20 @@ import com.google.gwt.regexp.shared.RegExp;
  *
  *  {@literal @}Override
  *  public void onViewLoaded() {
- *    getView().setGreetHandler(new ClickHandler() {
+ *    view.setGreetHandler(new ClickHandler() {
  *      {@literal @}Override
  *      public void onClick(ClickEvent e) {
- *        Window.alert("Hello " + getView().getNameInput().getValue() + " for the " + 
+ *        Window.alert("Hello " + view.getNameInput().getValue() + " for the " + 
  *            formatCounter() + " time!");
  *        counter++;
- *        getView().getCounter().setInnerText(formatCounter());
+ *        view.getCounter().setInnerText(formatCounter());
  *      }
  *    });
  *  }
  *
  *  {@literal @}Override
  *  public void onShow(String... groups) {
- *    getView().getCounter().setInnerText(formatCounter());
+ *    view.getCounter().setInnerText(formatCounter());
  *  }
  *
  *  private String formatCounter() {
@@ -57,8 +57,8 @@ import com.google.gwt.regexp.shared.RegExp;
  */
 public class BasePresenter<V extends View<? extends Element>> implements Presenter<V> {
 
+  protected final V view;
   private RegExp regExp;
-  private final V view;
   private String[] currentGroups;
 
   public BasePresenter(String regExp, V view) {
@@ -113,19 +113,6 @@ public class BasePresenter<V extends View<? extends Element>> implements Present
    */
   public void setTokenRegExp(String regExp) {
     this.regExp = (regExp != null ? RegExp.compile(regExp) : null);
-  }
-
-  /**
-   * Shorthand method to set inner text of a HTML element, the element has to have {@code data-gwtid} attribute. 
-   * It calls {@code getView().getElement(gwtId).setInnerText(text)}.
-   * @param gwtId The {@code data-gwtid} attribute of the element.
-   * @param text The text to set as inner text of the element.
-   */
-  public void setElementText(String gwtId, String text) {
-    Element e = getView().getElement(gwtId);
-    if (e != null) {
-      e.setInnerText(text);
-    }
   }
 
   void onPresenterShown(String... groups) {

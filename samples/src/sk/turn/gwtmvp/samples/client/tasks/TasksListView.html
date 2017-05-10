@@ -1,13 +1,13 @@
-<div class="row">
+<div class="row" data-mvpDict="sk.turn.gwtmvp.samples.client.tasks.Dictionary">
   <style>.finished { text-decoration: line-through; color: #aaa; }</style>
   <div class="col-md-offset-3 col-md-6">
     <h1>
-      <span style="float: right;"><a href="javascript:void(0)" class="btn btn-default" data-gwtid="addButton"><span class="glyphicon glyphicon-plus"></span></a></span>
-      <span data-gwtid="username"></span> Tasks
-      <small>(<a href="javascript:void(0)" data-gwtid="logout">logout</a>)</small>
+      <span style="float: right;"><a href="javascript:void(0)" class="btn btn-default" data-mvpId="addButton"><span class="glyphicon glyphicon-plus"></span></a></span>
+      <span data-mvpId="username"></span> {mvpDict.listTasks}
+      <small>(<a href="javascript:void(0)" data-mvpId="logout">{mvpDict.listLogout}</a>)</small>
     </h1>
   </div>
-  <div class="col-md-offset-3 col-md-6 well" data-gwtid="tasksContainer">
+  <div class="col-md-offset-3 col-md-6 well" data-mvpId="tasksContainer">
   </div>
   <!-- Source code -->
   <div class="col-md-12">
@@ -20,6 +20,8 @@ public class TasksListPresenter extends BasePresenter&lt;TasksListPresenter.Task
     @HtmlElement Element getTasksContainer();
   }
 
+  private static final Dictionary dict = GWT.create(Dictionary.class);
+
   public TasksListPresenter() {
     super("^tasks/list$", (TasksListView) GWT.create(TasksListView.class));
   }
@@ -28,10 +30,10 @@ public class TasksListPresenter extends BasePresenter&lt;TasksListPresenter.Task
 
   @Override
   public void onViewLoaded() {
-    getView().setHandler(this);
+    view.setHandler(this);
     Dao.addOnUserChangedHandler(this);
     onUserChanged(Dao.getUsername());
-    taskAdapter = new TaskAdapter(getView().getTasksContainer());
+    taskAdapter = new TaskAdapter(view.getTasksContainer());
   }
 
   @Override
@@ -41,7 +43,7 @@ public class TasksListPresenter extends BasePresenter&lt;TasksListPresenter.Task
 
   @Override
   public void onUserChanged(String username) {
-    getView().getUsername().setInnerText(username != null ? username + (username.endsWith("s") ? "'" : "'s") : "");
+    view.getUsername().setInnerText(username != null ? username + (username.endsWith("s") ? "'" : "'s") : "");
   }
 
   @HtmlHandler("addButton")
@@ -51,7 +53,7 @@ public class TasksListPresenter extends BasePresenter&lt;TasksListPresenter.Task
 
   @HtmlHandler("logout")
   void onLogout(ClickEvent event) {
-    if (Window.confirm("Logging out also clears your task list, proceed?")) {
+    if (Window.confirm(dict.listLogoutConfirmation())) {
       Dao.setTasks(null);
       Dao.setUsername(null);
     }

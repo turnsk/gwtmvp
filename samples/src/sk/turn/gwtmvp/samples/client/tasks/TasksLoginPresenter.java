@@ -26,9 +26,11 @@ public class TasksLoginPresenter extends BasePresenter<TasksLoginPresenter.Tasks
   }
 
   private static final String REGEXP = "^tasks/.*$";
+  private static final Dictionary dict = GWT.create(Dictionary.class);
 
   public TasksLoginPresenter() {
-    super(Dao.getUsername() != null ? null : REGEXP, (TasksLoginView) GWT.create(TasksLoginView.class));
+    super(Dao.getUsername() != null ? null : REGEXP, GWT.<TasksLoginView>create(TasksLoginView.class));
+    view.setHandler(this);
     // Add a handler for user login/logout
     Dao.addOnUserChangedHandler(new Dao.OnUserChangedHandler() {
       @Override
@@ -42,19 +44,14 @@ public class TasksLoginPresenter extends BasePresenter<TasksLoginPresenter.Tasks
   }
 
   @Override
-  public void onViewLoaded() {
-    getView().setHandler(this);
-  }
-
-  @Override
   public void onShow(String... groups) {
     // Give the username input focus
-    getView().getUsername().focus();
+    view.getUsername().focus();
   }
 
   @HtmlHandler("login")
   void onLogin(ClickEvent event) {
-    final String username = getView().getUsername().getValue();
+    final String username = view.getUsername().getValue();
     if (username.length() == 0) {
       return;
     }
@@ -74,24 +71,24 @@ public class TasksLoginPresenter extends BasePresenter<TasksLoginPresenter.Tasks
             Dao.setTasks(JsonUtils.<JsArray<Task>>safeEval(response.getText()));
             Dao.setUsername(username);
           } else {
-            onError(request, new Exception("Invalid response status code: " + response.getStatusCode()));
+            onError(request, new Exception(dict.loginInvalidStatusCode(response.getStatusCode())));
           }
         }
         @Override
         public void onError(Request request, Throwable exception) {
           showProgess(false);
-          Window.alert("Failed logging in: " + exception);
+          Window.alert(dict.loginFailed(exception.getMessage()));
         }
       });
     } catch (RequestException e) {
       showProgess(false);
-      Window.alert("Failed logging in: " + e);
+      Window.alert(dict.loginFailed(e.getMessage()));
     }
   }
 
   private void showProgess(boolean show) {
-    getView().getElement(show ? "login" : "progress").addClassName("hidden");
-    getView().getElement(show ? "progress" : "login").removeClassName("hidden");
+    view.getElement(show ? "login" : "progress").addClassName("hidden");
+    view.getElement(show ? "progress" : "login").removeClassName("hidden");
   }
 
 }

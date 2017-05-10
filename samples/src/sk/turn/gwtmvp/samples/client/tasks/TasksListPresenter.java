@@ -18,6 +18,8 @@ public class TasksListPresenter extends BasePresenter<TasksListPresenter.TasksLi
     @HtmlElement Element getTasksContainer();
   }
 
+  private static final Dictionary dict = GWT.create(Dictionary.class);
+
   public TasksListPresenter() {
     super("^tasks/list$", (TasksListView) GWT.create(TasksListView.class));
   }
@@ -26,10 +28,10 @@ public class TasksListPresenter extends BasePresenter<TasksListPresenter.TasksLi
 
   @Override
   public void onViewLoaded() {
-    getView().setHandler(this);
+    view.setHandler(this);
     Dao.addOnUserChangedHandler(this);
     onUserChanged(Dao.getUsername());
-    taskAdapter = new TaskAdapter(getView().getTasksContainer());
+    taskAdapter = new TaskAdapter(view.getTasksContainer());
   }
 
   @Override
@@ -39,7 +41,7 @@ public class TasksListPresenter extends BasePresenter<TasksListPresenter.TasksLi
 
   @Override
   public void onUserChanged(String username) {
-    getView().getUsername().setInnerText(username != null ? username + (username.endsWith("s") ? "'" : "'s") : "");
+    view.getUsername().setInnerText(username != null ? username + (username.endsWith("s") ? "'" : "'s") : "");
   }
 
   @HtmlHandler("addButton")
@@ -49,7 +51,7 @@ public class TasksListPresenter extends BasePresenter<TasksListPresenter.TasksLi
 
   @HtmlHandler("logout")
   void onLogout(ClickEvent event) {
-    if (Window.confirm("Logging out also clears your task list, proceed?")) {
+    if (Window.confirm(dict.listLogoutConfirmation())) {
       Dao.setTasks(null);
       Dao.setUsername(null);
     }

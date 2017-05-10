@@ -24,7 +24,7 @@ public class PeoplePresenter extends BasePresenter<PeoplePresenter.PeopleView> {
 
   @Override
   public void onViewLoaded() {
-    personRowAdapter = new TableRowAdapter<Person>(getView().getTable(), 4) {
+    personRowAdapter = new TableRowAdapter<Person>(view.getTable(), 4) {
       @Override
       protected String getCellText(int column, Person item) {
         switch (column) {

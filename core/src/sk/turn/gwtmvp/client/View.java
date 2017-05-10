@@ -25,10 +25,10 @@ import com.google.gwt.dom.client.Element;
  * must be <code>&lt;div&gt;</code>.
  * <p>
  * Every element in the .html that is either being mapped to a {@link HtmlElement} or
- * {@link HtmlHandler} must be marked with a {@code data-gwtid} attribute, which must be unique
- * within this view. For the connection between {@code data-gwtid} attribute and the name of the
+ * {@link HtmlHandler} must be marked with a {@code data-mvpId} attribute, which must be unique
+ * within this view. For the connection between {@code data-mvpId} attribute and the name of the
  * accessor method, see {@link HtmlElement} and/or {@link HtmlHandler}. Note that the
- * {@code data-gwtid} attribute is removed after the element has been mapped, i.e. you won't be able
+ * {@code data-mvpId} attribute is removed after the element has been mapped, i.e. you won't be able
  * to read the attribute later.
  * <p>
  * A sample simple implementation may look like following:
@@ -42,9 +42,9 @@ import com.google.gwt.dom.client.Element;
  * <p>
  * HelloView.html
  * <pre><code>&lt;div&gt;
- *  &lt;a href="javascript:void(0)" data-gwtid="greetLink"&gt;Greet&lt;/a&gt;
- *  &lt;input type="text" data-gwtid="nameInput"/&gt;
- *  for the &lt;span data-gwtid="counter"&gt;&lt;/span&gt; time!
+ *  &lt;a href="javascript:void(0)" data-mvpId="greetLink"&gt;Greet&lt;/a&gt;
+ *  &lt;input type="text" data-mvpId="nameInput"/&gt;
+ *  for the &lt;span data-mvpId="counter"&gt;&lt;/span&gt; time!
  *&lt;/div&gt;</code></pre>
  *
  * @param <E> The element class that matches the root element in the corresponding .html file.
@@ -52,7 +52,7 @@ import com.google.gwt.dom.client.Element;
 public interface View<E extends Element> {
   /**
    * Do not implement or override this method, this is automatically done by the compile-time GWT
-   * generator. This method parses the .html file and maps all {@code data-gwtid} attributed
+   * generator. This method parses the .html file and maps all {@code data-mvpId} attributed
    * elements.
    * 
    * @return The root element of this view.
@@ -60,10 +60,10 @@ public interface View<E extends Element> {
   E getRootElement();
 
   /**
-   * Tries to find an element with a specific {@code data-gwtid} and returns it. We strongly encourage 
+   * Tries to find an element with a specific {@code data-mvpId} and returns it. We strongly encourage 
    * you to define the element in the View, though for one-time element usage this may help code brevity.
-   * @param gwtId The ID of the element to find
+   * @param mvpId The ID of the element to find
    * @return The found Element or null if no such element exists in the HTML file
    */
-  <E2 extends Element> E2 getElement(String gwtId);
+  <E2 extends Element> E2 getElement(String mvpId);
 }

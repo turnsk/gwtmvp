@@ -1,13 +1,13 @@
-<div class="row">
+<div class="row" data-mvpDict="sk.turn.gwtmvp.samples.client.tasks.Dictionary">
   <div class="col-md-offset-4 col-md-4">
-    <h1>Tasks Login</h1>
-    <label>Username</label>
-    <input type="text" class="form-control" data-gwtid="username"/>
-    <p class="help-block">Type any username you want...</p>
+    <h1>{mvpDict.loginTitle}</h1>
+    <label>{mvpDict.loginUsername}</label>
+    <input type="text" class="form-control" data-mvpId="username"/>
+    <p class="help-block">{mvpDict.loginUsernameHint}</p>
     <div class="text-right">
-      <button class="btn btn-primary" data-gwtid="login">Login</button>
+      <button class="btn btn-primary" data-mvpId="login">{mvpDict.loginButton}</button>
     </div>
-    <div class="progress hidden" data-gwtid="progress"><div class="progress-bar progress-bar-striped active" style="width: 100%;"></div></div>
+    <div class="progress hidden" data-mvpId="progress"><div class="progress-bar progress-bar-striped active" style="width: 100%;"></div></div>
   </div>
   <!-- Source code -->
   <div class="col-md-12">
@@ -20,9 +20,11 @@ public class TasksLoginPresenter extends BasePresenter&lt;TasksLoginPresenter.Ta
   }
 
   private static final String REGEXP = "^tasks/.*$";
+  private static final Dictionary dict = GWT.create(Dictionary.class);
 
   public TasksLoginPresenter() {
-    super(Dao.getUsername() != null ? null : REGEXP, (TasksLoginView) GWT.create(TasksLoginView.class));
+    super(Dao.getUsername() != null ? null : REGEXP, GWT.&lt;TasksLoginView&gt;create(TasksLoginView.class));
+    view.setHandler(this);
     // Add a handler for user login/logout
     Dao.addOnUserChangedHandler(new Dao.OnUserChangedHandler() {
       @Override
@@ -36,19 +38,14 @@ public class TasksLoginPresenter extends BasePresenter&lt;TasksLoginPresenter.Ta
   }
 
   @Override
-  public void onViewLoaded() {
-    getView().setHandler(this);
-  }
-
-  @Override
   public void onShow(String... groups) {
     // Give the username input focus
-    getView().getUsername().focus();
+    view.getUsername().focus();
   }
 
   @HtmlHandler("login")
   void onLogin(ClickEvent event) {
-    final String username = getView().getUsername().getValue();
+    final String username = view.getUsername().getValue();
     if (username.length() == 0) {
       return;
     }
@@ -68,26 +65,26 @@ public class TasksLoginPresenter extends BasePresenter&lt;TasksLoginPresenter.Ta
             Dao.setTasks(JsonUtils.&lt;JsArray&lt;Task&gt;&gt;safeEval(response.getText()));
             Dao.setUsername(username);
           } else {
-            onError(request, new Exception("Invalid response status code: " + response.getStatusCode()));
+            onError(request, new Exception(dict.loginInvalidStatusCode(response.getStatusCode())));
           }
         }
         @Override
         public void onError(Request request, Throwable exception) {
           showProgess(false);
-          Window.alert("Failed logging in: " + exception);
+          Window.alert(dict.loginFailed(exception.getMessage()));
         }
       });
     } catch (RequestException e) {
       showProgess(false);
-      Window.alert("Failed logging in: " + e);
+      Window.alert(dict.loginFailed(e.getMessage()));
     }
   }
 
   private void showProgess(boolean show) {
-    getView().getElement(show ? "login" : "progress").addClassName("hidden");
-    getView().getElement(show ? "progress" : "login").removeClassName("hidden");
+    view.getElement(show ? "login" : "progress").addClassName("hidden");
+    view.getElement(show ? "progress" : "login").removeClassName("hidden");
   }
 
-}&lt;/pre&gt;
+}</pre>
   </div>
 </div>
