@@ -134,6 +134,10 @@ public class ViewGenerator extends IncrementalGenerator {
           throw new Exception("Localization classs " + dictClassName + " does not exist");
         }
       }
+      // Check whether data-gwtid is still being used
+      if (html.indexOf("data-gwtid=\"") != -1) {
+        logger.log(TreeLogger.Type.WARN, "The use of \"data-gwtid\" attribute is deprecated and its support will be removed in future versions, please use \"data-mvpId\" instead.");
+      }
       w.println("package " + packageName + ";");
       w.println();
       w.println("import com.google.gwt.core.client.GWT;");
