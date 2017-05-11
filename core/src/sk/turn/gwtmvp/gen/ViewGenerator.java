@@ -124,11 +124,12 @@ public class ViewGenerator extends IncrementalGenerator {
       // Check whether dictionary class is defined
       String html = Util.readStreamAsString(htmlResource.openContents());
       Matcher dictMatcher = Pattern.compile("^<[^<]+data-mvpDict=\"(.+)\"").matcher(html);
-      String dictClass = null;
+      String dictClassName = null;
+      JClassType dictClass = null;
       if (dictMatcher.find()) {
-        dictClass = dictMatcher.group(1);
-        if (typeOracle.getType(dictClass) == null) {
-          throw new Exception("Dictionary type " + dictClass + " does not exist");
+        dictClassName = dictMatcher.group(1);
+        if ((dictClass = typeOracle.getType(dictClassName)) == null) {
+          throw new Exception("Localization classs " + dictClassName + " does not exist");
         }
       }
       w.println("package " + packageName + ";");
@@ -171,14 +172,18 @@ public class ViewGenerator extends IncrementalGenerator {
       w.println("    }");
       w.println("    String html = Resources.INSTANCE.htmlContent().getText();");
       // Replace any dictionary entries
-      if (dictClass != null) {
-        w.println("    " + dictClass + " dict = GWT.create(" + dictClass + ".class);");
+      if (dictClassName != null) {
+        w.println("    " + dictClassName + " dict = GWT.create(" + dictClassName + ".class);");
         dictMatcher = Pattern.compile("\\{mvpDict\\.([^}]+)\\}").matcher(html);
         Set<String> replacedEntries = new HashSet<>();
         while (dictMatcher.find()) {
-          if (!replacedEntries.contains(dictMatcher.group(1))) {
-            w.println("    html = html.replace(\"" + dictMatcher.group(0) + "\", dict." + dictMatcher.group(1) + "());");
-            replacedEntries.add(dictMatcher.group(1));
+          String dictEntry = dictMatcher.group(1);
+          if (!replacedEntries.contains(dictEntry)) {
+            if (dictClass.getMethod(dictEntry, null) == null) {
+              throw new Exception("Localization method " + dictClassName + "." + dictEntry + "() does not exist.");
+            }
+            w.println("    html = html.replace(\"" + dictMatcher.group(0) + "\", dict." + dictEntry + "());");
+            replacedEntries.add(dictEntry);
           }
         }
       }
@@ -187,7 +192,7 @@ public class ViewGenerator extends IncrementalGenerator {
             rootElementType.equals("com.google.gwt.dom.client.TableCellElement") ? "TR" : "Div") + "Element();");
       w.println("    tempElem.setInnerHTML(html);");
       w.println("    rootElement = (" + rootElementType + ") tempElem.getFirstChild();");
-      if (dictClass != null) {
+      if (dictClassName != null) {
         w.println("    rootElement.removeAttribute(\"data-mvpDict\");");
       }
       w.println("    addElementToMap(rootElement, elementsMap);");
