@@ -31,6 +31,8 @@ import com.google.gwt.core.ext.typeinfo.JClassType;
 import com.google.gwt.core.ext.typeinfo.JMethod;
 import com.google.gwt.core.ext.typeinfo.JParameter;
 import com.google.gwt.core.ext.typeinfo.JParameterizedType;
+import com.google.gwt.core.ext.typeinfo.JType;
+import com.google.gwt.core.ext.typeinfo.NotFoundException;
 import com.google.gwt.core.ext.typeinfo.TypeOracle;
 import com.google.gwt.dev.resource.Resource;
 import com.google.gwt.dev.util.Util;
@@ -42,10 +44,10 @@ import sk.turn.gwtmvp.client.HtmlHandler;
 import sk.turn.gwtmvp.client.View;
 
 public class ViewGenerator extends IncrementalGenerator {
-  
+
   @Override
   public long getVersionId() {
-    return 2;
+    return 3;
   }
 
   @Override
@@ -179,7 +181,9 @@ public class ViewGenerator extends IncrementalGenerator {
         while (dictMatcher.find()) {
           String dictEntry = dictMatcher.group(1);
           if (!replacedEntries.contains(dictEntry)) {
-            if (dictClass.getMethod(dictEntry, null) == null) {
+            try {
+              dictClass.getMethod(dictEntry, new JType[] { });
+            } catch (NotFoundException e) {
               throw new Exception("Localization method " + dictClassName + "." + dictEntry + "() does not exist.");
             }
             w.println("    html = html.replace(\"" + dictMatcher.group(0) + "\", dict." + dictEntry + "());");
@@ -292,7 +296,7 @@ public class ViewGenerator extends IncrementalGenerator {
       context.commit(logger, w);
       return new RebindResult(RebindMode.USE_ALL_NEW, packageName + "." + generatedClassName);
     } catch (Exception e) {
-      logger.log(TreeLogger.Type.ERROR, "Failed generating wrapper for class " + typeName, e);
+      logger.log(TreeLogger.Type.ERROR, "Failed generating wrapper for class " + typeName + ": " + e.getMessage());
       throw new UnableToCompleteException();
     }
   }
