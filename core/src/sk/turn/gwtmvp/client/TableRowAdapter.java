@@ -14,13 +14,13 @@
 package sk.turn.gwtmvp.client;
 
 import com.google.gwt.dom.client.AnchorElement;
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NodeList;
 import com.google.gwt.dom.client.TableCellElement;
 import com.google.gwt.dom.client.TableElement;
 import com.google.gwt.dom.client.TableRowElement;
 import com.google.gwt.dom.client.TableSectionElement;
-import com.google.gwt.user.client.DOM;
 
 /**
  * Subclass of {@link ViewAdapter} to show items in a table row without the need to create {@link View} for it.
@@ -66,7 +66,7 @@ public abstract class TableRowAdapter<T> extends ViewAdapter<T, TableRowAdapter.
     @Override
     public TableRowElement getRootElement() {
       if (rootElement == null) {
-        rootElement = DOM.createTR().cast();
+        rootElement = Document.get().createTRElement();
       }
       return rootElement;
     }

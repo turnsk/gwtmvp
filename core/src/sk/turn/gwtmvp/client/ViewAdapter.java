@@ -58,9 +58,9 @@ import com.google.gwt.event.dom.client.DomEvent;
  * <p>
  * PersonView.html
  * <pre><code>&lt;tr&gt;
- *  &lt;td data-mvpId="name"&gt;&lt;/td&gt;
- *  &lt;td data-mvpId="city"&gt;&lt;/td&gt;
- *  &lt;td&gt;&lt;a data-mvpId="action"&gt;&lt;/a&gt;&lt;/td&gt;
+ *  &lt;td data-mvp-id="name"&gt;&lt;/td&gt;
+ *  &lt;td data-mvp-id="city"&gt;&lt;/td&gt;
+ *  &lt;td&gt;&lt;a data-mvp-id="action"&gt;&lt;/a&gt;&lt;/td&gt;
  *&lt;/tr&gt;</code></pre>
  * 
  * @param <T> Type of the object being displayed.

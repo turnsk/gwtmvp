@@ -125,7 +125,7 @@ public class ViewGenerator extends IncrementalGenerator {
       }
       // Check whether dictionary class is defined
       String html = Util.readStreamAsString(htmlResource.openContents());
-      Matcher dictMatcher = Pattern.compile("^<[^<]+data-mvpDict=\"(.+)\"").matcher(html);
+      Matcher dictMatcher = Pattern.compile("^<[^<]+data-mvp-dict=\"(.+)\"").matcher(html);
       String dictClassName = null;
       JClassType dictClass = null;
       if (dictMatcher.find()) {
@@ -136,7 +136,7 @@ public class ViewGenerator extends IncrementalGenerator {
       }
       // Check whether data-gwtid is still being used
       if (html.indexOf("data-gwtid=\"") != -1) {
-        logger.log(TreeLogger.Type.WARN, "The use of \"data-gwtid\" attribute is deprecated and its support will be removed in future versions, please use \"data-mvpId\" instead.");
+        logger.log(TreeLogger.Type.WARN, "The use of \"data-gwtid\" attribute is deprecated and its support will be removed in future versions, please use \"data-mvp-id\" instead.");
       }
       w.println("package " + packageName + ";");
       w.println();
@@ -201,7 +201,7 @@ public class ViewGenerator extends IncrementalGenerator {
       w.println("    tempElem.setInnerHTML(html);");
       w.println("    rootElement = (" + rootElementType + ") tempElem.getFirstChild();");
       if (dictClassName != null) {
-        w.println("    rootElement.removeAttribute(\"data-mvpDict\");");
+        w.println("    rootElement.removeAttribute(\"data-mvp-dict\");");
       }
       w.println("    addElementToMap(rootElement, elementsMap);");
       w.println("    NodeList<Element> elements = rootElement.getElementsByTagName(\"*\");");
@@ -212,13 +212,13 @@ public class ViewGenerator extends IncrementalGenerator {
         w.println("    generated_" + entry.getKey() + " = (" + entry.getValue().getReturnType().getQualifiedSourceName() + ") elementsMap.get(\"" + entry
             .getKey() + "\");");
         w.println("    if (generated_" + entry.getKey() + " == null) {");
-        w.println("      LOG.severe(\"Could not find element with data-mvpId=\\\"" + entry.getKey() + "\\\" in " + viewType.getSimpleSourceName()
+        w.println("      LOG.severe(\"Could not find element with data-mvp-id=\\\"" + entry.getKey() + "\\\" in " + viewType.getSimpleSourceName()
             + ".html.\");");
         w.println("    }");
       }
       for (Map.Entry<String, Map<String, JMethod>> entry : handlersMap.entrySet()) {
         w.println("    if (elementsMap.get(\"" + entry.getKey() + "\") == null) {");
-        w.println("      LOG.severe(\"Could not find element with data-mvpId=\\\"" + entry.getKey() + "\\\" in " + viewType.getSimpleSourceName() + ".html.\");");
+        w.println("      LOG.severe(\"Could not find element with data-mvp-id=\\\"" + entry.getKey() + "\\\" in " + viewType.getSimpleSourceName() + ".html.\");");
         w.println("    }");
       }
       if (handlerType != null) {
@@ -286,7 +286,7 @@ public class ViewGenerator extends IncrementalGenerator {
       }
       w.println();
       w.println("  private void addElementToMap(Element element, Map<String, Element> elementsMap) {");
-      w.println("    String attrName = (element.hasAttribute(\"data-mvpId\") ? \"data-mvpId\" : element.hasAttribute(\"data-gwtid\") ? \"data-gwtid\" : null);");
+      w.println("    String attrName = (element.hasAttribute(\"data-mvp-id\") ? \"data-mvp-id\" : element.hasAttribute(\"data-gwtid\") ? \"data-gwtid\" : null);");
       w.println("    if (attrName == null) {");
       w.println("      return;");
       w.println("    }");

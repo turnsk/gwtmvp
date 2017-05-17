@@ -20,12 +20,12 @@ import java.lang.annotation.Target;
 
 /**
  * Annotation for methods that handle HTML DOM events. The annotation value lists one or more
- * {@code data-mvpId} attributes that the method should handle the events for. The actual method
+ * {@code data-mvp-id} attributes that the method should handle the events for. The actual method
  * name does not matter. The type of the event is generated from the method parameter type, e.g.
  * 
- * <pre><code>// Registers ClickHandler on an element with data-mvpId="inputName"
+ * <pre><code>// Registers ClickHandler on an element with data-mvp-id="inputName"
  *{@literal @}HtmlHandler("inputName") void setClickHandler(ClickHandler handler);
- *{@literal //} Registers BlurHandler on elements with data-mvpId="inputName" and data-mvpId="inputEmail"
+ *{@literal //} Registers BlurHandler on elements with data-mvp-id="inputName" and data-mvp-id="inputEmail"
  *{@literal @}HtmlHandler({ "inputName", "inputEmail" }) void setBlurHandlerOnInputs(BlurHandler handler);</code></pre>
  */
 @Retention(RetentionPolicy.RUNTIME)
@@ -34,7 +34,7 @@ public @interface HtmlHandler {
   /**
    * Lists element IDs that the annotated method should handle events for.
    * 
-   * @return A list of {@code data-mvpId}s of elements that should register for the event.
+   * @return A list of {@code data-mvp-id}s of elements that should register for the event.
    */
   String[] value();
 }

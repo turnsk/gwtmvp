@@ -20,7 +20,7 @@ import java.lang.annotation.Target;
 
 /**
  * Annotation for methods that reference a HTML element in an accompanying .html file. For example,
- * when an {@code input} element has {@code data-mvpId="nameInput"}, the corresponding {@link View}
+ * when an {@code input} element has {@code data-mvp-id="nameInput"}, the corresponding {@link View}
  * method would be
  * 
  * <pre><code>@HtmlElement InputElement getNameInput();</code></pre>
@@ -32,10 +32,10 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 public @interface HtmlElement {
   /**
-   * Optionally can override the {@code data-mvpId} attribute that the generator searches for, the
+   * Optionally can override the {@code data-mvp-id} attribute that the generator searches for, the
    * ID is automatically generated from method name by default.
    * 
-   * @return The {@code data-mvpId} of the element that should map to this method. If omitted the ID
+   * @return The {@code data-mvp-id} of the element that should map to this method. If omitted the ID
    *         is generated from the method name.
    */
   String value() default "";

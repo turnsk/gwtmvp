@@ -13,6 +13,7 @@
  */
 package sk.turn.gwtmvp.client;
 
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 
 /**
@@ -25,10 +26,10 @@ import com.google.gwt.dom.client.Element;
  * must be <code>&lt;div&gt;</code>.
  * <p>
  * Every element in the .html that is either being mapped to a {@link HtmlElement} or
- * {@link HtmlHandler} must be marked with a {@code data-mvpId} attribute, which must be unique
- * within this view. For the connection between {@code data-mvpId} attribute and the name of the
+ * {@link HtmlHandler} must be marked with a {@code data-mvp-id} attribute, which must be unique
+ * within this view. For the connection between {@code data-mvp-id} attribute and the name of the
  * accessor method, see {@link HtmlElement} and/or {@link HtmlHandler}. Note that the
- * {@code data-mvpId} attribute is removed after the element has been mapped, i.e. you won't be able
+ * {@code data-mvp-id} attribute is removed after the element has been mapped, i.e. you won't be able
  * to read the attribute later.
  * <p>
  * A sample simple implementation may look like following:
@@ -42,17 +43,33 @@ import com.google.gwt.dom.client.Element;
  * <p>
  * HelloView.html
  * <pre><code>&lt;div&gt;
- *  &lt;a href="javascript:void(0)" data-mvpId="greetLink"&gt;Greet&lt;/a&gt;
- *  &lt;input type="text" data-mvpId="nameInput"/&gt;
- *  for the &lt;span data-mvpId="counter"&gt;&lt;/span&gt; time!
+ *  &lt;a href="javascript:void(0)" data-mvp-id="greetLink"&gt;Greet&lt;/a&gt;
+ *  &lt;input type="text" data-mvp-id="nameInput"/&gt;
+ *  for the &lt;span data-mvp-id="counter"&gt;&lt;/span&gt; time!
  *&lt;/div&gt;</code></pre>
  *
  * @param <E> The element class that matches the root element in the corresponding .html file.
  */
 public interface View<E extends Element> {
   /**
+   * An empty view made of a single empty {@code div} element.
+   */
+  public static final View<Element> EMPTY = new View<Element>() {
+    private Element root;
+    @Override
+    public Element getRootElement() {
+      if (root == null) {
+        root = Document.get().createDivElement();
+      }
+      return root;
+    }
+    @Override
+    public <E2 extends Element> E2 getElement(String mvpId) { return null; }
+  };
+  
+  /**
    * Do not implement or override this method, this is automatically done by the compile-time GWT
-   * generator. This method parses the .html file and maps all {@code data-mvpId} attributed
+   * generator. This method parses the .html file and maps all {@code data-mvp-id} attributed
    * elements.
    * 
    * @return The root element of this view.
@@ -60,7 +77,7 @@ public interface View<E extends Element> {
   E getRootElement();
 
   /**
-   * Tries to find an element with a specific {@code data-mvpId} and returns it. We strongly encourage 
+   * Tries to find an element with a specific {@code data-mvp-id} and returns it. We strongly encourage 
    * you to define the element in the View, though for one-time element usage this may help code brevity.
    * @param mvpId The ID of the element to find
    * @return The found Element or null if no such element exists in the HTML file
