@@ -122,7 +122,7 @@ public abstract class TableRowAdapter<T> extends ViewAdapter<T, TableRowAdapter.
   }
 
   /**
-   * Default implementation that populates the table cells with a return value of {@link #getCellText(int, Object)}.
+   * Default implementation that populates the table cells with a return value of {@link #getCellContent(int, Object)}.
    * Override this method if you need to perform more complex operation on a table cell.
    * @param column The column index of the table cell (0-based)
    * @param elem The DOM element of the table cell
