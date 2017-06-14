@@ -18,16 +18,14 @@ public class OptionAdapter extends ViewAdapter<Map.Entry<String, String>, Option
   static class OptionView implements View<OptionElement> {
     private OptionElement rootElement;
     @Override
-    public OptionElement getRootElement() {
-      if (rootElement == null) {
-        rootElement = Document.get().createOptionElement();
-      }
-      return rootElement;
+    public void loadView(ViewLoadedHandler<OptionElement> viewLoadedHandler) {
+      rootElement = Document.get().createOptionElement();
+      viewLoadedHandler.onViewLoaded(rootElement);
     }
     @Override
-    public <E2 extends Element> E2 getElement(String gwtId) {
-      return null;
-    }
+    public OptionElement getRootElement() { return rootElement; }
+    @Override
+    public <E2 extends Element> E2 getElement(String gwtId) { return null; }
   }
 
   public OptionAdapter(SelectElement parentElement) {

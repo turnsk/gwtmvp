@@ -13,7 +13,6 @@
  */
 package sk.turn.gwtmvp.client;
 
-import com.google.gwt.dom.client.AnchorElement;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NodeList;
@@ -21,6 +20,7 @@ import com.google.gwt.dom.client.TableCellElement;
 import com.google.gwt.dom.client.TableElement;
 import com.google.gwt.dom.client.TableRowElement;
 import com.google.gwt.dom.client.TableSectionElement;
+import com.google.gwt.safehtml.shared.SafeHtml;
 
 /**
  * Subclass of {@link ViewAdapter} to show items in a table row without the need to create {@link View} for it.
@@ -64,16 +64,14 @@ public abstract class TableRowAdapter<T> extends ViewAdapter<T, TableRowAdapter.
   static class TableRowView implements View<TableRowElement> {
     private TableRowElement rootElement;
     @Override
-    public TableRowElement getRootElement() {
-      if (rootElement == null) {
-        rootElement = Document.get().createTRElement();
-      }
-      return rootElement;
+    public void loadView(ViewLoadedHandler<TableRowElement> viewLoadedHandler) {
+      rootElement = Document.get().createTRElement();
+      viewLoadedHandler.onViewLoaded(rootElement);
     }
     @Override
-    public <E2 extends Element> E2 getElement(String gwtId) {
-      return null;
-    }
+    public TableRowElement getRootElement() { return rootElement; }
+    @Override
+    public <E2 extends Element> E2 getElement(String gwtId) { return null; }
   }
 
   private final int columns;
@@ -131,45 +129,20 @@ public abstract class TableRowAdapter<T> extends ViewAdapter<T, TableRowAdapter.
    * @param item The item for this row
    */
   protected void setTableCell(int column, TableCellElement elem, T item) {
-    String text = getCellText(column, item);
-    String historyToken = getCellHistoryToken(column, item);
-    if (historyToken == null) {
-      Element child;
-      while ((child = elem.getFirstChildElement()) != null) {
-        elem.removeChild(child);
-      }
-      elem.setInnerText(text);
+    Object content = getCellContent(column, item);
+    if (content instanceof SafeHtml) {
+      elem.setInnerSafeHtml((SafeHtml) content);
     } else {
-      Element child = elem.getFirstChildElement();
-      if (child != null && !(child instanceof AnchorElement)) {
-        while ((child = elem.getFirstChildElement()) != null) {
-          elem.removeChild(child);
-        }
-      }
-      AnchorElement a = (AnchorElement) (child != null && child instanceof AnchorElement ? child : 
-        elem.appendChild(elem.getOwnerDocument().createAnchorElement()));
-      a.setInnerText(text);
-      a.setHref("#" + historyToken);
+      elem.setInnerText(content != null ? content.toString() : "");
     }
   }
 
   /**
-   * Method that should return the text content of the table cell.
+   * Method that should return the text or {@code SafeHtml} content of the table cell.
    * @param column The column index of the table cell (0-based)
    * @param item The item for this row
-   * @return Value (inner text) that should be populated into the table cell
+   * @return Either {@code String} or {@code SafeHtml} that should be populated into the table cell
    */
-  protected abstract String getCellText(int column, T item);
-
-  /**
-   * Override this method to set links in cell(s), return a valid history token for a specific column or 
-   * null to make the cell plain text.
-   * @param column The column index of the table cell (0-based)
-   * @param item The item for this row
-   * @return Valid history token or null to make the cell plain text.
-   */
-  protected String getCellHistoryToken(int column, T item) {
-    return null;
-  }
+  protected abstract Object getCellContent(int column, T item);
 
 }

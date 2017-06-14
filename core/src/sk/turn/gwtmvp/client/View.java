@@ -51,22 +51,34 @@ import com.google.gwt.dom.client.Element;
  * @param <E> The element class that matches the root element in the corresponding .html file.
  */
 public interface View<E extends Element> {
+  public interface ViewLoadedHandler<E extends Element> {
+    void onViewLoaded(E rootElement);
+  }
   /**
    * An empty view made of a single empty {@code div} element.
    */
   public static final View<Element> EMPTY = new View<Element>() {
     private Element root;
     @Override
-    public Element getRootElement() {
-      if (root == null) {
-        root = Document.get().createDivElement();
-      }
-      return root;
+    public void loadView(ViewLoadedHandler<Element> viewLoadedHandler) {
+      root = Document.get().createDivElement();
+      viewLoadedHandler.onViewLoaded(root);
     }
+    @Override
+    public Element getRootElement() { return root; }
     @Override
     public <E2 extends Element> E2 getElement(String mvpId) { return null; }
   };
-  
+
+  /**
+   * Tells the view to load itself (root element). This may be an asynchronous operation, 
+   * in either case the {@code ViewLoadedHandler} must be called when the root element is ready.
+   * When used within {@code Mvp} it is guaranteed that this method will be called only once.
+   * 
+   * @param viewLoadedHandler The handler to receive the call when the view is loaded.
+   */
+  void loadView(ViewLoadedHandler<E> viewLoadedHandler);
+
   /**
    * Do not implement or override this method, this is automatically done by the compile-time GWT
    * generator. This method parses the .html file and maps all {@code data-mvp-id} attributed

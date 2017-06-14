@@ -117,22 +117,30 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> implemen
    * 
    * @param item Item to add.
    */
-  public void addItem(T item) {
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  public void addItem(final T item) {
     if (item == null) {
       return;
     }
-    Entry<T, V> entry = new Entry<>(item);
     if (availableViews.size() > 0) {
+      Entry<T, V> entry = new Entry<>(item);
       entry.view = availableViews.remove(0);
+      parentElement.appendChild(entry.view.getRootElement());
+      rootElementsToIndexMap.put(entry.view.getRootElement(), entries.size());
+      entries.add(entry);
+      safeSetViewData(entry);
     } else {
-      entry.view = createView();
-      // Allow the implementor to do any one-time initialization
-      onViewLoaded(entry.view);
+      final V view = createView();
+      view.loadView(new View.ViewLoadedHandler() {
+        @Override
+        public void onViewLoaded(Element rootElement) {
+          // Allow the implementor to do any one-time initialization
+          ViewAdapter.this.onViewLoaded(view);
+          availableViews.add(view);
+          addItem(item);
+        }
+      });
     }
-    parentElement.appendChild(entry.view.getRootElement());
-    rootElementsToIndexMap.put(entry.view.getRootElement(), entries.size());
-    entries.add(entry);
-    safeSetViewData(entry);
   }
 
   /**

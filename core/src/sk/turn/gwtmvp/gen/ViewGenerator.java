@@ -37,7 +37,9 @@ import com.google.gwt.core.ext.typeinfo.TypeOracle;
 import com.google.gwt.dev.resource.Resource;
 import com.google.gwt.dev.util.Util;
 import com.google.gwt.event.shared.EventHandler;
+import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 
+import sk.turn.gwtmvp.client.AsyncView;
 import sk.turn.gwtmvp.client.HandlerView;
 import sk.turn.gwtmvp.client.HtmlElement;
 import sk.turn.gwtmvp.client.HtmlHandler;
@@ -47,7 +49,7 @@ public class ViewGenerator extends IncrementalGenerator {
 
   @Override
   public long getVersionId() {
-    return 3;
+    return 6;
   }
 
   @Override
@@ -55,6 +57,7 @@ public class ViewGenerator extends IncrementalGenerator {
     try {
       TypeOracle typeOracle = context.getTypeOracle();
       JClassType viewType = typeOracle.getType(typeName);
+      boolean asyncView = (viewType.getAnnotation(AsyncView.class) != null);
       String packageName = viewType.getPackage().getName();
       String generatedClassName = viewType.getName().replace('.', '_') + "Impl";
       PrintWriter w = context.tryCreate(logger, packageName, generatedClassName);
@@ -147,6 +150,9 @@ public class ViewGenerator extends IncrementalGenerator {
       w.println("import com.google.gwt.event.dom.client.DomEvent;");
       w.println("import com.google.gwt.event.shared.HandlerManager;");
       w.println("import com.google.gwt.resources.client.ClientBundle;");
+      w.println("import com.google.gwt.resources.client.ExternalTextResource;");
+      w.println("import com.google.gwt.resources.client.ResourceCallback;");
+      w.println("import com.google.gwt.resources.client.ResourceException;");
       w.println("import com.google.gwt.resources.client.TextResource;");
       w.println("import com.google.gwt.user.client.Event;");
       w.println("import com.google.gwt.user.client.EventListener;");
@@ -157,10 +163,11 @@ public class ViewGenerator extends IncrementalGenerator {
       w.println("public class " + generatedClassName + " implements " + viewType.getQualifiedSourceName() + " {");
       w.println("  interface Resources extends ClientBundle {");
       w.println("    Resources INSTANCE = GWT.create(Resources.class);");
-      w.println("    @Source(\"" + viewType.getSimpleSourceName() + ".html\") TextResource htmlContent();");
+      w.println("    @Source(\"" + viewType.getSimpleSourceName() + ".html\") " + (asyncView ? "External" : "") + "TextResource htmlContent();");
       w.println("  }");
       w.println();
       w.println("  private static final Logger LOG = Logger.getLogger(\"" + packageName + "." + generatedClassName + "\");");
+      w.println("  private static String sHtml = null;");
       w.println();
       w.println("  private " + rootElementType + " rootElement = null;");
       for (Map.Entry<String, JMethod> entry : fieldsMap.entrySet()) {
@@ -172,14 +179,41 @@ public class ViewGenerator extends IncrementalGenerator {
       }
       w.println();
       w.println("  @Override");
-      w.println("  public " + rootElementType + " getRootElement() {");
+      w.println("  public void loadView(final ViewLoadedHandler<" + rootElementType + "> viewLoadedHandler) {");
       w.println("    if (rootElement != null) {");
-      w.println("      return rootElement;");
+      w.println("      viewLoadedHandler.onViewLoaded(rootElement);");
       w.println("    }");
-      w.println("    String html = Resources.INSTANCE.htmlContent().getText();");
+      if (asyncView) {
+        w.println("    if (sHtml != null) {");
+        w.println("      loadView(new String(sHtml), viewLoadedHandler);");
+        w.println("    } else {");
+        w.println("      try {");
+        w.println("        Resources.INSTANCE.htmlContent().getText(new ResourceCallback<TextResource>() {");
+        w.println("          public void onSuccess(TextResource r) {");
+        w.println("            sHtml = r.getText();");
+        w.println("            loadView(new String(sHtml), viewLoadedHandler);");
+        w.println("          }");
+        w.println("          public void onError(ResourceException e) {");
+        w.println("            LOG.severe(\"Failed to load " + viewType.getSimpleSourceName() + ".html: \" + e);");
+        w.println("            viewLoadedHandler.onViewLoaded(null);");
+        w.println("          }");
+        w.println("        });");
+        w.println("      } catch (ResourceException e) {");
+        w.println("        LOG.severe(\"Failed to load " + viewType.getSimpleSourceName() + ".html: \" + e);");
+        w.println("        viewLoadedHandler.onViewLoaded(null);");
+        w.println("      }");
+        w.println("    }");
+      } else {
+        w.println("    loadView(Resources.INSTANCE.htmlContent().getText(), viewLoadedHandler);");
+      }
+      w.println("  }");
+      w.println();
+      w.println("  private void loadView(String html, ViewLoadedHandler<" + rootElementType + "> viewLoadedHandler) {");
       // Replace any dictionary entries
+      new SafeHtmlBuilder();
       if (dictClassName != null) {
         w.println("    " + dictClassName + " dict = GWT.create(" + dictClassName + ".class);");
+        w.println("    Object dictEntry;");
         dictMatcher = Pattern.compile("\\{mvpDict\\.([^}]+)\\}").matcher(html);
         Set<String> replacedEntries = new HashSet<>();
         while (dictMatcher.find()) {
@@ -190,7 +224,8 @@ public class ViewGenerator extends IncrementalGenerator {
             } catch (NotFoundException e) {
               throw new Exception("Localization method " + dictClassName + "." + dictEntry + "() does not exist.");
             }
-            w.println("    html = html.replace(\"" + dictMatcher.group(0) + "\", dict." + dictEntry + "());");
+            w.println("    dictEntry = dict." + dictEntry + "();");
+            w.println("    html = html.replace(\"" + dictMatcher.group(0) + "\", dictEntry instanceof com.google.gwt.safehtml.shared.SafeHtml ? ((com.google.gwt.safehtml.shared.SafeHtml)dictEntry).asString() : dictEntry.toString());");
             replacedEntries.add(dictEntry);
           }
         }
@@ -248,6 +283,11 @@ public class ViewGenerator extends IncrementalGenerator {
           }
         }
       }
+      w.println("    viewLoadedHandler.onViewLoaded(rootElement);");
+      w.println("  }");
+      w.println();
+      w.println("  @Override");
+      w.println("  public " + rootElementType + " getRootElement() {");
       w.println("    return rootElement;");
       w.println("  }");
       w.println();

@@ -46,6 +46,7 @@ public class Mvp {
   private static final Logger LOG = Logger.getLogger(Mvp.class.getName());
 
   private class HistoryHandler implements ValueChangeHandler<String> {
+    @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
     public void onValueChange(ValueChangeEvent<String> event) {
       Presenter<? extends View<? extends Element>> matchingPresenter = null;
@@ -65,24 +66,52 @@ public class Mvp {
         LOG.warning("Not presenter found for token \"" + event.getValue() + "\".");
         return;
       }
-      try {
-        if (currentPresenter != matchingPresenter) {
-          hideCurrentPresenter();
-          currentPresenter = matchingPresenter;
-          attachView(currentPresenter.getView());
-          if (!initializedPresenters.contains(currentPresenter)) {
-            try {
-              currentPresenter.onViewLoaded();
-            } catch (Exception e) {
-              LOG.log(Level.SEVERE, "Call to Presenter.onViewLoaded() failed.", e);
-            }
-            initializedPresenters.add(currentPresenter);
+      final String[] groups = new String[matchResult.getGroupCount()];
+      for (int i = 0; i < matchResult.getGroupCount(); i++) {
+        groups[i] = matchResult.getGroup(i);
+      }
+      if (currentPresenter != matchingPresenter) {
+        hideCurrentPresenter();
+        currentPresenter = matchingPresenter;
+        if (!initializedPresenters.contains(currentPresenter)) {
+          final Presenter<? extends View<? extends Element>> presenterLoading = currentPresenter;
+          if (useLoader) {
+            Loader.show(loaderId);
           }
+          currentPresenter.getView().loadView(new View.ViewLoadedHandler() {
+            @Override
+            public void onViewLoaded(Element rootElement) {
+              if (useLoader) {
+                Loader.hide(loaderId);
+              }
+              // Stop if failed to load the view or presenter has changed in the meantime
+              if (rootElement == null || presenterLoading != currentPresenter) {
+                return;
+              }
+              attachView(currentPresenter.getView());
+              try {
+                currentPresenter.onViewLoaded();
+              } catch (Exception e) {
+                LOG.log(Level.SEVERE, "Call to Presenter.onViewLoaded() failed.", e);
+              }
+              showPresenter(groups);
+            }
+          });
+          initializedPresenters.add(currentPresenter);
+          return; // We'll continue in the handler callback method
+        } else if (currentPresenter.getView().getRootElement() != null) {
+          attachView(currentPresenter.getView());
         }
-        String[] groups = new String[matchResult.getGroupCount()];
-        for (int i = 0; i < matchResult.getGroupCount(); i++) {
-          groups[i] = matchResult.getGroup(i);
-        }
+      }
+      showPresenter(groups);
+    }
+
+    private void showPresenter(String[] groups) {
+      if (currentPresenter.getView().getRootElement() == null) {
+        // Root element of the view does not exist - probably still being loaded asynchronously
+        return;
+      }
+      try {
         if (currentPresenter instanceof BasePresenter) {
           ((BasePresenter<?>) currentPresenter).onPresenterShown(groups);
         } else {
@@ -100,6 +129,8 @@ public class Mvp {
   private final List<Presenter<? extends View<? extends Element>>> presenters = new ArrayList<>();
   private Presenter<? extends View<? extends Element>> currentPresenter;
   private final Set<Presenter<? extends View<? extends Element>>> initializedPresenters = new HashSet<>();
+  private boolean useLoader = false;
+  private String loaderId = null;
 
   /**
    * Constructs a new MVP object with a root container element.
@@ -108,6 +139,29 @@ public class Mvp {
    */
   public Mvp(Element rootElement) {
     this.rootElement = rootElement;
+  }
+
+  /**
+   * Enables a specific loader to show when loading views asynchronously. Note, that {@code null} is a valid value.
+   * The loader does not need to be initialized at the time of calling this method, but should be before calling {@code start()}.
+   * 
+   * @param loaderId
+   * @return This object for easy method chaining.
+   */
+  public Mvp setLoader(String loaderId) {
+    useLoader = true;
+    this.loaderId = loaderId;
+    return this;
+  }
+
+  /**
+   * Disables the loader when loading async views.
+   * 
+   * @return This object for easy method chaining.
+   */
+  public Mvp disableLoader() {
+    useLoader = false;
+    return this;
   }
 
   /**
@@ -125,9 +179,11 @@ public class Mvp {
    * Registers a new {@link Presenter}.
    * 
    * @param presenter {@link Presenter} to be managed by this Mvp.
+   * @return This object for easy method chaining.
    */
-  public void addPresenter(Presenter<? extends View<? extends Element>> presenter) {
+  public Mvp addPresenter(Presenter<? extends View<? extends Element>> presenter) {
     presenters.add(presenter);
+    return this;
   }
 
   /**
@@ -146,10 +202,13 @@ public class Mvp {
   /**
    * Starts the main handling loop by registering a GWT {@code History} handler. This method will
    * also re-fire the current history state so that the initial presenter is immediately shown.
+   * 
+   * @return This object for easy method chaining.
    */
-  public void start() {
+  public Mvp start() {
     historyRegistration = History.addValueChangeHandler(new HistoryHandler());
     History.fireCurrentHistoryState();
+    return this;
   }
 
   /**

@@ -3,6 +3,7 @@ package sk.turn.gwtmvp.samples.client.adapter;
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.dom.client.TableElement;
+import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 
 import sk.turn.gwtmvp.client.BasePresenter;
 import sk.turn.gwtmvp.client.HtmlElement;
@@ -26,10 +27,11 @@ public class PeoplePresenter extends BasePresenter<PeoplePresenter.PeopleView> {
   public void onViewLoaded() {
     personRowAdapter = new TableRowAdapter<Person>(view.getTable(), 4) {
       @Override
-      protected String getCellText(int column, Person item) {
+      protected Object getCellContent(int column, Person item) {
         switch (column) {
           case 0:
-            return item.name;
+            return new SafeHtmlBuilder().appendHtmlConstant("<a href=\"#person/").append(item.id).appendHtmlConstant("\">")
+                .appendEscaped(item.name).appendHtmlConstant("</a>").toSafeHtml();
           case 1:
             return item.email;
           case 2:
@@ -38,10 +40,6 @@ public class PeoplePresenter extends BasePresenter<PeoplePresenter.PeopleView> {
             return item.city;
         }
         return null;
-      }
-      @Override
-      protected String getCellHistoryToken(int column, Person item) {
-        return (column == 0 ? "person/" + item.id : null);
       }
     };
   }

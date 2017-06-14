@@ -2,8 +2,8 @@
 [MVP](https://en.wikipedia.org/wiki/Model-view-presenter) library for [GWT](http://www.gwtproject.org/), adding a light-weighted, easy-to-use MVP framework, plain HTML-to-Java binding and at the same time taking the complexity off of the built-in widgets library.
 
 * [GWT MVP Showcase](https://turnsk.github.io/gwtmvp/)
-* [Read Javadoc](https://jitpack.io/sk/turn/gwtmvp/1.3.2/javadoc/)
-* [Download JAR](https://jitpack.io/sk/turn/gwtmvp/1.3.2/gwtmvp-1.3.2.jar)
+* [Read Javadoc](https://jitpack.io/sk/turn/gwtmvp/1.4/javadoc/)
+* [Download JAR](https://jitpack.io/sk/turn/gwtmvp/1.4/gwtmvp-1.4.jar)
 
 ## Contents
 * [Assumptions and Goals](#assumptions-and-goals)
@@ -15,6 +15,7 @@
 * [View adapters](#view-adapters)
 * [Table adapters](#table-adapters)
 * [Internationalization](#internationalization)
+* [Async views](#async-views)
 
 ## Assumptions and Goals
 Following assumptions were considered when designing this library:
@@ -49,7 +50,7 @@ repositories {
 ```gradle
 dependencies {
   ...
-  providedCompile 'sk.turn:gwtmvp:1.3.2'
+  providedCompile 'sk.turn:gwtmvp:1.4'
 }
 ```
 
@@ -139,19 +140,24 @@ Although this library works best as a whole, you can also use the HTML to View b
 ```java
 // Create an instance of our view
 final HelloView helloView = GWT.create(HelloView.class);
-// Attach the view into some parent element
-DOM.findElementById("someContainerId").appendChild(helloView.getRootElement());
-// Work with the view
-helloView.getNameInput().setValue("John Doe");
-helloView.setGreetHandler(new ClickHandler() {
+helloView.loadView(new View.ViewLoadedHandler<DivElement>() {
   @Override
-  public void onClick(ClickEvent e) {
-    Window.alert("Hello " + hellowView.getNameInput().getValue());
+  public void onViewLoaded(DivElement rootElement) {
+    // Attach the view into some parent element
+    DOM.findElementById("someContainerId").appendChild(rootElement);
+    // Work with the view
+    helloView.getNameInput().setValue("John Doe");
+    helloView.setGreetHandler(new ClickHandler() {
+      @Override
+      public void onClick(ClickEvent e) {
+        Window.alert("Hello " + hellowView.getNameInput().getValue());
+      }
+    });
   }
 });
 ```
 
-Note, that you can work with the view methods only after first call to `View.getRootElement()` since that's where all the mapping occurs. Trying to call something on an element (or setting an event handler) before that will result in a `NullPointerException`.
+Note, that you can work with the view methods only after call to `View.loadView()` since that's where the view is loaded and the mapping occurs. Trying to call something on an element (or setting an event handler) before that will most likely result in a `NullPointerException`.
 
 ## Loaders
 This is an optional helper class to assist with a common task -- showing a loading indicator while one or more background tasks are in progress. The `Loader` class allows you to register one or more HTML elements that represent loaders in your application and you can show/hide them anywhere within your app.
@@ -265,23 +271,27 @@ Since a very common scenario is to list data in a table and creating a separate 
 ```java
 personAdapter = new TableRowAdapter<Person>(getView().getTable(), 2) {
   @Override
-  protected String getCellText(int column, Person item) {
+  protected Object getCellContent(int column, Person item) {
     switch (column) {
       case 0:
-        return item.getName();
+        // Can return either SafeHtml
+        return new SafeHtmlBuilder()
+            .appendHtmlConstant("<a href=\"#person/")
+            .append(item.id)
+            .appendHtmlConstant("\">")
+            .appendEscaped(item.getName())
+            .appendHtmlConstant("</a>")
+            .toSafeHtml();
       case 1:
+        // ...or plain String
         return item.getEmail();
     }
     return null;
   }
-  @Override
-  protected String getCellHistoryToken(int column, Person item) {
-    return (column == 0 ? "person/" + item.id : null);
-  }
 };
 ```
 
-Here we've created a table-row adapter with a parent table element and each row will have two columns. `TableRowAdapter.getCellText` is called for every column and every object letting you to choose the appropriate values. Should you want to have links in a cell `getCellHistoryToken` lets you to choose GWT history tokens for individual columns (`null` means the cell should have no link).
+Here we've created a table-row adapter with a parent table element and each row will have two columns. `TableRowAdapter.getCellContent` is called for every column and every object letting you to choose the appropriate text or SafeHtml values.
 
 There are cases where you may need to customize the cell even further, in that case override `TableRowAdapter.setTableCell` method:
 ```java
@@ -306,12 +316,39 @@ package com.sample.project;
 public interface Dictionary extends com.google.gwt.i18n.client.Constants {
   @DefaultStringValue("Hello world!")
   String helloWorld();
+  @DefaultStringValue("Hello <b>HTML</b> world!")
+  SafeHtml helloHtmlWorld();
 }
 ```
 
 In order to use the dictionary values in a view HTML file, first define the dictionary class in the root element's attribute `data-mvp-dict` and then use placeholders in the form `{mvpDict.identifier}` anywhere in the HTML file, e.g.
 ```html
 <div data-mvp-dict="com.sample.project.Dictionary">
-  <p title="{mvpDict.helloWorld}">{mvpDict.helloWorld}</p>
+  <p title="{mvpDict.helloWorld}">{mvpDict.helloHtmlWorld}</p>
 </div>
 ```
+
+## Async views
+By default, the view HTML files are bundled with the compiled javascript code, making the whole package larger, even when not all the views are being used in that particular session. I.e. when a user enters your site he has to wait until all the javascript and all the HTML files are loaded and first then starts seeing some content. GWT MVP allows the view HTML content to be separated from the code and only loading the content when necessary.
+
+You can enable asynchronous views simply by putting the `@AsyncView` annotation to the view interface:
+```java
+@AsyncView
+public interface HelloView extends View<DivElement> {
+  ...
+}
+```
+
+Because it may take a while before the view content is fetched from the server, it may be a nice habit to let the user know that something is going on on the background. The `Mvp` class has methods to set a loader in such cases, e.g.:
+```java
+  ...
+  Loader.register(DOM.findElementById("loaderId"), true);
+  new Mvp(Document.get().getBody())
+      .setLoader(null) // Tell MVP to use the default loader
+      .addPresenter(...)
+      ...
+      .start();
+  ...
+```
+
+Should you for some reason need to disable the loader at runtime, use the `Mvp.disableLoader()` method.
