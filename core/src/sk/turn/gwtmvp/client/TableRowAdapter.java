@@ -102,12 +102,7 @@ public abstract class TableRowAdapter<T> extends ViewAdapter<T, TableRowAdapter.
    */
   @Override
   public TableRowView createView() {
-    TableRowView row = new TableRowView();
-    TableRowElement rowElement = row.getRootElement();
-    for (int i = 0; i < columns; i++) {
-      rowElement.appendChild(rowElement.getOwnerDocument().createTDElement());
-    }
-    return row;
+    return new TableRowView();
   }
 
   /**
@@ -118,6 +113,14 @@ public abstract class TableRowAdapter<T> extends ViewAdapter<T, TableRowAdapter.
     NodeList<TableCellElement> cells = view.getRootElement().getCells();
     for (int i = 0; i < columns; i++) {
       setTableCell(i, cells.getItem(i), item);
+    }
+  }
+
+  @Override
+  protected void onViewLoaded(TableRowView view) {
+    TableRowElement rowElement = view.getRootElement();
+    for (int i = 0; i < columns; i++) {
+      rowElement.appendChild(rowElement.getOwnerDocument().createTDElement());
     }
   }
 

@@ -25,10 +25,11 @@ public class PeoplePresenter extends BasePresenter&lt;PeoplePresenter.PeopleView
   public void onViewLoaded() {
     personRowAdapter = new TableRowAdapter&lt;Person&gt;(view.getTable(), 4) {
       @Override
-      protected String getCellText(int column, Person item) {
+      protected Object getCellContent(int column, Person item) {
         switch (column) {
           case 0:
-            return item.name;
+            return new SafeHtmlBuilder().appendHtmlConstant("&lt;a href=\"#person/").append(item.id).appendHtmlConstant("\"&gt;")
+                .appendEscaped(item.name).appendHtmlConstant("&lt;/a&gt;").toSafeHtml();
           case 1:
             return item.email;
           case 2:
@@ -37,10 +38,6 @@ public class PeoplePresenter extends BasePresenter&lt;PeoplePresenter.PeopleView
             return item.city;
         }
         return null;
-      }
-      @Override
-      protected String getCellHistoryToken(int column, Person item) {
-        return (column == 0 ? "person/" + item.id : null);
       }
     };
   }
