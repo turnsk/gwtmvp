@@ -7,8 +7,8 @@ import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 
 import sk.turn.gwtmvp.client.BasePresenter;
 import sk.turn.gwtmvp.client.HtmlElement;
-import sk.turn.gwtmvp.client.TableRowAdapter;
 import sk.turn.gwtmvp.client.View;
+import sk.turn.gwtmvp.client.adapters.TableRowAdapter;
 import sk.turn.gwtmvp.samples.client.adapter.DataProvider.Person;
 
 public class PeoplePresenter extends BasePresenter<PeoplePresenter.PeopleView> {

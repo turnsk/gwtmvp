@@ -45,7 +45,7 @@ public class DataProvider {
     return crowd.get(id);
   }
 
-  private static Person getRandomPerson() {
+  public static Person getRandomPerson() {
     Person person = new Person();
     person.id = (long) (5000 * Math.random());
     person.name = NAMES[(int) (NAMES.length * Math.random())];

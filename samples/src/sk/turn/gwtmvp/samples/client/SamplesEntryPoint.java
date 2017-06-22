@@ -10,6 +10,7 @@ import sk.turn.gwtmvp.client.Mvp;
 import sk.turn.gwtmvp.client.View;
 import sk.turn.gwtmvp.samples.client.adapter.PeoplePresenter;
 import sk.turn.gwtmvp.samples.client.adapter.PersonPresenter;
+import sk.turn.gwtmvp.samples.client.adapter.PhonebookPresenter;
 import sk.turn.gwtmvp.samples.client.hello.HelloPresenter;
 import sk.turn.gwtmvp.samples.client.loader.LoadersPresenter;
 import sk.turn.gwtmvp.samples.client.tasks.TasksListPresenter;
@@ -29,6 +30,7 @@ public class SamplesEntryPoint implements EntryPoint {
     mvp.addPresenter(new PersonPresenter());
     mvp.addPresenter(new TasksLoginPresenter());
     mvp.addPresenter(new TasksListPresenter());
+    mvp.addPresenter(new PhonebookPresenter());
     // This last presenter catches any history token that hasn't been caught by other presenters
     mvp.addPresenter(new BasePresenter<SamplesView>(".*", (SamplesView) GWT.create(SamplesView.class)));
     mvp.start();

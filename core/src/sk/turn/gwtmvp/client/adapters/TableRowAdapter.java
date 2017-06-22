@@ -11,16 +11,18 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package sk.turn.gwtmvp.client;
+package sk.turn.gwtmvp.client.adapters;
 
-import com.google.gwt.dom.client.Document;
-import com.google.gwt.dom.client.Element;
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.NodeList;
 import com.google.gwt.dom.client.TableCellElement;
 import com.google.gwt.dom.client.TableElement;
 import com.google.gwt.dom.client.TableRowElement;
 import com.google.gwt.dom.client.TableSectionElement;
 import com.google.gwt.safehtml.shared.SafeHtml;
+
+import sk.turn.gwtmvp.client.View;
+import sk.turn.gwtmvp.client.ViewHtml;
 
 /**
  * Subclass of {@link ViewAdapter} to show items in a table row without the need to create {@link View} for it.
@@ -61,17 +63,8 @@ import com.google.gwt.safehtml.shared.SafeHtml;
  */
 public abstract class TableRowAdapter<T> extends ViewAdapter<T, TableRowAdapter.TableRowView> {
 
-  static class TableRowView implements View<TableRowElement> {
-    private TableRowElement rootElement;
-    @Override
-    public void loadView(ViewLoadedHandler<TableRowElement> viewLoadedHandler) {
-      rootElement = Document.get().createTRElement();
-      viewLoadedHandler.onViewLoaded(rootElement);
-    }
-    @Override
-    public TableRowElement getRootElement() { return rootElement; }
-    @Override
-    public <E2 extends Element> E2 getElement(String gwtId) { return null; }
+  @ViewHtml("<tr></tr>")
+  interface TableRowView extends View<TableRowElement> {
   }
 
   private final int columns;
@@ -102,7 +95,7 @@ public abstract class TableRowAdapter<T> extends ViewAdapter<T, TableRowAdapter.
    */
   @Override
   public TableRowView createView() {
-    return new TableRowView();
+    return GWT.create(TableRowView.class);
   }
 
   /**

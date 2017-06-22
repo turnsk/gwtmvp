@@ -20,7 +20,7 @@ import com.google.gwt.event.dom.client.MouseOverEvent;
 import sk.turn.gwtmvp.client.HandlerView;
 import sk.turn.gwtmvp.client.HtmlElement;
 import sk.turn.gwtmvp.client.HtmlHandler;
-import sk.turn.gwtmvp.client.ViewAdapter;
+import sk.turn.gwtmvp.client.adapters.ViewAdapter;
 
 public class TaskAdapter extends ViewAdapter<Task, TaskAdapter.TaskAdapterView> {
 
@@ -84,7 +84,7 @@ public class TaskAdapter extends ViewAdapter<Task, TaskAdapter.TaskAdapterView> 
   @HtmlHandler("check")
   void onCheckChange(ChangeEvent event) {
     int index = getItemIndexFromEvent(event);
-    getItem(index).setFinished(getItemView(index).getCheck().isChecked());
+    getItem(index, true).setFinished(getItemView(index).getCheck().isChecked());
     rearrangeTasks();
   }
 
@@ -102,7 +102,7 @@ public class TaskAdapter extends ViewAdapter<Task, TaskAdapter.TaskAdapterView> 
 
   private void finishEdit(DomEvent<?> event, boolean save) {
     int index = getItemIndexFromEvent(event);
-    Task task = getItem(index);
+    Task task = getItem(index, true);
     TaskAdapterView view = getItemView(index);
     if (save) {
       if (view.getNameInput().getValue().trim().length() == 0) {
@@ -125,7 +125,7 @@ public class TaskAdapter extends ViewAdapter<Task, TaskAdapter.TaskAdapterView> 
   }
 
   private void startEdit(int index) {
-    Task task = getItem(index);
+    Task task = getItem(index, true);
     TaskAdapterView view = getItemView(index);
     view.getEditButton().addClassName("hidden");
     view.getRemoveButton().addClassName("hidden");

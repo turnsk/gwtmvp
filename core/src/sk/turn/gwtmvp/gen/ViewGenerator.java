@@ -44,6 +44,7 @@ import sk.turn.gwtmvp.client.HandlerView;
 import sk.turn.gwtmvp.client.HtmlElement;
 import sk.turn.gwtmvp.client.HtmlHandler;
 import sk.turn.gwtmvp.client.View;
+import sk.turn.gwtmvp.client.ViewHtml;
 
 public class ViewGenerator extends IncrementalGenerator {
 
@@ -58,6 +59,7 @@ public class ViewGenerator extends IncrementalGenerator {
       TypeOracle typeOracle = context.getTypeOracle();
       JClassType viewType = typeOracle.getType(typeName);
       boolean asyncView = (viewType.getAnnotation(AsyncView.class) != null);
+      ViewHtml viewHtml = viewType.getAnnotation(ViewHtml.class);
       String packageName = viewType.getPackage().getName();
       String generatedClassName = viewType.getName().replace('.', '_') + "Impl";
       PrintWriter w = context.tryCreate(logger, packageName, generatedClassName);
@@ -78,10 +80,13 @@ public class ViewGenerator extends IncrementalGenerator {
       if (superType == null) {
         throw new Exception(typeName + " does not inherit from " + View.class.getName());
       }
-      // Make sure the view HTML file exists
-      Resource htmlResource = context.getResourcesOracle().getResource(packageName.replace('.', '/') + "/" + viewType.getSimpleSourceName() + ".html");
-      if (htmlResource == null) {
-        throw new Exception("Cannot find " + viewType.getSimpleSourceName() + ".html");
+      // If the view HTML is not inline, make sure the view HTML file exists
+      Resource htmlResource = null;
+      if (viewHtml == null) {
+        htmlResource = context.getResourcesOracle().getResource(packageName.replace('.', '/') + "/" + viewType.getSimpleSourceName() + ".html");
+        if (htmlResource == null) {
+          throw new Exception("Cannot find " + viewType.getSimpleSourceName() + ".html");
+        }
       }
       String rootElementType = superType.getTypeArgs()[0].getQualifiedSourceName();
       // Map all annotated methods
@@ -127,7 +132,7 @@ public class ViewGenerator extends IncrementalGenerator {
         }
       }
       // Check whether dictionary class is defined
-      String html = Util.readStreamAsString(htmlResource.openContents());
+      String html = (viewHtml != null ? viewHtml.value() : Util.readStreamAsString(htmlResource.openContents()));
       Matcher dictMatcher = Pattern.compile("^<[^<]+data-mvp-dict=\"(.+)\"").matcher(html);
       String dictClassName = null;
       JClassType dictClass = null;
@@ -161,18 +166,19 @@ public class ViewGenerator extends IncrementalGenerator {
       w.println("import java.util.logging.Logger;");
       w.println();
       w.println("public class " + generatedClassName + " implements " + viewType.getQualifiedSourceName() + " {");
-      w.println("  interface Resources extends ClientBundle {");
-      w.println("    Resources INSTANCE = GWT.create(Resources.class);");
-      w.println("    @Source(\"" + viewType.getSimpleSourceName() + ".html\") " + (asyncView ? "External" : "") + "TextResource htmlContent();");
-      w.println("  }");
-      w.println();
+      if (htmlResource != null) {
+        w.println("  interface Resources extends ClientBundle {");
+        w.println("    Resources INSTANCE = GWT.create(Resources.class);");
+        w.println("    @Source(\"" + viewType.getSimpleSourceName() + ".html\") " + (asyncView ? "External" : "") + "TextResource htmlContent();");
+        w.println("  }");
+        w.println();
+      }
       w.println("  private static final Logger LOG = Logger.getLogger(\"" + packageName + "." + generatedClassName + "\");");
-      w.println("  private static String sHtml = null;");
+      if (asyncView) {
+        w.println("  private static String sHtml = null;");
+      }
       w.println();
       w.println("  private " + rootElementType + " rootElement = null;");
-      for (Map.Entry<String, JMethod> entry : fieldsMap.entrySet()) {
-        w.println("  private " + entry.getValue().getReturnType().getQualifiedSourceName() + " generated_" + entry.getKey() + " = null;");
-      }
       w.println("  private final Map<String, Element> elementsMap = new HashMap<>();");
       if (handlerType != null) {
         w.println("  private " + handlerType + " handler;");
@@ -203,6 +209,8 @@ public class ViewGenerator extends IncrementalGenerator {
         w.println("        viewLoadedHandler.onViewLoaded(null);");
         w.println("      }");
         w.println("    }");
+      } else if (viewHtml != null) {
+        w.println("    loadView(\"" + escapeJavaString(viewHtml.value()) + "\", viewLoadedHandler);");
       } else {
         w.println("    loadView(Resources.INSTANCE.htmlContent().getText(), viewLoadedHandler);");
       }
@@ -244,11 +252,8 @@ public class ViewGenerator extends IncrementalGenerator {
       w.println("      addElementToMap(elements.getItem(i), elementsMap);");
       w.println("    }");
       for (Map.Entry<String, JMethod> entry : fieldsMap.entrySet()) {
-        w.println("    generated_" + entry.getKey() + " = (" + entry.getValue().getReturnType().getQualifiedSourceName() + ") elementsMap.get(\"" + entry
-            .getKey() + "\");");
-        w.println("    if (generated_" + entry.getKey() + " == null) {");
-        w.println("      LOG.severe(\"Could not find element with data-mvp-id=\\\"" + entry.getKey() + "\\\" in " + viewType.getSimpleSourceName()
-            + ".html.\");");
+        w.println("    if (elementsMap.get(\"" + entry.getKey() + "\") == null) {");
+        w.println("      LOG.severe(\"Could not find element with data-mvp-id=\\\"" + entry.getKey() + "\\\" in " + viewType.getSimpleSourceName() + ".html.\");");
         w.println("    }");
       }
       for (Map.Entry<String, Map<String, JMethod>> entry : handlersMap.entrySet()) {
@@ -306,7 +311,7 @@ public class ViewGenerator extends IncrementalGenerator {
         w.println();
         w.println("  @Override");
         w.println("  public " + entry.getValue().getReturnType().getQualifiedSourceName() + " " + entry.getValue().getName() + "() {");
-        w.println("    return generated_" + entry.getKey() + ";");
+        w.println("    return elementsMap.get(\"" + entry.getKey() + "\").<" + entry.getValue().getReturnType().getQualifiedSourceName() + ">cast();");
         w.println("  }");
       }
       for (JMethod method : viewType.getMethods()) {
@@ -343,6 +348,11 @@ public class ViewGenerator extends IncrementalGenerator {
       logger.log(TreeLogger.Type.ERROR, "Failed generating wrapper for class " + typeName + ": " + e.getMessage());
       throw new UnableToCompleteException();
     }
+  }
+
+  private String escapeJavaString(String str) {
+    return str.replace("\\", "\\\\").replace("\"", "\\\"").replace("\b", "\\b").replace("\n", "\\n")
+        .replace("\t", "\\t").replace("\f", "\\f").replace("\r", "\\r");
   }
 
 }
