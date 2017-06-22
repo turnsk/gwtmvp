@@ -24,7 +24,7 @@ public class PagingFilter<T> extends ViewAdapter.Filter<T> {
   }
 
   /**
-   * Event object for {@link #PagingChangeHandler}
+   * Event object for {@link PagingChangeHandler}
    */
   public static class PagingChangeEvent extends Event<PagingChangeHandler> {
     private static Event.Type<PagingChangeHandler> TYPE;
