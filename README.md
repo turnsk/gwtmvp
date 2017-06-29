@@ -77,6 +77,15 @@ In order to automatically map HTML elements onto the generated methods, we need 
 
 The `@HtmlHandler` annotation allows you to easily bind DOM events onto your handler implementations. In this particular case calling `setGreetHandler()` will allow you to capture all click events on the anchor element, see sample below.
 
+### Inline view HTML
+There may be cases where the view HTML is dead-simple or such that it'd be a waste to create a separate file for it. We've created the @ViewHtml annotation to cover exactly such (be carefull though not to over-use it as it reduces the readability of the HTML):
+```java
+@ViewHtml("<div><input type=\"text\" value=\"John Doe\" data-mvp-id=\"nameInput\"/></div>")
+public interface HelloView extends View<DivElement> {
+  @HtmlElement InputElement getNameInput();
+}
+```
+
 We'll get on with creating a Presenter for this view.
 
 ## Presenters
