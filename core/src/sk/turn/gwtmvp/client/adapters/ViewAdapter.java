@@ -186,9 +186,8 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> implemen
   }
 
   /**
-   * @deprecated Replaced by {@link #removeAt(int, boolean)}
+   * Calls {@code removeAt(index, true)}
    */
-  @Deprecated
   public T removeAt(int index) {
     return removeAt(index, true);
   }
@@ -256,15 +255,12 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> implemen
   }
 
   /**
-   * Returns the count of the items in the adapter.
+   * Returns the count of the (filtered) items in the adapter.
    * 
-   * @deprecated Replaced by {@link #getTotalCount()} and {@link #getFilteredCount()}
-   * 
-   * @return Count of the items.
+   * @return Count of the filtered items.
    */
-  @Deprecated
   public int getCount() {
-    return filteredList.size();
+    return getFilteredCount();
   }
 
   /**
@@ -286,9 +282,8 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> implemen
   }
 
   /**
-   * @deprecated Replaced by {@link #getItem(int, boolean)}
+   * Calls {@code getItem(index, true)}
    */
-  @Deprecated
   public T getItem(int index) {
     return getItem(index, true);
   }
