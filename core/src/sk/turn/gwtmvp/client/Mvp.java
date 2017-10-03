@@ -45,85 +45,6 @@ public class Mvp {
 
   private static final Logger LOG = Logger.getLogger(Mvp.class.getName());
 
-  private class HistoryHandler implements ValueChangeHandler<String> {
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    @Override
-    public void onValueChange(ValueChangeEvent<String> event) {
-      Presenter<? extends View<? extends Element>> matchingPresenter = null;
-      MatchResult matchResult = null;
-      for (Presenter<? extends View<? extends Element>> presenter : presenters) {
-        RegExp regExp = presenter.getTokenRegExp();
-        if (regExp == null) {
-          continue;
-        }
-        matchResult = regExp.exec(event.getValue());
-        if (matchResult != null) {
-          matchingPresenter = presenter;
-          break;
-        }
-      }
-      if (matchingPresenter == null) {
-        LOG.warning("Not presenter found for token \"" + event.getValue() + "\".");
-        return;
-      }
-      final String[] groups = new String[matchResult.getGroupCount()];
-      for (int i = 0; i < matchResult.getGroupCount(); i++) {
-        groups[i] = matchResult.getGroup(i);
-      }
-      if (currentPresenter != matchingPresenter) {
-        hideCurrentPresenter();
-        currentPresenter = matchingPresenter;
-        if (!initializedPresenters.contains(currentPresenter)) {
-          final Presenter<? extends View<? extends Element>> presenterLoading = currentPresenter;
-          if (useLoader) {
-            Loader.show(loaderId);
-          }
-          currentPresenter.getView().loadView(new View.ViewLoadedHandler() {
-            @Override
-            public void onViewLoaded(Element rootElement) {
-              if (useLoader) {
-                Loader.hide(loaderId);
-              }
-              // Stop if failed to load the view or presenter has changed in the meantime
-              if (rootElement == null || presenterLoading != currentPresenter) {
-                return;
-              }
-              attachView(currentPresenter.getView());
-              try {
-                currentPresenter.onViewLoaded();
-              } catch (Exception e) {
-                LOG.log(Level.SEVERE, "Call to Presenter.onViewLoaded() failed.", e);
-              }
-              showPresenter(groups);
-            }
-          });
-          initializedPresenters.add(currentPresenter);
-          return; // We'll continue in the handler callback method
-        } else if (currentPresenter.getView().getRootElement() != null) {
-          attachView(currentPresenter.getView());
-        }
-      }
-      showPresenter(groups);
-    }
-
-    private void showPresenter(String[] groups) {
-      if (currentPresenter.getView().getRootElement() == null) {
-        // Root element of the view does not exist - probably still being loaded asynchronously
-        return;
-      }
-      try {
-        if (currentPresenter instanceof BasePresenter) {
-          ((BasePresenter<?>) currentPresenter).onPresenterShown(groups);
-        } else {
-          currentPresenter.onShow(groups);
-        }
-      } catch (Exception e) {
-        LOG.log(Level.SEVERE, "Call to Presenter.onShow(String...) failed.", e);
-      }
-    }
-
-  }
-
   private final Element rootElement;
   private HandlerRegistration historyRegistration;
   private final List<Presenter<? extends View<? extends Element>>> presenters = new ArrayList<>();
@@ -206,7 +127,12 @@ public class Mvp {
    * @return This object for easy method chaining.
    */
   public Mvp start() {
-    historyRegistration = History.addValueChangeHandler(new HistoryHandler());
+    historyRegistration = History.addValueChangeHandler(new ValueChangeHandler<String>() {
+      @Override
+      public void onValueChange(ValueChangeEvent<String> event) {
+        showPresenter(event.getValue());
+      }
+    });
     History.fireCurrentHistoryState();
     return this;
   }
@@ -220,7 +146,33 @@ public class Mvp {
       historyRegistration.removeHandler();
       historyRegistration = null;
     }
-    hideCurrentPresenter();
+    setCurrentPresenter(null);
+  }
+
+  @SuppressWarnings("unchecked")
+  protected void showPresenter(String token) {
+    Presenter<? extends View<? extends Element>> matchingPresenter = null;
+    MatchResult matchResult = null;
+    for (Presenter<? extends View<? extends Element>> presenter : presenters) {
+      RegExp regExp = presenter.getTokenRegExp();
+      if (regExp == null) {
+        continue;
+      }
+      matchResult = regExp.exec(token);
+      if (matchResult != null) {
+        matchingPresenter = presenter;
+        break;
+      }
+    }
+    if (matchingPresenter == null) {
+      LOG.warning("No presenter found for token \"" + token + "\".");
+      return;
+    }
+    final String[] groups = new String[matchResult.getGroupCount()];
+    for (int i = 0; i < matchResult.getGroupCount(); i++) {
+      groups[i] = matchResult.getGroup(i);
+    }
+    setCurrentPresenter((Presenter<? extends View<Element>>) matchingPresenter, groups);
   }
 
   protected void attachView(View<? extends Element> view) {
@@ -231,21 +183,78 @@ public class Mvp {
     view.getRootElement().removeFromParent();
   }
 
-  private void hideCurrentPresenter() {
-    if (currentPresenter == null) {
+  protected Presenter<? extends View<? extends Element>> getCurrentPresenter() {
+    return currentPresenter;
+  }
+
+  protected <E extends Element> void setCurrentPresenter(Presenter<? extends View<E>> presenter, final String... groups) {
+    if (presenter == null) {
+      if (currentPresenter == null) {
+        return;
+      }
+      try {
+        if (currentPresenter instanceof BasePresenter) {
+          ((BasePresenter<?>) currentPresenter).onPresenterHidden();
+        } else {
+          currentPresenter.onHide();
+        }
+      } catch (Exception e) {
+        LOG.log(Level.SEVERE, "Call to Presenter.onHide() failed.", e);
+      }
+      detachView(currentPresenter.getView());
+      currentPresenter = null;
+    } else {
+      if (currentPresenter != presenter) {
+        setCurrentPresenter(null);
+        currentPresenter = presenter;
+        if (!initializedPresenters.contains(currentPresenter)) {
+          final Presenter<? extends View<? extends Element>> presenterLoading = currentPresenter;
+          if (useLoader) {
+            Loader.show(loaderId);
+          }
+          presenter.getView().loadView(new View.ViewLoadedHandler<E>() {
+            @Override
+            public void onViewLoaded(E rootElement) {
+              if (useLoader) {
+                Loader.hide(loaderId);
+              }
+              // Stop if failed to load the view or presenter has changed in the meantime
+              if (rootElement == null || presenterLoading != currentPresenter) {
+                return;
+              }
+              attachView(currentPresenter.getView());
+              try {
+                currentPresenter.onViewLoaded();
+              } catch (Exception e) {
+                LOG.log(Level.SEVERE, "Call to Presenter.onViewLoaded() failed.", e);
+              }
+              invokeOnPresenterShow(groups);
+            }
+          });
+          initializedPresenters.add(currentPresenter);
+          return; // We'll continue in the handler callback method
+        } else if (currentPresenter.getView().getRootElement() != null) {
+          attachView(currentPresenter.getView());
+        }
+      }
+      invokeOnPresenterShow(groups);
+    }
+  }
+
+  private void invokeOnPresenterShow(String[] groups) {
+    if (currentPresenter.getView().getRootElement() == null) {
+      // Root element of the view does not exist - probably still being loaded asynchronously
       return;
     }
     try {
       if (currentPresenter instanceof BasePresenter) {
-        ((BasePresenter<?>) currentPresenter).onPresenterHidden();
+        ((BasePresenter<?>) currentPresenter).onPresenterShown(groups);
       } else {
-        currentPresenter.onHide();
+        currentPresenter.onShow(groups);
       }
     } catch (Exception e) {
-      LOG.log(Level.SEVERE, "Call to Presenter.onHide() failed.", e);
+      LOG.log(Level.SEVERE, "Call to Presenter.onShow(String...) failed.", e);
     }
-    detachView(currentPresenter.getView());
-    currentPresenter = null;
   }
 
 }
