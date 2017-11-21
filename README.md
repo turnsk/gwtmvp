@@ -13,6 +13,7 @@
 * [Standalone View usage](#standalone-view-usage)
 * [Loaders](#loaders)
 * [View adapters](#view-adapters)
+* [View adapter filters](#view-adapter-filters)
 * [Table adapters](#table-adapters)
 * [Internationalization](#internationalization)
 * [Async views](#async-views)
@@ -274,6 +275,11 @@ public class SomePresenter extends BasePresenter<SomeView> {
   }
 }
 ```
+
+## View adapter filters
+But just shoving the data into the adapter may not be enough. Real-life situation will expect either (column?) sorting, filtering, paging the data or any other data manipulation for that matter. `ViewAdapter` has a built-in support for filters - customised data manipulation before the items are populated into the views. Some basic filter implementations are provided out-of-the-box such as `PagingFilter`, `SearchFilter`, `SortingFilter` or `ColumnSortingFilter`. Others can be easily written to fit any of your needs by providing an implementation of `ViewAdapter.Filter` interface.
+
+Filters within an adapter can be chained where the result of first filter is passed into the second, etc. See the [Phonebook sample](https://turnsk.github.io/gwtmvp/#phonebook) for a sample implementation.
 
 ## Table adapters
 Since a very common scenario is to list data in a table and creating a separate view for every type of object may be tedious and flood the project with similar java/HTML files, we've created a `TableRowAdapter` class that takes the load off. It is a `ViewAdapter` in the end, though it creates the table rows at runtime and allows you to format the data anyway you need.
