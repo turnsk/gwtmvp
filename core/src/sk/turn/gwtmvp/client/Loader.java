@@ -53,7 +53,7 @@ public class Loader {
    * Registers a specific loader. Tagging loaders allows you to work with more than one loader on a
    * single page.
    * 
-   * @param tag The tag that represents this loader, not that {@code null} is reserved for the
+   * @param tag The tag that represents this loader, note that {@code null} is reserved for the
    *          global (general) loader.
    * @param element The element that represents the loader.
    * @param isCounted Whether or not the loader is counted.
@@ -80,7 +80,7 @@ public class Loader {
    * Shows a specific loader if it hasn't been already visible before. For counted loaders this also
    * increases the shown counter.
    * 
-   * @param tag The tag of the loader to show, not that {@code null} is reserved for the global
+   * @param tag The tag of the loader to show, note that {@code null} is reserved for the global
    *          (general) loader.
    */
   public static void show(String tag) {
@@ -110,7 +110,7 @@ public class Loader {
    * Decreases the shown counter for a specific loader and hides the element if it has reached zero.
    * For non-counted loaders this hides the element immediately.
    * 
-   * @param tag The tag of the loader to hide, not that {@code null} is reserved for the global
+   * @param tag The tag of the loader to hide, note that {@code null} is reserved for the global
    *          (general) loader.
    */
   public static void hide(String tag) {
@@ -142,13 +142,13 @@ public class Loader {
   /**
    * Checks the current state of a specific loader.
    * 
-   * @param tag The tag of the loader to check, not that {@code null} is reserved for the global
+   * @param tag The tag of the loader to check, note that {@code null} is reserved for the global
    *          (general) loader.
    * @return True if the loader element is visible, false if not or such loader is not registered.
    */
   public static boolean isVisible(String tag) {
     Entry entry = entries.get(tag);
-    return (entry == null ? null : !Style.Display.NONE.equals(entry.element.getStyle().getDisplay()));
+    return (entry != null && !Style.Display.NONE.equals(entry.element.getStyle().getDisplay()));
   }
 
 }
