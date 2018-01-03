@@ -148,7 +148,7 @@ public class Loader {
    */
   public static boolean isVisible(String tag) {
     Entry entry = entries.get(tag);
-    return (entry != null && !Style.Display.NONE.equals(entry.element.getStyle().getDisplay()));
+    return (entry != null && !Style.Display.NONE.getCssName().equals(entry.element.getStyle().getDisplay()));
   }
 
 }
