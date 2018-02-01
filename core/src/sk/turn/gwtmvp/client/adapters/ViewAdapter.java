@@ -352,13 +352,13 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> implemen
     }
     for (int i = 0; i < filteredList.size(); i++) {
       if (i < usedViews.size()) {
-        safeSetViewData(usedViews.get(i), filteredList.get(i));
+        safeSetViewData(usedViews.get(i), filteredList.get(i), i);
       } else if (availableViews.size() > 0) {
         V view = availableViews.remove(0);
         usedViews.add(view);
         parentElement.appendChild(view.getRootElement());
         rootElementsToIndexMap.put(view.getRootElement(), i);
-        safeSetViewData(view, filteredList.get(i));
+        safeSetViewData(view, filteredList.get(i), i);
       } else {
         final V view = createView();
         final int index = i;
@@ -373,7 +373,7 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> implemen
               usedViews.add(view);
               parentElement.appendChild(view.getRootElement());
               rootElementsToIndexMap.put(view.getRootElement(), index);
-              safeSetViewData(view, item);
+              safeSetViewData(view, item, index);
             } else {
               availableViews.add(view); // Let's not put the view to waste
             }
@@ -483,15 +483,29 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> implemen
 
   /**
    * Override this method to update the view with the data from the object.
-   * 
+   * If you need position of view use {@link #setViewData(V, T, int)}.
+   *
    * @param view Instance of the view.
    * @param item Object to populate into the view.
    */
-  protected abstract void setViewData(V view, T item);
+  protected void setViewData(V view, T item) {
 
-  private void safeSetViewData(V view, T item) {
+  }
+
+  /**
+   * Override this method to update the view on the position with the data from the object.
+   *
+   * @param view Instance of the view.
+   * @param item Object to populate into the view.
+   * @param position Position of the view in adapter.
+   */
+  protected void setViewData(V view, T item, int position) {
+    setViewData(view, item);
+  }
+
+  private void safeSetViewData(V view, T item, int position) {
     try {
-      setViewData(view, item);
+      setViewData(view, item, position);
     } catch (Exception e) {
       LOG.log(Level.SEVERE, "Call to ViewAdapter.setViewData(V, T) failed.", e);
     }
