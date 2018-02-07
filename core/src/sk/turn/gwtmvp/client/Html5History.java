@@ -142,6 +142,7 @@ public class Html5History {
         } else {
             mode = historyMode;
         }
+        token = (mode ==  Mode.HTML5 ? getDecodedToken() : getDecodedToken());
     }
 
     public static Mode getMode() {
