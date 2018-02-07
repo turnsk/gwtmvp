@@ -7,7 +7,6 @@ import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.event.shared.HandlerManager;
 import com.google.gwt.event.shared.HandlerRegistration;
-import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
 
 public class Html5History {
@@ -95,7 +94,6 @@ public class Html5History {
 
     /**
      * History implementation using hash tokens.
-     * <p>This is the default implementation for all browsers except IE8.
      */
     private static class HashTokenHistoryImpl {
 
@@ -131,7 +129,7 @@ public class Html5History {
     /**
      * <p>
      * Choose your history mode. You have 3 options:
-     * <ul><li>history based on #hastag content change</li><li>history based on classical approach with "/" convention</li><li>auto-detect mode</li></ul>
+     * <ul><li>for history based on #hastag content please use {@code LEGACY}</li><li>for history based on classical approach with "/" convention use  {@code HTML5}</li><li>for auto-detect mode use  {@code AUTO_DETECT}</li></ul>
      * </p>
      *
      * @param historyMode
@@ -204,7 +202,7 @@ public class Html5History {
      * token explicitly on startup gives it an opportunity to run different
      * initialization code in the presence or absence of an initial token.
      *
-     * @return the initial token, or the empty string if none is present.
+     * @return the actual token
      */
     public static String getToken() {
         return token;
@@ -299,12 +297,7 @@ public class Html5History {
      *          event should be issued
      */
     public static void replaceItem(String historyToken, boolean issueEvent) {
-        if (getMode() == Mode.LEGACY) {
-            History.replaceItem(historyToken, issueEvent);
-            return;
-        }
         token = historyToken;
-
         if (getMode() == Mode.LEGACY) {
             hashTokenHistoryImpl.replaceToken(encodeHistoryToken(historyToken));
         } else {
@@ -331,16 +324,12 @@ public class Html5History {
     // this is called from JS when the native click on a element occurs
     private static void onAnchorClicked(String newToken) {
         newToken = removeHashTag(newToken);
-        if (getMode() == Mode.LEGACY) {
-            History.newItem(newToken);
-            return;
-        }
         newItem(newToken);
     }
 
     private static String removeHashTag(String token) {
-        if (token == null) {
-            return null;
+        if (token == null || token.equals("")) {
+            return "";
         }
         if (token.substring(0, 1).equals("#")) {
             return token.substring(1);
