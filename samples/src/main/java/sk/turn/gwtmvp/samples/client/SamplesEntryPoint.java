@@ -6,6 +6,7 @@ import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 
 import sk.turn.gwtmvp.client.BasePresenter;
+import sk.turn.gwtmvp.client.Html5History;
 import sk.turn.gwtmvp.client.Mvp;
 import sk.turn.gwtmvp.client.View;
 import sk.turn.gwtmvp.samples.client.adapter.PeoplePresenter;
@@ -33,6 +34,9 @@ public class SamplesEntryPoint implements EntryPoint {
     mvp.addPresenter(new PhonebookPresenter());
     // This last presenter catches any history token that hasn't been caught by other presenters
     mvp.addPresenter(new BasePresenter<SamplesView>(".*", (SamplesView) GWT.create(SamplesView.class)));
+
+    // choose mode of history
+    Html5History.setMode(Html5History.Mode.HTML5);
     mvp.start();
   }
 

@@ -11,13 +11,9 @@ import com.google.gwt.http.client.RequestBuilder;
 import com.google.gwt.http.client.RequestCallback;
 import com.google.gwt.http.client.RequestException;
 import com.google.gwt.http.client.Response;
-import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
 
-import sk.turn.gwtmvp.client.BasePresenter;
-import sk.turn.gwtmvp.client.HandlerView;
-import sk.turn.gwtmvp.client.HtmlElement;
-import sk.turn.gwtmvp.client.HtmlHandler;
+import sk.turn.gwtmvp.client.*;
 
 public class TasksLoginPresenter extends BasePresenter<TasksLoginPresenter.TasksLoginView> {
 
@@ -38,7 +34,7 @@ public class TasksLoginPresenter extends BasePresenter<TasksLoginPresenter.Tasks
         // Update this Presenter's RegExp to either handle all history tokens or none
         setTokenRegExp(username != null ? null : REGEXP);
         // Force MVP to update current presenter
-        History.fireCurrentHistoryState();
+        Html5History.fireCurrentHistoryState();
       }
     });
   }
