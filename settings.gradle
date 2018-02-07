@@ -1,0 +1,4 @@
+rootProject.name = 'gwtmvp'
+include 'core'
+include 'samples'
+
