@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/core/core_core.iml" filepath="$PROJECT_DIR$/.idea/modules/core/core_core.iml" group="core" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/core/core_main.iml" filepath="$PROJECT_DIR$/.idea/modules/core/core_main.iml" group="core" />
+      <module fileurl="file://$PROJECT_DIR$/gwtmvp.iml" filepath="$PROJECT_DIR$/gwtmvp.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/samples/samples_sample.iml" filepath="$PROJECT_DIR$/.idea/modules/samples/samples_sample.iml" group="samples" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/samples/samples_main.iml" filepath="$PROJECT_DIR$/.idea/modules/samples/samples_main.iml" group="samples" />
+    </modules>
+  </component>
+</project>

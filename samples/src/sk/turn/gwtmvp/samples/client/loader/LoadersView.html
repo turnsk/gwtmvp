@@ -1,0 +1,71 @@
+<div class="row">
+  <div class="col-md-6">
+    <h1>Non-counted loader</h1>
+    <p>
+      <span class="progress-bar progress-bar-striped active" data-mvp-id="loader" style="float:right; display:none; width: 33%;">Something is loading...</span>
+      <button class="btn btn-primary" data-mvp-id="showButton">Show loader</button>
+      <button class="btn btn-danger" data-mvp-id="hideButton">Hide loader</button>
+    </p>
+  </div>
+  <div class="col-md-6">
+    <h1>Counted loader</h1>
+    <p>
+      <span class="progress-bar progress-bar-striped active" data-mvp-id="countedLoader" style="float:right; display:none; width: 33%;"><span data-mvp-id="loadCount"></span> item(s) loading...</span>
+      <button class="btn btn-primary" data-mvp-id="showCountedButton">Show counted loader</button>
+      <button class="btn btn-danger" data-mvp-id="hideCountedButton">Hide counted loader</button>
+    </p>
+  </div>
+  <!-- Source code -->
+  <div class="col-md-12">
+    <h2><small><a href="https://github.com/turnsk/gwtmvp/blob/master/samples/src/sk/turn/gwtmvp/samples/client/loader/LoadersPresenter.java" target="_blank">LoadersPresenter.java</a></small></h2>
+    <pre class="pre-scrollable" style="max-height: 500px;">
+public class LoadersPresenter extends BasePresenter&lt;LoadersPresenter.LoadersView&gt; {
+
+  interface LoadersView extends HandlerView&lt;DivElement, LoadersPresenter&gt; {
+    @HtmlElement SpanElement getLoader();
+    @HtmlElement SpanElement getCountedLoader();
+    @HtmlElement SpanElement getLoadCount();
+  }
+
+  private int loadCount = 0;
+
+  public LoadersPresenter() {
+    super("^loaders$", (LoadersView) GWT.create(LoadersView.class));
+  }
+
+  @Override
+  public void onViewLoaded() {
+    view.setHandler(this);
+    // Register global (non-counted) loader
+    Loader.register(view.getLoader(), false);
+    // Register named (counted) loader
+    Loader.register("counted", view.getCountedLoader(), true);
+  }
+
+  @HtmlHandler("showButton")
+  void onShowClicked(ClickEvent event) {
+    Loader.show();
+  }
+
+  @HtmlHandler("hideButton")
+  void onHideClicked(ClickEvent event) {
+    Loader.hide();
+  }
+
+  @HtmlHandler("showCountedButton")
+  void onShowCountedClicked(ClickEvent event) {
+    Loader.show("counted");
+    view.getLoadCount().setInnerText(String.valueOf(++loadCount));
+  }
+
+  @HtmlHandler("hideCountedButton")
+  void onHideCountedClicked(ClickEvent event) {
+    Loader.hide("counted");
+    if (loadCount &gt; 0) {
+      view.getLoadCount().setInnerText(String.valueOf(--loadCount));
+    }
+  }
+
+}</pre>
+  </div>
+</div>

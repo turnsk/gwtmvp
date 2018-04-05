@@ -1,0 +1,57 @@
+<div class="row">
+  <div class="col-md-12 form-inline">
+    <div class="form-group well">
+      <label>Name</label>
+      <input type="text" value="John Doe" class="form-control" data-mvp-id="nameInput"/>
+      <button class="btn btn-default" data-mvp-id="greetLink">Greet</button>
+      for the <span data-mvp-id="counter"></span> time!
+    </div>
+  </div>
+  <!-- Source code -->
+  <div class="col-md-12">
+    <h2><small><a href="https://github.com/turnsk/gwtmvp/blob/master/samples/src/sk/turn/gwtmvp/samples/client/hello/HelloPresenter.java" target="_blank">HelloPresenter.java</a></small></h2>
+    <pre class="pre-scrollable" style="max-height: 500px;">
+public class HelloPresenter extends BasePresenter&lt;HelloPresenter.HelloView&gt; {
+
+  interface HelloView extends HandlerView&lt;DivElement, HelloPresenter&gt; {
+    @HtmlElement InputElement getNameInput();
+    @HtmlElement SpanElement getCounter();
+  }
+
+  private int counter = 1;
+
+  public HelloPresenter() {
+    super("^hello$", GWT.&lt;HelloView&gt;create(HelloView.class));
+    view.setHandler(this);
+  }
+
+  @Override
+  public void onShow(String... groups) {
+    view.getCounter().setInnerText(formatCounter());
+    view.getNameInput().focus();
+  }
+
+  @HtmlHandler("nameInput")
+  void onNameKeyPress(KeyPressEvent event) {
+    if (event.getCharCode() == KeyCodes.KEY_ENTER) {
+      onGreetClick(null);
+    }
+  }
+
+  @HtmlHandler("greetLink")
+  void onGreetClick(ClickEvent event) {
+    String name = view.getNameInput().getValue();
+    Window.alert("Hello " + (name.length() == 0 ? "Mr. Nobody" : name) + " for the " + formatCounter() + " time!");
+    counter++;
+    view.getCounter().setInnerText(formatCounter());
+  }
+
+  private String formatCounter() {
+    return counter + (counter % 10 == 1 &amp;&amp; (counter / 10) % 10 != 1 ? "st" : 
+      counter % 10 == 2 &amp;&amp; (counter / 10) % 10 != 1 ? "nd" : 
+        counter % 10 == 3 &amp;&amp; (counter / 10) % 10 != 1 ? "rd" : "th");
+  }
+
+}</pre>
+  </div>
+</div>
