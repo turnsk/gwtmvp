@@ -1,12 +1,23 @@
-group 'GwtMvp'
-version '1.5.3'
+group 'GWTMVP samples'
+version '1.0-SNAPSHOT'
 
+apply plugin: 'java'
 apply plugin: 'war'
 apply plugin: 'gwt'
+
+sourceCompatibility = 1.8
+
+allprojects {
+    repositories {
+        jcenter()
+        maven { url 'https://jitpack.io/' }
+    }
+}
 
 buildscript {
     repositories {
         jcenter()
+        mavenCentral()
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:2.0.0'
@@ -24,5 +35,5 @@ gwt {
 dependencies {
     providedCompile 'com.google.gwt:gwt-user:2.8.1'
     providedCompile 'com.google.gwt:gwt-dev:2.8.1'
-    compile project(':core')
+    providedCompile fileTree(dir: '../core/build/libs/', include: '*.jar')
 }
