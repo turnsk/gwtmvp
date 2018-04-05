@@ -488,7 +488,9 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> implemen
    * @param view Instance of the view.
    * @param item Object to populate into the view.
    */
-  protected abstract void setViewData(V view, T item);
+  protected void setViewData(V view, T item) {
+
+  }
 
   /**
    * Override this method to update the view on the position with the data from the object.
