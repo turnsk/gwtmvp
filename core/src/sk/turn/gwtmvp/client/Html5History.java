@@ -140,7 +140,7 @@ public class Html5History {
         } else {
             mode = historyMode;
         }
-        token = (mode ==  Mode.HTML5 ? getDecodedToken() : getDecodedToken());
+        token = (mode ==  Mode.HTML5 ? getDecodedToken() : getDecodedHash());
     }
 
     public static Mode getMode() {
