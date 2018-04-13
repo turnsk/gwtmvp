@@ -26,6 +26,7 @@ import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.regexp.shared.RegExp;
+import sk.turn.gwtmvp.client.history.History;
 
 /**
  * The centerpiece of the MVP framework, it manages the {@link Presenter}s and handles GWT history
@@ -126,13 +127,13 @@ public class Mvp {
    * @return This object for easy method chaining.
    */
   public Mvp start() {
-    historyRegistration = Html5History.addValueChangeHandler(new ValueChangeHandler<String>() {
+    historyRegistration = History.addValueChangeHandler(new ValueChangeHandler<String>() {
       @Override
       public void onValueChange(ValueChangeEvent<String> event) {
         showPresenter(event.getValue());
       }
     });
-    Html5History.fireCurrentHistoryState();
+    History.fireCurrentHistoryState();
     return this;
   }
 
