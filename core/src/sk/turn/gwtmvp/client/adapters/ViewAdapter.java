@@ -327,19 +327,13 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> implemen
   /**
    * Reloads the views in the adapter, optionally selecting specifying indices to reload.
    * 
+   * @deprecated Replaced by {@link #notifyDataSetChanged()}
+   * 
    * @param indices A list of indices to reload in the list, leave empty to reload all items.
    */
   @Deprecated
   public void reload(int... indices) {
-    if (indices.length == 0) {
-      notifyDataSetChanged();
-    } else {
-      for (int i : indices) {
-        if (i < usedViews.size()) {
-          safeSetViewData(usedViews.get(i), filteredList.get(i), i);
-        }
-      }
-    }
+    notifyDataSetChanged();
   }
 
   /**
@@ -489,7 +483,7 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> implemen
 
   /**
    * Override this method to update the view with the data from the object.
-   * If you need position of view use {@link #setViewData(View, Object, int)}.
+   * If you need position of view use {@link #setViewData(V, T, int)}.
    *
    * @param view Instance of the view.
    * @param item Object to populate into the view.
