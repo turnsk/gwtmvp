@@ -30,7 +30,7 @@ public class PeoplePresenter extends BasePresenter<PeoplePresenter.PeopleView> {
       protected Object getCellContent(int column, Person item) {
         switch (column) {
           case 0:
-            return new SafeHtmlBuilder().appendHtmlConstant("<a href=\"#person/").append(item.id).appendHtmlConstant("\">")
+            return new SafeHtmlBuilder().appendHtmlConstant("<a href=\"person/").append(item.id).appendHtmlConstant("\">")
                 .appendEscaped(item.name).appendHtmlConstant("</a>").toSafeHtml();
           case 1:
             return item.email;
