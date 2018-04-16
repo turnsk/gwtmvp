@@ -102,11 +102,11 @@ public abstract class TableRowAdapter<T> extends ViewAdapter<T, TableRowAdapter.
    * Loops through columns and calls {@code setTableCell} for each.
    */
   @Override
-  public void setViewData(TableRowView view, T item) {
+  public void setViewData(TableRowView view, T item, int position) {
     NodeList<TableCellElement> cells = view.getRootElement().getCells();
-    for (int i = 0; i < columns; i++) {
-      setTableCell(i, cells.getItem(i), item);
-    }
+	  for (int column = 0; column < columns; column++) {
+        setTableCell(position, column, cells.getItem(column), item);
+      }
   }
 
   @Override
@@ -118,12 +118,33 @@ public abstract class TableRowAdapter<T> extends ViewAdapter<T, TableRowAdapter.
   }
 
   /**
-   * Default implementation that populates the table cells with a return value of {@link #getCellContent(int, Object)}.
+   * Default implementation that populates the table cells with a return value of {@link #getCellContent(row, column, Object)}.
    * Override this method if you need to perform more complex operation on a table cell.
+   * @param row The row index of the table cell (0-based)
    * @param column The column index of the table cell (0-based)
    * @param elem The DOM element of the table cell
    * @param item The item for this row
    */
+  protected void setTableCell(int row, int column, TableCellElement elem, T item) {
+    Object content = getCellContent(row, column, item);
+    if (content == null) {
+      setTableCell(column, elem, item);
+    } else if (content instanceof SafeHtml) {
+      elem.setInnerSafeHtml((SafeHtml) content);
+    } else {
+      elem.setInnerText(content != null ? content.toString() : "");
+    }
+  }
+
+  /**
+   * Default implementation that populates the table cells with a return value of {@link #getCellContent(column, Object)}.
+   * Override this method if you need to perform more complex operation on a table cell.
+   * @param column The column index of the table cell (0-based)
+   * @param elem The DOM element of the table cell
+   * @param item The item for this row
+   * @deprecated As of release 1.6, replaced by {@link #setTableCell(row, column, V, T)}
+   */
+  @Deprecated
   protected void setTableCell(int column, TableCellElement elem, T item) {
     Object content = getCellContent(column, item);
     if (content instanceof SafeHtml) {
@@ -138,7 +159,22 @@ public abstract class TableRowAdapter<T> extends ViewAdapter<T, TableRowAdapter.
    * @param column The column index of the table cell (0-based)
    * @param item The item for this row
    * @return Either {@code String} or {@code SafeHtml} that should be populated into the table cell
+   * @deprecated As of release 1.6, replaced by {@link #getCellContent(row, column, T)}
    */
-  protected abstract Object getCellContent(int column, T item);
+  @Deprecated
+  protected Object getCellContent(int column, T item) {
+	  return null;
+  }
+  
+  /**
+   * Method that should return the text or {@code SafeHtml} content of the table cell.
+   * @param row The row index of the table cell (0-based)
+   * @param column The column index of the table cell (0-based)
+   * @param item The item for this row
+   * @return Either {@code String} or {@code SafeHtml} that should be populated into the table cell
+   */
+  protected Object getCellContent(int row, int column, T item) {
+    return getCellContent(column, item);
+  }
 
 }
