@@ -1,3 +1,16 @@
+/*
+ * Copyright 2018 Turn s.r.o.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ */
 package sk.turn.gwtmvp.client.history;
 
 import com.google.gwt.event.logical.shared.HasValueChangeHandlers;
@@ -52,7 +65,7 @@ public class History {
   }
 
   /**
-   * Adds a {@link com.google.gwt.event.logical.shared.ValueChangeEvent} handler
+   * Adds a {@code com.google.gwt.event.logical.shared.ValueChangeEvent} handler
    * to be informed of changes to the browser's history stack.
    *
    * @param handler the handler
@@ -81,10 +94,9 @@ public class History {
 
   /**
    * Fire
-   * {@link ValueChangeHandler#onValueChange(com.google.gwt.event.logical.shared.ValueChangeEvent)}
+   * {@code ValueChangeHandler.onValueChange(com.google.gwt.event.logical.shared.ValueChangeEvent)}
    * events with the current history state. This is most often called at the end
-   * of an application's
-   * {@link com.google.gwt.core.client.EntryPoint#onModuleLoad()} to inform
+   * of an application's {@code com.google.gwt.core.client.EntryPoint.onModuleLoad()} to inform
    * history handlers of the initial application state.
    */
   public static void fireCurrentHistoryState() {
@@ -101,7 +113,7 @@ public class History {
 
   /**
    * Gets the current history token. The handler will not receive a
-   * {@link ValueChangeHandler#onValueChange(com.google.gwt.event.logical.shared.ValueChangeEvent)}
+   * {@code ValueChangeHandler.onValueChange(com.google.gwt.event.logical.shared.ValueChangeEvent)}
    * event for the initial token; requiring that an application request the
    * token explicitly on startup gives it an opportunity to run different
    * initialization code in the presence or absence of an initial token.
@@ -114,7 +126,7 @@ public class History {
 
   /**
    * Adds a new browser history entry. Calling this method will cause
-   * {@link ValueChangeHandler#onValueChange(com.google.gwt.event.logical.shared.ValueChangeEvent)}
+   * {@code ValueChangeHandler.onValueChange(com.google.gwt.event.logical.shared.ValueChangeEvent)}
    * to be called as well.
    *
    * @param historyToken the token to associate with the new history item
@@ -125,12 +137,12 @@ public class History {
 
   /**
    * Adds a new browser history entry. Calling this method will cause
-   * {@link ValueChangeHandler#onValueChange(com.google.gwt.event.logical.shared.ValueChangeEvent)}
+   * {@code ValueChangeHandler.onValueChange(com.google.gwt.event.logical.shared.ValueChangeEvent)}
    * to be called as well if and only if issueEvent is true.
    *
    * @param historyToken the token to associate with the new history item
    * @param issueEvent true if a
-   *      {@link ValueChangeHandler#onValueChange(com.google.gwt.event.logical.shared.ValueChangeEvent)}
+   *      {@code ValueChangeHandler.onValueChange(com.google.gwt.event.logical.shared.ValueChangeEvent)}
    *      event should be issued
    */
   public static void newItem(String historyToken, boolean issueEvent) {
@@ -155,7 +167,7 @@ public class History {
    * this method in your code.
    *
    * <p>Calling this method will cause
-   * {@link ValueChangeHandler#onValueChange(com.google.gwt.event.logical.shared.ValueChangeEvent)}
+   * {@code ValueChangeHandler.onValueChange(com.google.gwt.event.logical.shared.ValueChangeEvent)}
    * to be called as well.
    *
    * @param historyToken history token to replace current top entry
@@ -173,12 +185,12 @@ public class History {
    * this method in your code.
    *
    * <p>Calling this method will cause
-   * {@link ValueChangeHandler#onValueChange(com.google.gwt.event.logical.shared.ValueChangeEvent)}
+   * {@code ValueChangeHandler.onValueChange(com.google.gwt.event.logical.shared.ValueChangeEvent)}
    * to be called as well if and only if issueEvent is true.
    *
    * @param historyToken history token to replace current top entry
    * @param issueEvent issueEvent true if a
-   *      {@link ValueChangeHandler#onValueChange(com.google.gwt.event.logical.shared.ValueChangeEvent)}
+   *      {@code ValueChangeHandler.onValueChange(com.google.gwt.event.logical.shared.ValueChangeEvent)}
    *      event should be issued
    */
   public static void replaceItem(String historyToken, boolean issueEvent) {
