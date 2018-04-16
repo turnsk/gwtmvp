@@ -2,8 +2,8 @@
 [MVP](https://en.wikipedia.org/wiki/Model-view-presenter) library for [GWT](http://www.gwtproject.org/), adding a light-weighted, easy-to-use MVP framework, plain HTML-to-Java binding and at the same time taking the complexity off of the built-in widgets library.
 
 * [GWT MVP Showcase](https://turnsk.github.io/gwtmvp/)
-* [Read Javadoc](https://jitpack.io/sk/turn/gwtmvp/1.5.4/javadoc/)
-* [Download JAR](https://jitpack.io/sk/turn/gwtmvp/1.5.4/gwtmvp-1.5.4.jar)
+* [Read Javadoc](https://jitpack.io/sk/turn/gwtmvp/1.6/javadoc/)
+* [Download JAR](https://jitpack.io/sk/turn/gwtmvp/1.6/gwtmvp-1.6.jar)
 
 ## Contents
 * [Assumptions and Goals](#assumptions-and-goals)
@@ -51,7 +51,7 @@ repositories {
 ```gradle
 dependencies {
   ...
-  providedCompile 'sk.turn:gwtmvp:1.5.4'
+  providedCompile 'sk.turn:gwtmvp:1.6'
 }
 ```
 
@@ -234,7 +234,7 @@ class PersonAdapter extends ViewAdapter<PersonAdapter.PersonView, Person> {
     return view;
   }
   @Override
-  protected void setViewData(PersonView view, Person item) {
+  protected void setViewData(PersonView view, Person item, int position) {
     view.getName().setInnerText(item.getName());
     view.getName().setHref("person/" + item.getId());
   }
@@ -286,12 +286,12 @@ Since a very common scenario is to list data in a table and creating a separate 
 ```java
 personAdapter = new TableRowAdapter<Person>(getView().getTable(), 2) {
   @Override
-  protected Object getCellContent(int column, Person item) {
+  protected Object getCellContent(int row, int column, Person item) {
     switch (column) {
       case 0:
         // Can return either SafeHtml
         return new SafeHtmlBuilder()
-            .appendHtmlConstant("<a href=\"#person/")
+            .appendHtmlConstant("<a href=\"person/")
             .append(item.id)
             .appendHtmlConstant("\">")
             .appendEscaped(item.getName())
@@ -312,9 +312,9 @@ There are cases where you may need to customize the cell even further, in that c
 ```java
   ...
   @Override
-  protected void setTableCell(int column, TableCellElement elem, Person item) {
+  protected void setTableCell(int row, int column, TableCellElement elem, Person item) {
     // You may decide not to call the super-method, in which case you have full control of the cell yourself
-    super.setTableCell(column, elem, item);
+    super.setTableCell(row, column, elem, item);
     if (column == 1) {
       // Right-align content in the second column
       elem.getStyle().setTextAlign(Style.TextAlign.RIGHT);

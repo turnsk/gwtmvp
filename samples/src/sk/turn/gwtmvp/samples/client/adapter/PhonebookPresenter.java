@@ -47,7 +47,7 @@ public class PhonebookPresenter extends BasePresenter<PhonebookPresenter.Phonebo
     // Initialize the table row adapter
     adapter = new TableRowAdapter<DataProvider.Person>(view.getTable(), 3) {
       @Override
-      protected Object getCellContent(int column, Person item) {
+      protected Object getCellContent(int row, int column, Person item) {
         switch (column) {
           case 0:
             return item.name;
