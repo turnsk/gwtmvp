@@ -493,7 +493,7 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> implemen
    *
    * @param view Instance of the view.
    * @param item Object to populate into the view.
-   * @deprecated As of release 1.6, replaced by {@link #setViewData(V, T, int)}
+   * @deprecated As of release 1.6, replaced by {@link #setViewData(View, Object, int)}
    */
   @Deprecated
   protected void setViewData(V view, T item) {

@@ -99,7 +99,7 @@ public abstract class TableRowAdapter<T> extends ViewAdapter<T, TableRowAdapter.
   }
 
   /**
-   * Loops through columns and calls {@code setTableCell} for each.
+   * Loops through columns and calls {@code setTableCell(int, int, TableCellElement, Object)} for each.
    */
   @Override
   public void setViewData(TableRowView view, T item, int position) {
@@ -118,7 +118,7 @@ public abstract class TableRowAdapter<T> extends ViewAdapter<T, TableRowAdapter.
   }
 
   /**
-   * Default implementation that populates the table cells with a return value of {@code getCellContent(row, column, T)}.
+   * Default implementation that populates the table cells with a return value of {@link #getCellContent(int, int, Object)}.
    * Override this method if you need to perform more complex operation on a table cell.
    * @param row The row index of the table cell (0-based)
    * @param column The column index of the table cell (0-based)
@@ -137,12 +137,12 @@ public abstract class TableRowAdapter<T> extends ViewAdapter<T, TableRowAdapter.
   }
 
   /**
-   * Default implementation that populates the table cells with a return value of {@code getCellContent(column, T)}.
+   * Default implementation that populates the table cells with a return value of {@link #getCellContent(int, Object)}.
    * Override this method if you need to perform more complex operation on a table cell.
    * @param column The column index of the table cell (0-based)
    * @param elem The DOM element of the table cell
    * @param item The item for this row
-   * @deprecated As of release 1.6, replaced by {@code setTableCell(row, column, V, T)}
+   * @deprecated As of release 1.6, replaced by {@code setTableCell(int, int, TableCellElement, Object)}
    */
   @Deprecated
   protected void setTableCell(int column, TableCellElement elem, T item) {
@@ -159,7 +159,7 @@ public abstract class TableRowAdapter<T> extends ViewAdapter<T, TableRowAdapter.
    * @param column The column index of the table cell (0-based)
    * @param item The item for this row
    * @return Either {@code String} or {@code SafeHtml} that should be populated into the table cell
-   * @deprecated As of release 1.6, replaced by {@code getCellContent(row, column, T)}
+   * @deprecated As of release 1.6, replaced by {@link #getCellContent(int, int, Object)}
    */
   @Deprecated
   protected Object getCellContent(int column, T item) {
