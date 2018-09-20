@@ -192,15 +192,7 @@ public class Mvp {
       if (currentPresenter == null) {
         return;
       }
-      try {
-        if (currentPresenter instanceof BasePresenter) {
-          ((BasePresenter<?>) currentPresenter).onPresenterHidden();
-        } else {
-          currentPresenter.onHide();
-        }
-      } catch (Exception e) {
-        LOG.log(Level.SEVERE, "Call to Presenter.onHide() failed.", e);
-      }
+      invokeOnPresenterHide();
       detachView(currentPresenter.getView());
       currentPresenter = null;
     } else {
@@ -254,6 +246,35 @@ public class Mvp {
       }
     } catch (Exception e) {
       LOG.log(Level.SEVERE, "Call to Presenter.onShow(String...) failed.", e);
+    }
+    // Call onShow on all controls
+    for (Control<? extends View<? extends Element>> ctrl : currentPresenter.getView().getControls()) {
+      try {
+        ctrl.onShow();
+      } catch (Exception e) {
+        LOG.log(Level.SEVERE, "Call to Control.onShow() failed.", e);
+      }
+    }
+  }
+
+  private void invokeOnPresenterHide() {
+    // Call onHide on all controls
+    for (Control<? extends View<? extends Element>> ctrl : currentPresenter.getView().getControls()) {
+      try {
+        ctrl.onHide();
+      } catch (Exception e) {
+        LOG.log(Level.SEVERE, "Call to Control.onHide() failed.", e);
+      }
+    }
+    // Call onHide on the current presenter
+    try {
+      if (currentPresenter instanceof BasePresenter) {
+        ((BasePresenter<?>) currentPresenter).onPresenterHidden();
+      } else {
+        currentPresenter.onHide();
+      }
+    } catch (Exception e) {
+      LOG.log(Level.SEVERE, "Call to Presenter.onHide() failed.", e);
     }
   }
 

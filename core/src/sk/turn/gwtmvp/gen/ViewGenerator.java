@@ -40,6 +40,7 @@ import com.google.gwt.event.shared.EventHandler;
 import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 
 import sk.turn.gwtmvp.client.AsyncView;
+import sk.turn.gwtmvp.client.Control;
 import sk.turn.gwtmvp.client.HandlerView;
 import sk.turn.gwtmvp.client.HtmlElement;
 import sk.turn.gwtmvp.client.HtmlHandler;
@@ -50,13 +51,14 @@ public class ViewGenerator extends IncrementalGenerator {
 
   @Override
   public long getVersionId() {
-    return 6;
+    return 7;
   }
 
   @Override
   public RebindResult generateIncrementally(TreeLogger logger, GeneratorContext context, String typeName) throws UnableToCompleteException {
     try {
       TypeOracle typeOracle = context.getTypeOracle();
+      JClassType controlClassType = typeOracle.findType(Control.class.getName());
       JClassType viewType = typeOracle.getType(typeName);
       boolean asyncView = (viewType.getAnnotation(AsyncView.class) != null);
       ViewHtml viewHtml = viewType.getAnnotation(ViewHtml.class);
@@ -151,6 +153,7 @@ public class ViewGenerator extends IncrementalGenerator {
       w.println("import com.google.gwt.core.client.GWT;");
       w.println("import com.google.gwt.dom.client.Element;");
       w.println("import com.google.gwt.dom.client.Document;");
+      w.println("import com.google.gwt.dom.client.Node;");
       w.println("import com.google.gwt.dom.client.NodeList;");
       w.println("import com.google.gwt.event.dom.client.DomEvent;");
       w.println("import com.google.gwt.event.shared.HandlerManager;");
@@ -164,6 +167,7 @@ public class ViewGenerator extends IncrementalGenerator {
       w.println("import java.util.HashMap;");
       w.println("import java.util.Map;");
       w.println("import java.util.logging.Logger;");
+      w.println("import sk.turn.gwtmvp.client.Control;");
       w.println();
       w.println("public class " + generatedClassName + " implements " + viewType.getQualifiedSourceName() + " {");
       if (htmlResource != null) {
@@ -180,6 +184,7 @@ public class ViewGenerator extends IncrementalGenerator {
       w.println();
       w.println("  private " + rootElementType + " rootElement = null;");
       w.println("  private final Map<String, Element> elementsMap = new HashMap<>();");
+      w.println("  private final Map<String, Control> controlsMap = new HashMap<>();");
       if (handlerType != null) {
         w.println("  private " + handlerType + " handler;");
       }
@@ -238,6 +243,27 @@ public class ViewGenerator extends IncrementalGenerator {
           }
         }
       }
+      // Create all the controls here
+      boolean controlDefined = false;
+      for (Map.Entry<String, JMethod> entry : fieldsMap.entrySet()) {
+        if (isMethodReturningType(entry.getValue(), controlClassType)) {
+          if (!controlDefined) {
+            w.println("    Control ctrl;");
+            controlDefined = true;
+          }
+          JClassType controlViewClass = entry.getValue().getReturnType().isClass().getSuperclass().isParameterized().getTypeArgs()[0];
+          // Show compiler warning when controlViewClass is annotated with @AsyncView
+          if (controlViewClass.isAnnotationPresent(AsyncView.class)) {
+            logger.log(TreeLogger.Type.WARN, entry.getValue().getReturnType().getQualifiedSourceName() + ".onShow() or .onHide() may be called before .onViewLoaded() for async control views.");
+          }
+          w.println("    ctrl = new " + entry.getValue().getReturnType().getQualifiedSourceName() + "();");
+          w.println("    if (ctrl.getView() == null) {");
+          w.println("      ctrl.setView((" + controlViewClass.getQualifiedSourceName() + ") GWT.create(" + controlViewClass.getQualifiedSourceName() + ".class));");
+          w.println("    }");
+          w.println("    controlsMap.put(\"" + entry.getKey() + "\", ctrl);");
+        }
+      }
+      // Load the view HTML
       w.println("    Element tempElem = Document.get().create" + (
           rootElementType.equals("com.google.gwt.dom.client.TableRowElement") ? "TBody" :
             rootElementType.equals("com.google.gwt.dom.client.TableCellElement") ? "TR" : "Div") + "Element();");
@@ -246,16 +272,19 @@ public class ViewGenerator extends IncrementalGenerator {
       if (dictClassName != null) {
         w.println("    rootElement.removeAttribute(\"data-mvp-dict\");");
       }
-      w.println("    addElementToMap(rootElement, elementsMap);");
+      // Loop through all the sub-elements and add the attributed elements to map or replace control elements with view HTML
+      w.println("    addElementToMap(rootElement);");
       w.println("    NodeList<Element> elements = rootElement.getElementsByTagName(\"*\");");
       w.println("    for (int i = 0; i < elements.getLength(); i++) {");
-      w.println("      addElementToMap(elements.getItem(i), elementsMap);");
+      w.println("      addElementToMap(elements.getItem(i));");
       w.println("    }");
+      // Make sure we have all the declared elements/controls
       for (Map.Entry<String, JMethod> entry : fieldsMap.entrySet()) {
-        w.println("    if (elementsMap.get(\"" + entry.getKey() + "\") == null) {");
+        w.println("    if (elementsMap.get(\"" + entry.getKey() + "\") == null && controlsMap.get(\"" + entry.getKey() + "\") == null) {");
         w.println("      LOG.severe(\"Could not find element with data-mvp-id=\\\"" + entry.getKey() + "\\\" in " + viewType.getSimpleSourceName() + ".html.\");");
         w.println("    }");
       }
+      // Make sure we have all the elements for handlers
       for (Map.Entry<String, Map<String, JMethod>> entry : handlersMap.entrySet()) {
         w.println("    if (elementsMap.get(\"" + entry.getKey() + "\") == null) {");
         w.println("      LOG.severe(\"Could not find element with data-mvp-id=\\\"" + entry.getKey() + "\\\" in " + viewType.getSimpleSourceName() + ".html.\");");
@@ -300,6 +329,11 @@ public class ViewGenerator extends IncrementalGenerator {
       w.println("  public <E2 extends Element> E2 getElement(String mvpId) {");
       w.println("    return (E2) elementsMap.get(mvpId);");
       w.println("  }");
+      w.println();
+      w.println("  @Override");
+      w.println("  public <C extends Control<?>> java.util.Collection<C> getControls() {");
+      w.println("    return (java.util.Collection<C>) controlsMap.values();");
+      w.println("  }");
       if (handlerType != null) {
         w.println();
         w.println("  @Override");
@@ -311,7 +345,11 @@ public class ViewGenerator extends IncrementalGenerator {
         w.println();
         w.println("  @Override");
         w.println("  public " + entry.getValue().getReturnType().getQualifiedSourceName() + " " + entry.getValue().getName() + "() {");
-        w.println("    return elementsMap.get(\"" + entry.getKey() + "\").<" + entry.getValue().getReturnType().getQualifiedSourceName() + ">cast();");
+        if (isMethodReturningType(entry.getValue(), controlClassType)) {
+          w.println("    return (" + entry.getValue().getReturnType().getQualifiedSourceName() + ") controlsMap.get(\"" + entry.getKey() + "\");");
+        } else {
+          w.println("    return elementsMap.get(\"" + entry.getKey() + "\").<" + entry.getValue().getReturnType().getQualifiedSourceName() + ">cast();");
+        }
         w.println("  }");
       }
       for (JMethod method : viewType.getMethods()) {
@@ -330,17 +368,41 @@ public class ViewGenerator extends IncrementalGenerator {
         w.println("  }");
       }
       w.println();
-      w.println("  private void addElementToMap(Element element, Map<String, Element> elementsMap) {");
+      w.println("  private void addElementToMap(Element element) {");
       w.println("    String attrName = (element.hasAttribute(\"data-mvp-id\") ? \"data-mvp-id\" : element.hasAttribute(\"data-gwtid\") ? \"data-gwtid\" : null);");
       w.println("    if (attrName == null) {");
       w.println("      return;");
       w.println("    }");
       w.println("    String mvpId = element.getAttribute(attrName);");
-      w.println("    if (!mvpId.equals(\"\")) {");
-      w.println("      element.removeAttribute(attrName);");
+      w.println("    if (mvpId.equals(\"\")) {");
+      w.println("      return;");
+      w.println("    }");
+      w.println("    element.removeAttribute(attrName);");
+      w.println("    if (element.getTagName().equalsIgnoreCase(\"object\")) {");
+      w.println("      Control control = controlsMap.get(mvpId);");
+      w.println("      if (control == null) {");
+      w.println("        LOG.severe(\"Control \" + mvpId + \" is not declared in " + typeName + "\");");
+      w.println("        return;");
+      w.println("      }");
+      w.println("      control.getView().loadView(new ViewLoadedHandler() {");
+      w.println("        @Override");
+      w.println("        public void onViewLoaded(Element rootElement) {");
+      w.println("          final com.google.gwt.core.client.JsArray<Node> attributes = getAttributes(element);");
+      w.println("          for (int i = 0; i < attributes.length(); i ++) {");
+      w.println("            rootElement.setAttribute(attributes.get(i).getNodeName(), attributes.get(i).getNodeValue());");
+      w.println("          }");
+      w.println("          element.getParentElement().replaceChild(rootElement, element);");
+      w.println("          control.onViewLoaded();");
+      w.println("        }");
+      w.println("      });");
+      w.println("    } else {");
       w.println("      elementsMap.put(mvpId, element);");
       w.println("    }");
       w.println("  }");
+      w.println();
+      w.println("  private native com.google.gwt.core.client.JsArray<Node> getAttributes(Element elem) /*-{");
+      w.println("    return elem.attributes;");
+      w.println("  }-*/;");
       w.println("}");
       context.commit(logger, w);
       return new RebindResult(RebindMode.USE_ALL_NEW, packageName + "." + generatedClassName);
@@ -353,6 +415,11 @@ public class ViewGenerator extends IncrementalGenerator {
   private String escapeJavaString(String str) {
     return str.replace("\\", "\\\\").replace("\"", "\\\"").replace("\b", "\\b").replace("\n", "\\n")
         .replace("\t", "\\t").replace("\f", "\\f").replace("\r", "\\r");
+  }
+
+  private boolean isMethodReturningType(JMethod method, JClassType classType) {
+    JClassType returnClassType = method.getReturnType().isClass();
+    return returnClassType != null && returnClassType.isAssignableTo(classType);
   }
 
 }

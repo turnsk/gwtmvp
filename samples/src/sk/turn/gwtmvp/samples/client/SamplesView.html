@@ -34,6 +34,13 @@
       <p><a class="btn btn-primary btn-lg" href="tasks/list">See sample</a></p>
     </div>
   </div>
+  <div class="col-md-6">
+    <div class="jumbotron">
+      <h1>Controls</h1>
+      <p>Demonstrating <code>Control</code>s - reusable UI components with own logic.</p>
+      <p><a class="btn btn-primary btn-lg" href="controls">See sample</a></p>
+    </div>
+  </div>
   <!-- Source code -->
   <div class="col-md-12">
     <h2><small><a href="https://github.com/turnsk/gwtmvp/blob/master/samples/src/sk/turn/gwtmvp/samples/client/SamplesEntryPoint.java" target="_blank">SamplesEntryPoint.java</a></small></h2>
@@ -51,6 +58,7 @@ public class SamplesEntryPoint implements EntryPoint {
     mvp.addPresenter(new PeoplePresenter());
     mvp.addPresenter(new PersonPresenter());
     mvp.addPresenter(new PhonebookPresenter());
+    mvp.addPresenter(new ControlPresenter());
     // This last presenter catches any history token that hasn't been caught by other presenters
     mvp.addPresenter(new BasePresenter&lt;SamplesView&gt;(".*", (SamplesView) GWT.create(SamplesView.class)));
     // Choose mode of history
