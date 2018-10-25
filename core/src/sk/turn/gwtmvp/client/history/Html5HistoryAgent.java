@@ -90,8 +90,15 @@ public class Html5HistoryAgent extends HistoryAgent {
   }
 
   private boolean onBodyClick(NativeEvent e) {
+    if (!isSupported()) {
+      return false;
+    }
     Element target = e.getEventTarget().cast();
-    if (target == null || !target.getTagName().equalsIgnoreCase("a") || !isSupported()) {
+    // Try to find first <a> going up the DOM tree
+    while (target != null && !target.getTagName().equalsIgnoreCase("a")) {
+      target = target.getParentElement();
+    }
+    if (target == null) {
       return false;
     }
     String enableFlag = target.getAttribute("data-html5history");
