@@ -90,7 +90,7 @@ public class Html5HistoryAgent extends HistoryAgent {
   }
 
   private boolean onBodyClick(NativeEvent e) {
-    if (!isSupported()) {
+    if (!isSupported() || e.getAltKey() || e.getCtrlKey() || e.getShiftKey() || e.getButton() != NativeEvent.BUTTON_LEFT) {
       return false;
     }
     Element target = e.getEventTarget().cast();
