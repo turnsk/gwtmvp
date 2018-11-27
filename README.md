@@ -2,8 +2,8 @@
 [MVP](https://en.wikipedia.org/wiki/Model-view-presenter) library for [GWT](http://www.gwtproject.org/), adding a light-weighted, easy-to-use MVP framework, plain HTML-to-Java binding and at the same time taking the complexity off of the built-in widgets library.
 
 * [GWT MVP Showcase](https://turnsk.github.io/gwtmvp/)
-* [Read Javadoc](https://jitpack.io/sk/turn/gwtmvp/1.6/javadoc/)
-* [Download JAR](https://jitpack.io/sk/turn/gwtmvp/1.6/gwtmvp-1.6.jar)
+* [Read Javadoc](https://jitpack.io/sk/turn/gwtmvp/1.6.1/javadoc/)
+* [Download JAR](https://jitpack.io/sk/turn/gwtmvp/1.6.1/gwtmvp-1.6.1.jar)
 
 ## Contents
 * [Assumptions and Goals](#assumptions-and-goals)
@@ -51,7 +51,7 @@ repositories {
 ```gradle
 dependencies {
   ...
-  providedCompile 'sk.turn:gwtmvp:1.6'
+  providedCompile 'sk.turn:gwtmvp:1.6.1'
 }
 ```
 
