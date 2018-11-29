@@ -256,21 +256,29 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> implemen
 
   /**
    * Replaces the specific item in the adapter and updates the view as necessary.
-   * @param index The index at which the item should be replaced. The method does nothing if the value is negative 
-   *        and calls {@code addItem(T)} if exceeds the current items count.
+   * @param index The filtered index at which the item should be replaced. The method does nothing if the value is negative 
+   *        and calls {@code addItem(T)} if exceeds the current (filtered) items count.
    * @param item The new item.
-   * @return This instance for easy method call chaining
+   * @return Previous item that was on this position
    */
-  public ViewAdapter<T, V> setItem(int index, T item) {
-    if (index >= fullList.size()) {
+  public T setItem(int index, T item) {
+    T prev = null;
+    if (index >= filteredList.size()) {
       addItem(item);
     } else if (index >= 0 && item != null) {
-      fullList.set(index, item);
+      prev = filteredList.get(index);
+      filteredList.set(index, item);
+      // Replace the item in the full list as well
+      for (int i = 0; i < fullList.size(); i++) {
+        if (fullList.get(i) == prev) {
+          fullList.set(i, item);
+        }
+      }
       if (notifyOnChange) {
-        reload(fullList.size() - 1);
+        reload(index);
       }
     }
-    return this;
+    return prev;
   }
 
   /**
