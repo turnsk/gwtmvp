@@ -7,3 +7,4 @@ samples/gwt-unitCache
 samples/war/sample
 samples/war/WEB-INF/classes
 samples/war/WEB-INF/deploy
+core/out
