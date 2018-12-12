@@ -255,6 +255,33 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> implemen
   }
 
   /**
+   * Replaces the specific item in the adapter and updates the view as necessary.
+   * @param index The filtered index at which the item should be replaced. The method does nothing if the value is negative 
+   *        and calls {@code addItem(T)} if exceeds the current (filtered) items count.
+   * @param item The new item.
+   * @return Previous item that was on this position
+   */
+  public T setItem(int index, T item) {
+    T prev = null;
+    if (index >= filteredList.size()) {
+      addItem(item);
+    } else if (index >= 0 && item != null) {
+      prev = filteredList.get(index);
+      filteredList.set(index, item);
+      // Replace the item in the full list as well
+      for (int i = 0; i < fullList.size(); i++) {
+        if (fullList.get(i) == prev) {
+          fullList.set(i, item);
+        }
+      }
+      if (notifyOnChange) {
+        reload(index);
+      }
+    }
+    return prev;
+  }
+
+  /**
    * Returns the count of the (filtered) items in the adapter.
    * 
    * @return Count of the filtered items.
@@ -329,7 +356,6 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> implemen
    * 
    * @param indices A list of indices to reload in the list, leave empty to reload all items.
    */
-  @Deprecated
   public void reload(int... indices) {
     if (indices.length == 0) {
       notifyDataSetChanged();
@@ -497,7 +523,6 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> implemen
    */
   @Deprecated
   protected void setViewData(V view, T item) {
-
   }
 
   /**
