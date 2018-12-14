@@ -166,6 +166,7 @@ public class ViewGenerator extends IncrementalGenerator {
       w.println("import com.google.gwt.user.client.EventListener;");
       w.println("import java.util.HashMap;");
       w.println("import java.util.Map;");
+      w.println("import java.util.logging.Level;");
       w.println("import java.util.logging.Logger;");
       w.println("import sk.turn.gwtmvp.client.Control;");
       w.println();
@@ -205,12 +206,12 @@ public class ViewGenerator extends IncrementalGenerator {
         w.println("            loadView(new String(sHtml), viewLoadedHandler);");
         w.println("          }");
         w.println("          public void onError(ResourceException e) {");
-        w.println("            LOG.severe(\"Failed to load " + viewType.getSimpleSourceName() + ".html: \" + e);");
+        w.println("            LOG.log(Level.SEVERE, \"Failed to load " + viewType.getSimpleSourceName() + ".html\", e);");
         w.println("            viewLoadedHandler.onViewLoaded(null);");
         w.println("          }");
         w.println("        });");
         w.println("      } catch (ResourceException e) {");
-        w.println("        LOG.severe(\"Failed to load " + viewType.getSimpleSourceName() + ".html: \" + e);");
+        w.println("        LOG.log(Level.SEVERE, \"Failed to load " + viewType.getSimpleSourceName() + ".html\", e);");
         w.println("        viewLoadedHandler.onViewLoaded(null);");
         w.println("      }");
         w.println("    }");
@@ -308,7 +309,7 @@ public class ViewGenerator extends IncrementalGenerator {
             w.println("      public void " + handlerMethod + "(" + eventType + " event) {");
             w.println("        if (handler != null) {");
             w.println("          try { handler." + method.getName() + "(event); }");
-            w.println("          catch (Exception e) { LOG.severe(\"Invoke of " + enclosingType.getName() + "." + method.getName() + " failed: \" + e); }");
+            w.println("          catch (Exception e) { LOG.log(Level.SEVERE, \"Invoke of " + enclosingType.getName() + "." + method.getName() + " failed\", e); }");
             w.println("        } else {");
             w.println("          LOG.severe(\"Ignoring " + enclosingType.getName() + "." + method.getName() + " - no HandlerView.handler set\");");
             w.println("        }");
