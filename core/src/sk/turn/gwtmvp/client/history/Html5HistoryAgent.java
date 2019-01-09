@@ -25,6 +25,8 @@ public class Html5HistoryAgent extends HistoryAgent {
     return $wnd.history && $wnd.history.pushState;
   }-*/;
 
+  private static final RegExp EXTERNAL_LINK_HREF = RegExp.compile("^([a-z0-9_\\-]+:)?\\/\\/.+", "i");
+
   private String pathToRoot;
   private JavaScriptObject popStateHandler;
   private JavaScriptObject globalClickHandler;
@@ -109,7 +111,7 @@ public class Html5HistoryAgent extends HistoryAgent {
     String href = target.getAttribute("href");
     if (!"true".equalsIgnoreCase(enableFlag)) {
       // Automatic history link discovery
-      if (RegExp.compile("^[a-zA-Z0-9_\\-]+:").test(href)) {
+      if (EXTERNAL_LINK_HREF.test(href)) {
         return false;
       }
     }
