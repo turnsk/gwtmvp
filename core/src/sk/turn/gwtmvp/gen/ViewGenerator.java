@@ -302,7 +302,7 @@ public class ViewGenerator extends IncrementalGenerator {
           }
           JClassType eventType = method.getParameters()[0].getType().isClass();
           if (!domEventClassType.isAssignableFrom(eventType)) {
-            throw new IllegalArgumentException("Event " + eventType.getName() + " must inherit from DomEvent");
+            throw new IllegalArgumentException("Event " + eventType.getName() + " does not inherit from DomEvent");
           }
           // find event handler type
           JParameterizedType eventSuperclassType = eventType.isClass().getSuperclass().isParameterized();
@@ -425,7 +425,7 @@ public class ViewGenerator extends IncrementalGenerator {
       context.commit(logger, w);
       return new RebindResult(RebindMode.USE_ALL_NEW, packageName + "." + generatedClassName);
     } catch (Exception e) {
-      logger.log(TreeLogger.Type.ERROR, "Failed generating wrapper for class " + typeName + ": " + e.getMessage());
+      logger.log(TreeLogger.Type.ERROR, "Failed generating wrapper for class " + typeName + ": " + e);
       throw new UnableToCompleteException();
     }
   }
