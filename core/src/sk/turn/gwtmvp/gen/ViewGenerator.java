@@ -425,7 +425,7 @@ public class ViewGenerator extends IncrementalGenerator {
       context.commit(logger, w);
       return new RebindResult(RebindMode.USE_ALL_NEW, packageName + "." + generatedClassName);
     } catch (Exception e) {
-      logger.log(TreeLogger.Type.ERROR, "Failed generating wrapper for class " + typeName + ": " + e);
+      logger.log(TreeLogger.Type.ERROR, "Failed generating wrapper for class " + typeName + ": " + e.getMessage());
       throw new UnableToCompleteException();
     }
   }
