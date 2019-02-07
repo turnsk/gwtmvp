@@ -37,6 +37,7 @@ import com.google.gwt.core.ext.typeinfo.NotFoundException;
 import com.google.gwt.core.ext.typeinfo.TypeOracle;
 import com.google.gwt.dev.resource.Resource;
 import com.google.gwt.dev.util.Util;
+import com.google.gwt.event.dom.client.DomEvent;
 import com.google.gwt.event.shared.EventHandler;
 import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 
@@ -60,6 +61,7 @@ public class ViewGenerator extends IncrementalGenerator {
     try {
       TypeOracle typeOracle = context.getTypeOracle();
       JClassType controlClassType = typeOracle.findType(Control.class.getName());
+      JClassType domEventClassType = typeOracle.getType(DomEvent.class.getName());
       JClassType viewType = typeOracle.getType(typeName);
       boolean asyncView = (viewType.getAnnotation(AsyncView.class) != null);
       ViewHtml viewHtml = viewType.getAnnotation(ViewHtml.class);
@@ -299,6 +301,9 @@ public class ViewGenerator extends IncrementalGenerator {
             continue;
           }
           JClassType eventType = method.getParameters()[0].getType().isClass();
+          if (!domEventClassType.isAssignableFrom(eventType)) {
+            throw new IllegalArgumentException("Event " + eventType.getName() + " must inherit from DomEvent");
+          }
           // find event handler type
           JParameterizedType eventSuperclassType = eventType.isClass().getSuperclass().isParameterized();
           if (eventSuperclassType == null || eventSuperclassType.getTypeArgs().length != 1
@@ -310,10 +315,7 @@ public class ViewGenerator extends IncrementalGenerator {
           JMethod handlerMethod = Arrays.stream(eventHandlerType.getOverridableMethods())
                   .filter(m -> m.getParameters().length == 1 && eventType == m.getParameterTypes()[0])
                   .findFirst()
-                  .orElse(null);
-          if (handlerMethod == null) {
-            throw new IllegalArgumentException("EventHandler " + eventHandlerType.getName() + " is expected to have overridable method that takes single parameter of type " + eventType.getName());
-          }
+                  .orElseThrow(() -> new IllegalArgumentException("EventHandler " + eventHandlerType.getName() + " is expected to have overridable method that takes single parameter of type " + eventType.getName()));
           for (String elemId : handlerAnnotation.value()) {
             w.println("    sk.turn.gwtmvp.client.EventManager.setEventHandler(getElement(\"" + elemId + "\"), " + eventType.getQualifiedSourceName() + ".getType(), new " + eventHandlerType.getQualifiedSourceName() + "() {");
             w.println("      @Override");
@@ -369,13 +371,17 @@ public class ViewGenerator extends IncrementalGenerator {
         if (handlerAnn == null) {
           continue;
         }
-        String paramType = method.getParameters()[0].getType().getQualifiedSourceName();
-        String eventType = paramType.substring(0, paramType.length() - 7) + "Event.getType()";
+        JClassType parameterType = method.getParameters()[0].getType().isClass();
+        JClassType eventType = Arrays.stream(parameterType.getMethods())
+                .filter(m -> m.getParameters().length == 1 && domEventClassType.isAssignableFrom(m.getParameterTypes()[0].isClass()))
+                .map(m -> m.getParameterTypes()[0].isClass())
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("EventHandler " + parameterType.getName() + " is expected to have method that takes single dom event parameter"));
         w.println();
         w.println("  @Override");
-        w.println("  public void " + method.getName() + "(" + paramType + " handler) {");
+        w.println("  public void " + method.getName() + "(" + parameterType.getQualifiedSourceName() + " handler) {");
         for (String id : handlerAnn.value()) {
-          w.println("    sk.turn.gwtmvp.client.EventManager.setEventHandler(getElement(\"" + id + "\"), " + eventType + ", handler);");
+          w.println("    sk.turn.gwtmvp.client.EventManager.setEventHandler(getElement(\"" + id + "\"), " + eventType.getQualifiedSourceName() + ".getType(), handler);");
         }
         w.println("  }");
       }
