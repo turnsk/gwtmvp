@@ -14,6 +14,7 @@
 package sk.turn.gwtmvp.gen;
 
 import java.io.PrintWriter;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -121,11 +122,7 @@ public class ViewGenerator extends IncrementalGenerator {
                 + (paramType == null ? "none" : paramType.getQualifiedSourceName()) + ").");
           }
           for (String val : handlerAnn.value()) {
-            Map<String, JMethod> methods = handlersMap.get(val);
-            if (methods == null) {
-              methods = new LinkedHashMap<>();
-              handlersMap.put(val, methods);
-            }
+            Map<String, JMethod> methods = handlersMap.computeIfAbsent(val, k -> new LinkedHashMap<>());
             if (methods.containsKey(paramType.getQualifiedSourceName())) {
               throw new Exception("Element \"" + val + "\" already has a " + paramType.getName() + " defined.");
             }
@@ -145,7 +142,7 @@ public class ViewGenerator extends IncrementalGenerator {
         }
       }
       // Check whether data-gwtid is still being used
-      if (html.indexOf("data-gwtid=\"") != -1) {
+      if (html.contains("data-gwtid=\"")) {
         logger.log(TreeLogger.Type.WARN, "The use of \"data-gwtid\" attribute is deprecated and its support will be removed in future versions, please use \"data-mvp-id\" instead.");
       }
       w.println("package " + packageName + ";");
@@ -295,18 +292,32 @@ public class ViewGenerator extends IncrementalGenerator {
         // Map @HtmlHandlers of enclosing class
         JClassType enclosingType = viewType.getEnclosingType();
         JMethod[] methods = (enclosingType != null ? enclosingType.getMethods() : new JMethod[] { });
+        JClassType baseEventHandlerType = typeOracle.getType(EventHandler.class.getName());
         for (JMethod method : methods) {
           HtmlHandler handlerAnnotation = method.getAnnotation(HtmlHandler.class);
           if (handlerAnnotation == null) {
             continue;
           }
-          String eventType = method.getParameters()[0].getType().getQualifiedSourceName();
-          String eventHandlerType = eventType.substring(0, eventType.length() - 5) + "Handler";
-          String handlerMethod = "on" + eventType.substring(0, eventType.length() - 5).substring(eventType.lastIndexOf('.') + 1);
+          JClassType eventType = method.getParameters()[0].getType().isClass();
+          // find event handler type
+          JParameterizedType eventSuperclassType = eventType.isClass().getSuperclass().isParameterized();
+          if (eventSuperclassType == null || eventSuperclassType.getTypeArgs().length != 1
+              || !baseEventHandlerType.isAssignableFrom(eventSuperclassType.getTypeArgs()[0])) {
+            throw new IllegalArgumentException("Event " + eventType.getName() + " is expected to inherit from class with single type parameter being subclass of EventHandler");
+          }
+          JClassType eventHandlerType = eventSuperclassType.getTypeArgs()[0];
+          // find event handler's "handling" method
+          JMethod handlerMethod = Arrays.stream(eventHandlerType.getOverridableMethods())
+                  .filter(m -> m.getParameters().length == 1 && eventType == m.getParameterTypes()[0])
+                  .findFirst()
+                  .orElse(null);
+          if (handlerMethod == null) {
+            throw new IllegalArgumentException("EventHandler " + eventHandlerType.getName() + " is expected to have overridable method that takes single parameter of type " + eventType.getName());
+          }
           for (String elemId : handlerAnnotation.value()) {
-            w.println("    sk.turn.gwtmvp.client.EventManager.setEventHandler(getElement(\"" + elemId + "\"), " + eventType + ".getType(), new " + eventHandlerType + "() {");
+            w.println("    sk.turn.gwtmvp.client.EventManager.setEventHandler(getElement(\"" + elemId + "\"), " + eventType.getQualifiedSourceName() + ".getType(), new " + eventHandlerType.getQualifiedSourceName() + "() {");
             w.println("      @Override");
-            w.println("      public void " + handlerMethod + "(" + eventType + " event) {");
+            w.println("      public void " + handlerMethod.getName() + "(" + eventType.getQualifiedSourceName() + " event) {");
             w.println("        if (handler != null) {");
             w.println("          try { handler." + method.getName() + "(event); }");
             w.println("          catch (Exception e) { LOG.log(Level.SEVERE, \"Invoke of " + enclosingType.getName() + "." + method.getName() + " failed\", e); }");
