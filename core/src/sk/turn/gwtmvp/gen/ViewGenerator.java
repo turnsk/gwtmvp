@@ -372,7 +372,7 @@ public class ViewGenerator extends IncrementalGenerator {
         if (handlerAnn == null) {
           continue;
         }
-        JClassType parameterType = method.getParameters()[0].getType().isClass();
+        JClassType parameterType = method.getParameters()[0].getType().isInterface();
         JClassType eventType = Arrays.stream(parameterType.getMethods())
                 .filter(m -> m.getParameters().length == 1 && domEventClassType.isAssignableFrom(m.getParameterTypes()[0].isClass()))
                 .map(m -> m.getParameterTypes()[0].isClass())
