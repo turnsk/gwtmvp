@@ -14,6 +14,7 @@
 package sk.turn.gwtmvp.gen;
 
 import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -425,7 +426,12 @@ public class ViewGenerator extends IncrementalGenerator {
       context.commit(logger, w);
       return new RebindResult(RebindMode.USE_ALL_NEW, packageName + "." + generatedClassName);
     } catch (Exception e) {
-      logger.log(TreeLogger.Type.ERROR, "Failed generating wrapper for class " + typeName + ": " + e);
+      logger.log(TreeLogger.Type.ERROR, "Failed generating wrapper for class " + typeName + ": " + e.getMessage());
+      StringWriter sw = new StringWriter();
+      PrintWriter pw = new PrintWriter(sw);
+      e.printStackTrace(pw);
+      pw.flush();
+      logger.log(TreeLogger.Type.ERROR, sw.toString());
       throw new UnableToCompleteException();
     }
   }
