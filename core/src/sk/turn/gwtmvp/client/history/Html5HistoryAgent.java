@@ -109,9 +109,12 @@ public class Html5HistoryAgent extends HistoryAgent {
       return false;
     }
     String href = target.getAttribute("href");
+    if (href == null) {
+      return false;
+    }
     if (!"true".equalsIgnoreCase(enableFlag)) {
       // Automatic history link discovery
-      if (EXTERNAL_LINK_HREF.test(href)) {
+      if (href.startsWith("javascript:") || EXTERNAL_LINK_HREF.test(href)) {
         return false;
       }
     }
