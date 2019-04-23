@@ -1,11 +1,11 @@
 /*
  * Copyright 2016 Turn s.r.o.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License
  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
  * or implied. See the License for the specific language governing permissions and limitations under
@@ -65,7 +65,7 @@ import sk.turn.gwtmvp.client.View;
  *  &lt;td data-mvp-id="city"&gt;&lt;/td&gt;
  *  &lt;td&gt;&lt;a data-mvp-id="action"&gt;&lt;/a&gt;&lt;/td&gt;
  *&lt;/tr&gt;</code></pre>
- * 
+ *
  * @param <T> Type of the object being displayed.
  * @param <V> Type of the view able to show one instance of class {@code T}
  */
@@ -100,7 +100,7 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> implemen
     }
     /**
      * Method that should do the actual filtering, e.g. changing the order, removing some items, etc.
-     * 
+     *
      * @param items The list to apply the filter on, the filter must change items within this list.
      */
     protected abstract void applyFilter(List<T> items);
@@ -152,7 +152,7 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> implemen
    * Creates a new instance of ViewAdapter with a specific parent element for all the sub-views.
    * This will in most cases be a {@code TableElement}, {@code UListElement}, {@code OListElement},
    * {@code DivElement}, but may be anything that extends an {@code Element} class.
-   * 
+   *
    * @param parentElement Element that all the sub-views will be attached under.
    */
   public ViewAdapter(Element parentElement) {
@@ -161,7 +161,7 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> implemen
 
   /**
    * Returns an iterator over item-view pairs of this adapter.
-   * 
+   *
    * @return An iterator.
    */
   @Override
@@ -195,7 +195,7 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> implemen
   /**
    * Removes an item at the specified index and return the instance. The corresponding view is also
    * removed from the DOM tree.
-   * 
+   *
    * @param index Zero-based index of the item to remove.
    * @param inFiltered Whether the index points to the filtered or full list of items, 
    *        if you're not using filters this parameter doesn't make a difference.
@@ -220,7 +220,7 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> implemen
 
   /**
    * Removes a specific item from the adapter and also the corresponding view from the DOM tree.
-   * 
+   *
    * @param item Item to remove.
    * @return True if the item/view has been removed, false if the item was not found in the current
    *         list.
@@ -255,8 +255,35 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> implemen
   }
 
   /**
+   * Replaces the specific item in the adapter and updates the view as necessary.
+   * @param index The filtered index at which the item should be replaced. The method does nothing if the value is negative
+   *        and calls {@code addItem(T)} if exceeds the current (filtered) items count.
+   * @param item The new item.
+   * @return Previous item that was on this position
+   */
+  public T setItem(int index, T item) {
+    T prev = null;
+    if (index >= filteredList.size()) {
+      addItem(item);
+    } else if (index >= 0 && item != null) {
+      prev = filteredList.get(index);
+      filteredList.set(index, item);
+      // Replace the item in the full list as well
+      for (int i = 0; i < fullList.size(); i++) {
+        if (fullList.get(i) == prev) {
+          fullList.set(i, item);
+        }
+      }
+      if (notifyOnChange) {
+        reload(index);
+      }
+    }
+    return prev;
+  }
+
+  /**
    * Returns the count of the (filtered) items in the adapter.
-   * 
+   *
    * @return Count of the filtered items.
    */
   public int getCount() {
@@ -265,7 +292,7 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> implemen
 
   /**
    * Returns the count of all the items in the adapter (including the ones filtered out).
-   * 
+   *
    * @return Count of all the items.
    */
   public int getTotalCount() {
@@ -274,7 +301,7 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> implemen
 
   /**
    * Returns the count of the filtered items in the adapter.
-   * 
+   *
    * @return Count of the filtered items.
    */
   public int getFilteredCount() {
@@ -290,21 +317,21 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> implemen
 
   /**
    * Returns the item at the specified index.
-   * 
+   *
    * @param index The index of the item to retrieve.
-   * @param inFiltered Whether the index points to the filtered or full list of items, 
+   * @param inFiltered Whether the index points to the filtered or full list of items,
    *        if you're not using filters this parameter doesn't make a difference.
    * @return The item at the specified index or null if out of bounds.
    */
   public T getItem(int index, boolean inFiltered) {
-    return (index < 0 ? null : 
-      inFiltered ? (index < filteredList.size() ? filteredList.get(index) : null) : 
-        (index < fullList.size() ? fullList.get(index) : null));
+    return (index < 0 ? null :
+            inFiltered ? (index < filteredList.size() ? filteredList.get(index) : null) :
+                    (index < fullList.size() ? fullList.get(index) : null));
   }
 
   /**
    * Returns the view at the specified index.
-   * 
+   *
    * @param index The index of the view to retrieve.
    * @return The view at the specified index or null if out of bounds.
    */
@@ -326,10 +353,9 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> implemen
 
   /**
    * Reloads the views in the adapter, optionally selecting specifying indices to reload.
-   * 
+   *
    * @param indices A list of indices to reload in the list, leave empty to reload all items.
    */
-  @Deprecated
   public void reload(int... indices) {
     if (indices.length == 0) {
       notifyDataSetChanged();
@@ -397,10 +423,10 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> implemen
   }
 
   /**
-   * Control whether methods that change the list (add, remove, removeAt, clear) automatically call {@link #notifyDataSetChanged()}. 
-   * If set to false, caller must manually call notifyDataSetChanged() to have the changes reflected in the attached view. 
+   * Control whether methods that change the list (add, remove, removeAt, clear) automatically call {@link #notifyDataSetChanged()}.
+   * If set to false, caller must manually call notifyDataSetChanged() to have the changes reflected in the attached view.
    * The default is true, and calling notifyDataSetChanged() resets the flag to true.
-   * 
+   *
    * @param notifyOnChange If true, modifications to the list will automatically call {@link #notifyDataSetChanged()}
    * @return This instance for easy method call chaining
    */
@@ -415,7 +441,7 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> implemen
   }
 
   /**
-   * Adds a new filter to the local filter chain. Filters are evaluated linearly in the order they were added, 
+   * Adds a new filter to the local filter chain. Filters are evaluated linearly in the order they were added,
    * where the next filter gets only the filtered items from the previous one.
    * @param filter Filter to add to the chain
    * @return This instance for easy method call chaining
@@ -429,7 +455,7 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> implemen
   }
 
   /**
-   * Returns the list of current filters, may be empty. Note that you are responsible for refreshing the view adapter 
+   * Returns the list of current filters, may be empty. Note that you are responsible for refreshing the view adapter
    * when you change the filters or update an individual filter.
    * <p>
    * You can chain more filters in a linear manner, the filters will be applied in the order as they are in the list.
@@ -440,7 +466,7 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> implemen
   }
 
   /**
-   * Returns the item index that is related to an event fired from within an item view. If the event is not 
+   * Returns the item index that is related to an event fired from within an item view. If the event is not
    * fired from a sub-view of the item or the view is no longer attached in the hierarchy, it returns -1.
    * @param event The event from the event handler.
    * @return The item index associated with the event or -1 if the event was not fired from this {@code ViewAdapter}.
@@ -458,7 +484,7 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> implemen
   }
 
   /**
-   * Returns the item that is related to an event fired from within an item view. If the event is not 
+   * Returns the item that is related to an event fired from within an item view. If the event is not
    * fired from a sub-view of the item or the view is no longer attached in the hierarchy, it returns null.
    * @param event The event from the event handler.
    * @return The item associated with the event or null if the event was not fired from this {@code ViewAdapter}.
@@ -470,17 +496,17 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> implemen
 
   /**
    * Override this method to return a {@link View} instance representing a single adapter item. This
-   * method will not be called if there is a currently unused view that will be reused. For any one-time 
+   * method will not be called if there is a currently unused view that will be reused. For any one-time
    * initialization of the view override the {@link #onViewLoaded(View)} method.
-   * 
+   *
    * @return Instance of a {@link View} sub-interface.
    */
   protected abstract V createView();
 
   /**
-   * Override this method to do one-time initialization of the created view. This method is called 
+   * Override this method to do one-time initialization of the created view. This method is called
    * after the view has been loaded so it's safe to set your handlers here.
-   * 
+   *
    * @param view Instance of the view.
    */
   protected void onViewLoaded(V view) {
@@ -493,11 +519,10 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> implemen
    *
    * @param view Instance of the view.
    * @param item Object to populate into the view.
-   * @deprecated As of release 1.6, replaced by {@link #setViewData(V, T, int)}
+   * @deprecated As of release 1.6, replaced by {@link #setViewData(View, Object, int)}
    */
   @Deprecated
   protected void setViewData(V view, T item) {
-
   }
 
   /**
