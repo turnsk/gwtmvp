@@ -176,18 +176,6 @@ public abstract class TableRowAdapter<T> extends ViewAdapter<T, TableRowAdapter.
    * @param item The item for this row
    * @return Either {@code String} or {@code SafeHtml} that should be populated into the table cell
    */
-  @Deprecated
-  protected Object getCellContent(int column, T item) {
-    return null;
-  }
-
-  /**
-   * Method that should return the text or {@code SafeHtml} content of the table cell.
-   * @param row The row index of the table cell (0-based)
-   * @param column The column index of the table cell (0-based)
-   * @param item The item for this row
-   * @return Either {@code String} or {@code SafeHtml} that should be populated into the table cell
-   */
   protected Object getCellContent(int row, int column, T item) {
     return getCellContent(column, item);
   }
