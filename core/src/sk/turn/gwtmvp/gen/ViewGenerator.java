@@ -252,16 +252,16 @@ public class ViewGenerator extends IncrementalGenerator {
             controlDefined = true;
           }
 
+          // Search for Control View class
           JClassType controlViewClass = null;
           JClassType superControlClass = entry.getValue().getReturnType().isClass();
           while (superControlClass.getSuperclass() != null) {
             if (superControlClass.getQualifiedSourceName().equals("sk.turn.gwtmvp.client.Control")) {
               controlViewClass = superControlClass.isParameterized().getTypeArgs()[0];
+              break;
             }
-
             superControlClass = superControlClass.getSuperclass();
           }
-
           if (controlViewClass == null) {
             throw new IllegalArgumentException("No View class found for " + entry.getValue().getName());
           }
