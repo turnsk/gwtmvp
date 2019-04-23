@@ -265,7 +265,7 @@ public class ViewGenerator extends IncrementalGenerator {
           if (controlViewClass == null) {
             throw new IllegalArgumentException("No View class found for " + entry.getValue().getName());
           }
-
+          
           // Show compiler warning when controlViewClass is annotated with @AsyncView
           if (controlViewClass.isAnnotationPresent(AsyncView.class)) {
             logger.log(TreeLogger.Type.WARN, entry.getValue().getReturnType().getQualifiedSourceName() + ".onShow() or .onHide() may be called before .onViewLoaded() for async control views.");

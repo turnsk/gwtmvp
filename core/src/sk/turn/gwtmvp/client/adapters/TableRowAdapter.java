@@ -104,9 +104,6 @@ public abstract class TableRowAdapter<T> extends ViewAdapter<T, TableRowAdapter.
   @Override
   public void setViewData(TableRowView view, T item, int position) {
     NodeList<TableCellElement> cells = view.getRootElement().getCells();
-    for (int column = 0; column < columns; column++) {
-      setTableCell(position, column, cells.getItem(column), item);
-    }
 	  for (int column = 0; column < columns; column++) {
         setTableCell(position, column, cells.getItem(column), item);
       }
