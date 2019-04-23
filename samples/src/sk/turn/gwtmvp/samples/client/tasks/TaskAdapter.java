@@ -55,7 +55,7 @@ public class TaskAdapter extends ViewAdapter<Task, TaskAdapter.TaskAdapterView> 
   }
 
   @Override
-  protected void setViewData(TaskAdapterView view, Task item) {
+  protected void setViewData(TaskAdapterView view, Task item, int position) {
     view.getCheck().setChecked(item.isFinished());
     view.getName().setInnerText(item.getName());
     if (item.isFinished()) {

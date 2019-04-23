@@ -13,6 +13,9 @@
  */
 package sk.turn.gwtmvp.client;
 
+import java.util.Collection;
+import java.util.Collections;
+
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 
@@ -68,6 +71,8 @@ public interface View<E extends Element> {
     public Element getRootElement() { return root; }
     @Override
     public <E2 extends Element> E2 getElement(String mvpId) { return null; }
+    @Override
+    public <C extends Control<?>> Collection<C> getControls() { return Collections.emptyList(); }
   };
 
   /**
@@ -95,4 +100,10 @@ public interface View<E extends Element> {
    * @return The found Element or null if no such element exists in the HTML file
    */
   <E2 extends Element> E2 getElement(String mvpId);
+
+  /**
+   * Returns a collection of {@link Control}s that are included in this {@code View}.
+   * @return The collection of {@link Control}s that are included in this {@code View}, is never {@code null}.
+   */
+  <C extends Control<?>> Collection<C> getControls();
 }

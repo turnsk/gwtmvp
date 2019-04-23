@@ -107,6 +107,9 @@ public abstract class TableRowAdapter<T> extends ViewAdapter<T, TableRowAdapter.
     for (int column = 0; column < columns; column++) {
       setTableCell(position, column, cells.getItem(column), item);
     }
+	  for (int column = 0; column < columns; column++) {
+        setTableCell(position, column, cells.getItem(column), item);
+      }
   }
 
   @Override
@@ -160,6 +163,18 @@ public abstract class TableRowAdapter<T> extends ViewAdapter<T, TableRowAdapter.
    * @param item The item for this row
    * @return Either {@code String} or {@code SafeHtml} that should be populated into the table cell
    * @deprecated As of release 1.6, replaced by {@link #getCellContent(int, int, Object)}
+   */
+  @Deprecated
+  protected Object getCellContent(int column, T item) {
+    return null;
+  }
+
+  /**
+   * Method that should return the text or {@code SafeHtml} content of the table cell.
+   * @param row The row index of the table cell (0-based)
+   * @param column The column index of the table cell (0-based)
+   * @param item The item for this row
+   * @return Either {@code String} or {@code SafeHtml} that should be populated into the table cell
    */
   @Deprecated
   protected Object getCellContent(int column, T item) {

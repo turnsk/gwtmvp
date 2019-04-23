@@ -27,7 +27,7 @@ public class PeoplePresenter extends BasePresenter<PeoplePresenter.PeopleView> {
   public void onViewLoaded() {
     personRowAdapter = new TableRowAdapter<Person>(view.getTable(), 4) {
       @Override
-      protected Object getCellContent(int column, Person item) {
+      protected Object getCellContent(int row, int column, Person item) {
         switch (column) {
           case 0:
             return new SafeHtmlBuilder().appendHtmlConstant("<a href=\"person/").append(item.id).appendHtmlConstant("\">")
