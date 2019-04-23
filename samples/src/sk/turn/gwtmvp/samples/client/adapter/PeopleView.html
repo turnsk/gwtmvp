@@ -25,10 +25,10 @@ public class PeoplePresenter extends BasePresenter&lt;PeoplePresenter.PeopleView
   public void onViewLoaded() {
     personRowAdapter = new TableRowAdapter&lt;Person&gt;(view.getTable(), 4) {
       @Override
-      protected Object getCellContent(int column, Person item) {
+      protected Object getCellContent(int row, int column, Person item) {
         switch (column) {
           case 0:
-            return new SafeHtmlBuilder().appendHtmlConstant("&lt;a href=\"#person/").append(item.id).appendHtmlConstant("\"&gt;")
+            return new SafeHtmlBuilder().appendHtmlConstant("&lt;a href=\"person/").append(item.id).appendHtmlConstant("\"&gt;")
                 .appendEscaped(item.name).appendHtmlConstant("&lt;/a&gt;").toSafeHtml();
           case 1:
             return item.email;

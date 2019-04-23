@@ -180,7 +180,9 @@ public class Mvp {
   }
 
   protected void detachView(View<? extends Element> view) {
-    view.getRootElement().removeFromParent();
+    if (view.getRootElement() != null) {
+      view.getRootElement().removeFromParent();
+    }
   }
 
   protected Presenter<? extends View<? extends Element>> getCurrentPresenter() {
@@ -192,15 +194,7 @@ public class Mvp {
       if (currentPresenter == null) {
         return;
       }
-      try {
-        if (currentPresenter instanceof BasePresenter) {
-          ((BasePresenter<?>) currentPresenter).onPresenterHidden();
-        } else {
-          currentPresenter.onHide();
-        }
-      } catch (Exception e) {
-        LOG.log(Level.SEVERE, "Call to Presenter.onHide() failed.", e);
-      }
+      invokeOnPresenterHide();
       detachView(currentPresenter.getView());
       currentPresenter = null;
     } else {
@@ -212,24 +206,21 @@ public class Mvp {
           if (useLoader) {
             Loader.show(loaderId);
           }
-          presenter.getView().loadView(new View.ViewLoadedHandler<E>() {
-            @Override
-            public void onViewLoaded(E rootElement) {
-              if (useLoader) {
-                Loader.hide(loaderId);
-              }
-              // Stop if failed to load the view or presenter has changed in the meantime
-              if (rootElement == null || presenterLoading != currentPresenter) {
-                return;
-              }
-              attachView(currentPresenter.getView());
-              try {
-                currentPresenter.onViewLoaded();
-              } catch (Exception e) {
-                LOG.log(Level.SEVERE, "Call to Presenter.onViewLoaded() failed.", e);
-              }
-              invokeOnPresenterShow(groups);
+          presenter.getView().loadView(rootElement -> {
+            if (useLoader) {
+              Loader.hide(loaderId);
             }
+            // Stop if failed to load the view or presenter has changed in the meantime
+            if (rootElement == null || presenterLoading != currentPresenter) {
+              return;
+            }
+            attachView(currentPresenter.getView());
+            try {
+              currentPresenter.onViewLoaded();
+            } catch (Exception e) {
+              LOG.log(Level.SEVERE, "Call to Presenter.onViewLoaded() failed.", e);
+            }
+            invokeOnPresenterShow(groups);
           });
           initializedPresenters.add(currentPresenter);
           return; // We'll continue in the handler callback method
@@ -254,6 +245,35 @@ public class Mvp {
       }
     } catch (Exception e) {
       LOG.log(Level.SEVERE, "Call to Presenter.onShow(String...) failed.", e);
+    }
+    // Call onShow on all controls
+    for (Control<? extends View<? extends Element>> ctrl : currentPresenter.getView().getControls()) {
+      try {
+        ctrl.onShow();
+      } catch (Exception e) {
+        LOG.log(Level.SEVERE, "Call to Control.onShow() failed.", e);
+      }
+    }
+  }
+
+  private void invokeOnPresenterHide() {
+    // Call onHide on all controls
+    for (Control<? extends View<? extends Element>> ctrl : currentPresenter.getView().getControls()) {
+      try {
+        ctrl.onHide();
+      } catch (Exception e) {
+        LOG.log(Level.SEVERE, "Call to Control.onHide() failed.", e);
+      }
+    }
+    // Call onHide on the current presenter
+    try {
+      if (currentPresenter instanceof BasePresenter) {
+        ((BasePresenter<?>) currentPresenter).onPresenterHidden();
+      } else {
+        currentPresenter.onHide();
+      }
+    } catch (Exception e) {
+      LOG.log(Level.SEVERE, "Call to Presenter.onHide() failed.", e);
     }
   }
 

@@ -1,3 +1,16 @@
+/*
+ * Copyright 2018 Turn s.r.o.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ */
 package sk.turn.gwtmvp.client.history;
 
 import com.google.gwt.core.client.JavaScriptObject;
@@ -11,6 +24,9 @@ public class Html5HistoryAgent extends HistoryAgent {
   public static native boolean isSupported() /*-{
     return $wnd.history && $wnd.history.pushState;
   }-*/;
+
+  private static final RegExp EXTERNAL_LINK_HREF = RegExp.compile("^([a-z0-9_\\-]+:)?\\/\\/.+", "i");
+  private static final RegExp SPECIAL_LINK_HREF = RegExp.compile("^(javascript|blob):", "i");
 
   private String pathToRoot;
   private JavaScriptObject popStateHandler;
@@ -77,8 +93,16 @@ public class Html5HistoryAgent extends HistoryAgent {
   }
 
   private boolean onBodyClick(NativeEvent e) {
+    if (!isSupported() || e.getAltKey() || e.getCtrlKey() || e.getShiftKey() || e.getMetaKey() ||
+        (e.getButton() & (NativeEvent.BUTTON_RIGHT | NativeEvent.BUTTON_MIDDLE)) != 0) {
+      return false;
+    }
     Element target = e.getEventTarget().cast();
-    if (target == null || !target.getTagName().equalsIgnoreCase("a") || !isSupported()) {
+    // Try to find first <a> going up the DOM tree
+    while (target != null && !target.getTagName().equalsIgnoreCase("a")) {
+      target = target.getParentElement();
+    }
+    if (target == null) {
       return false;
     }
     String enableFlag = target.getAttribute("data-html5history");
@@ -86,9 +110,12 @@ public class Html5HistoryAgent extends HistoryAgent {
       return false;
     }
     String href = target.getAttribute("href");
+    if (href == null) {
+      return false;
+    }
     if (!"true".equalsIgnoreCase(enableFlag)) {
       // Automatic history link discovery
-      if (RegExp.compile("^[a-zA-Z0-9_\\-]+:").test(href)) {
+      if (SPECIAL_LINK_HREF.test(href) || EXTERNAL_LINK_HREF.test(href)) {
         return false;
       }
     }
