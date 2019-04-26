@@ -206,6 +206,7 @@ public class Mvp {
           if (useLoader) {
             Loader.show(loaderId);
           }
+          initializedPresenters.add(presenter);
           presenter.getView().loadView(rootElement -> {
             if (useLoader) {
               Loader.hide(loaderId);
@@ -214,15 +215,16 @@ public class Mvp {
             if (rootElement == null || presenterLoading != currentPresenter) {
               return;
             }
-            attachView(currentPresenter.getView());
+            attachView(presenterLoading.getView());
             try {
-              currentPresenter.onViewLoaded();
+              presenterLoading.onViewLoaded();
             } catch (Exception e) {
               LOG.log(Level.SEVERE, "Call to Presenter.onViewLoaded() failed.", e);
             }
-            invokeOnPresenterShow(groups);
+            if (presenterLoading == currentPresenter) { // The current presenter may have been changed in Presenter.onViewLoaded()
+              invokeOnPresenterShow(groups);
+            }
           });
-          initializedPresenters.add(currentPresenter);
           return; // We'll continue in the handler callback method
         } else if (currentPresenter.getView().getRootElement() != null) {
           attachView(currentPresenter.getView());
