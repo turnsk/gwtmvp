@@ -251,7 +251,18 @@ public class ViewGenerator extends IncrementalGenerator {
             w.println("    Control ctrl;");
             controlDefined = true;
           }
-          JClassType controlViewClass = entry.getValue().getReturnType().isClass().getSuperclass().isParameterized().getTypeArgs()[0];
+          // Search for Control View class
+          JClassType superControlClass = entry.getValue().getReturnType().isClass();
+          while (superControlClass != null && !superControlClass.getQualifiedSourceName().equals("sk.turn.gwtmvp.client.Control")) {
+            superControlClass = superControlClass.getSuperclass();
+          }
+          if (superControlClass == null || superControlClass.isParameterized() == null) {
+            throw new IllegalArgumentException(entry.getValue().getName() + " does not inherit from " + controlClassType.getQualifiedSourceName());
+          }
+          JClassType controlViewClass = superControlClass.isParameterized().getTypeArgs()[0];
+          if (controlViewClass == null) {
+            throw new IllegalArgumentException("No View class found for " + entry.getValue().getName());
+          }
           // Show compiler warning when controlViewClass is annotated with @AsyncView
           if (controlViewClass.isAnnotationPresent(AsyncView.class)) {
             logger.log(TreeLogger.Type.WARN, entry.getValue().getReturnType().getQualifiedSourceName() + ".onShow() or .onHide() may be called before .onViewLoaded() for async control views.");
