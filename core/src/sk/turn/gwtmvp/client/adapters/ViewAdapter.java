@@ -147,6 +147,7 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> implemen
   private final List<V> availableViews = new ArrayList<>();
   private final Map<Element, Integer> rootElementsToIndexMap = new HashMap<>();
   private boolean notifyOnChange = true;
+  private int viewCacheSize = 100;
 
   /**
    * Creates a new instance of ViewAdapter with a specific parent element for all the sub-views.
@@ -419,6 +420,10 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> implemen
       view.getRootElement().removeFromParent();
       availableViews.add(view);
     }
+    // Keep max viewCacheSize views for later reuse
+    while (availableViews.size() > viewCacheSize) {
+      availableViews.remove(0);
+    }
     return this;
   }
 
@@ -492,6 +497,23 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> implemen
   public T getItemFromEvent(DomEvent<?> event) {
     int index = getItemIndexFromEvent(event);
     return (index == -1 ? null : getItem(index));
+  }
+
+  /**
+   * Current view cache size, i.e. how many currently unused views are kept in memory for quick reuse. Defaults to 100.
+   * @return Current view cache size.
+   */
+  public int getViewCacheSize() { return viewCacheSize; }
+
+  /**
+   * Sets the current maximum view cache size. Unused views above this limit will be removed from memory.
+   * @param viewCacheSize The view cache size to use.
+   */
+  public void setViewCacheSize(int viewCacheSize) {
+    this.viewCacheSize = (viewCacheSize >= 0 ? viewCacheSize : 0);
+    while (availableViews.size() > viewCacheSize) {
+      availableViews.remove(0);
+    }
   }
 
   /**
