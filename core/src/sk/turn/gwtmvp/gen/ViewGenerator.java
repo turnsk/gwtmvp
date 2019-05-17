@@ -14,6 +14,7 @@
 package sk.turn.gwtmvp.gen;
 
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -32,8 +33,6 @@ import com.google.gwt.core.ext.typeinfo.JClassType;
 import com.google.gwt.core.ext.typeinfo.JMethod;
 import com.google.gwt.core.ext.typeinfo.JParameter;
 import com.google.gwt.core.ext.typeinfo.JParameterizedType;
-import com.google.gwt.core.ext.typeinfo.JType;
-import com.google.gwt.core.ext.typeinfo.NotFoundException;
 import com.google.gwt.core.ext.typeinfo.TypeOracle;
 import com.google.gwt.dev.resource.Resource;
 import com.google.gwt.dev.util.Util;
@@ -53,7 +52,7 @@ public class ViewGenerator extends IncrementalGenerator {
 
   @Override
   public long getVersionId() {
-    return 7;
+    return 8;
   }
 
   @Override
@@ -229,16 +228,20 @@ public class ViewGenerator extends IncrementalGenerator {
         w.println("    Object dictEntry;");
         dictMatcher = Pattern.compile("\\{mvpDict\\.([^}]+)\\}").matcher(html);
         Set<String> replacedEntries = new HashSet<>();
+        ArrayList<String> dictMethods = new ArrayList<String>();
+        for (JMethod method : dictClass.getMethods()) {
+          dictMethods.add(method.getName());
+        }
         while (dictMatcher.find()) {
-          String dictEntry = dictMatcher.group(1);
+          String dictEntry = dictMatcher.group(1).replace("&quot;", "\"").replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&");
+          int braceIndex = dictEntry.indexOf('(');
+          String dictMethod = (braceIndex != -1 ? dictEntry.substring(0, braceIndex) : dictEntry);
           if (!replacedEntries.contains(dictEntry)) {
-            try {
-              dictClass.getMethod(dictEntry, new JType[] { });
-            } catch (NotFoundException e) {
-              throw new Exception("Localization method " + dictClassName + "." + dictEntry + "() does not exist.");
+            if (!dictMethods.contains(dictMethod)) {
+              throw new Exception("Localization method " + dictClassName + "." + dictMethod + "() does not exist.");
             }
-            w.println("    dictEntry = dict." + dictEntry + "();");
-            w.println("    html = html.replace(\"" + dictMatcher.group(0) + "\", dictEntry instanceof com.google.gwt.safehtml.shared.SafeHtml ? ((com.google.gwt.safehtml.shared.SafeHtml)dictEntry).asString() : dictEntry.toString());");
+            w.println("    dictEntry = dict." + dictEntry + (braceIndex != -1 ? "" : "()") + ";");
+            w.println("    html = html.replace(\"" + dictMatcher.group(0).replace("\\", "\\\\").replace("\"", "\\\"") + "\", dictEntry instanceof com.google.gwt.safehtml.shared.SafeHtml ? ((com.google.gwt.safehtml.shared.SafeHtml)dictEntry).asString() : dictEntry.toString());");
             replacedEntries.add(dictEntry);
           }
         }
