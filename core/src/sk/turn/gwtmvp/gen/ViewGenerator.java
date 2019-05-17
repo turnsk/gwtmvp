@@ -72,12 +72,12 @@ public class ViewGenerator extends IncrementalGenerator {
         return new RebindResult(RebindMode.USE_ALL_CACHED, packageName + "." + generatedClassName);
       }
       JParameterizedType superType = null;
-      String handlerType = null;
+      JClassType handlerType = null;
       for (JClassType intfc : viewType.getImplementedInterfaces()) {
         if (intfc.getQualifiedSourceName().equals(View.class.getName()) || intfc.getQualifiedSourceName().equals(HandlerView.class.getName())) {
           superType = intfc.isParameterized();
           if (intfc.getQualifiedSourceName().equals(HandlerView.class.getName())) {
-            handlerType = superType.getTypeArgs()[1].getQualifiedSourceName();
+            handlerType = superType.getTypeArgs()[1];
           }
           break;
         }
@@ -186,7 +186,7 @@ public class ViewGenerator extends IncrementalGenerator {
       w.println("  private final Map<String, Element> elementsMap = new HashMap<>();");
       w.println("  private final Map<String, Control> controlsMap = new HashMap<>();");
       if (handlerType != null) {
-        w.println("  private " + handlerType + " handler;");
+        w.println("  private " + handlerType.getQualifiedSourceName() + " handler;");
       }
       w.println();
       w.println("  @Override");
@@ -303,8 +303,7 @@ public class ViewGenerator extends IncrementalGenerator {
       }
       if (handlerType != null) {
         // Map @HtmlHandlers of enclosing class
-        JClassType enclosingType = viewType.getEnclosingType();
-        JMethod[] methods = (enclosingType != null ? enclosingType.getMethods() : new JMethod[] { });
+        JMethod[] methods = handlerType.getMethods();
         JClassType baseEventHandlerType = typeOracle.getType(EventHandler.class.getName());
         for (JMethod method : methods) {
           HtmlHandler handlerAnnotation = method.getAnnotation(HtmlHandler.class);
@@ -333,9 +332,9 @@ public class ViewGenerator extends IncrementalGenerator {
             w.println("      public void " + handlerMethod.getName() + "(" + eventType.getQualifiedSourceName() + " event) {");
             w.println("        if (handler != null) {");
             w.println("          try { handler." + method.getName() + "(event); }");
-            w.println("          catch (Exception e) { LOG.log(Level.SEVERE, \"Invoke of " + enclosingType.getName() + "." + method.getName() + " failed\", e); }");
+            w.println("          catch (Exception e) { LOG.log(Level.SEVERE, \"Invoke of " + handlerType.getName() + "." + method.getName() + " failed\", e); }");
             w.println("        } else {");
-            w.println("          LOG.severe(\"Ignoring " + enclosingType.getName() + "." + method.getName() + " - no HandlerView.handler set\");");
+            w.println("          LOG.severe(\"Ignoring " + handlerType.getName() + "." + method.getName() + " - no HandlerView.handler set\");");
             w.println("        }");
             w.println("      }");
             w.println("    });");
@@ -362,7 +361,7 @@ public class ViewGenerator extends IncrementalGenerator {
       if (handlerType != null) {
         w.println();
         w.println("  @Override");
-        w.println("  public void setHandler(" + handlerType + " handler) {");
+        w.println("  public void setHandler(" + handlerType.getQualifiedSourceName() + " handler) {");
         w.println("    this.handler = handler;");
         w.println("  }");
       }
