@@ -52,7 +52,7 @@ public class ViewGenerator extends IncrementalGenerator {
 
   @Override
   public long getVersionId() {
-    return 8;
+    return 9;
   }
 
   @Override
@@ -241,7 +241,10 @@ public class ViewGenerator extends IncrementalGenerator {
               throw new Exception("Localization method " + dictClassName + "." + dictMethod + "() does not exist.");
             }
             w.println("    dictEntry = dict." + dictEntry + (braceIndex != -1 ? "" : "()") + ";");
-            w.println("    html = html.replace(\"" + dictMatcher.group(0).replace("\\", "\\\\").replace("\"", "\\\"") + "\", dictEntry instanceof com.google.gwt.safehtml.shared.SafeHtml ? ((com.google.gwt.safehtml.shared.SafeHtml)dictEntry).asString() : dictEntry.toString());");
+            w.println("    if (!(dictEntry instanceof com.google.gwt.safehtml.shared.SafeHtml)) {");
+            w.println("      dictEntry = new com.google.gwt.safehtml.shared.SafeHtmlBuilder().appendEscaped(dictEntry.toString()).toSafeHtml();");
+            w.println("    }");
+            w.println("    html = html.replace(\"" + dictMatcher.group(0).replace("\\", "\\\\").replace("\"", "\\\"") + "\", ((com.google.gwt.safehtml.shared.SafeHtml)dictEntry).asString());");
             replacedEntries.add(dictEntry);
           }
         }
