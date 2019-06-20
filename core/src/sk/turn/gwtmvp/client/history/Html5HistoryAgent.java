@@ -26,6 +26,7 @@ public class Html5HistoryAgent extends HistoryAgent {
   }-*/;
 
   private static final RegExp EXTERNAL_LINK_HREF = RegExp.compile("^([a-z0-9_\\-]+:)?\\/\\/.+", "i");
+  private static final RegExp SPECIAL_LINK_HREF = RegExp.compile("^(javascript|blob):", "i");
 
   private String pathToRoot;
   private JavaScriptObject popStateHandler;
@@ -114,7 +115,7 @@ public class Html5HistoryAgent extends HistoryAgent {
     }
     if (!"true".equalsIgnoreCase(enableFlag)) {
       // Automatic history link discovery
-      if (href.startsWith("javascript:") || EXTERNAL_LINK_HREF.test(href)) {
+      if (SPECIAL_LINK_HREF.test(href) || EXTERNAL_LINK_HREF.test(href)) {
         return false;
       }
     }

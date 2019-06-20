@@ -180,7 +180,9 @@ public class Mvp {
   }
 
   protected void detachView(View<? extends Element> view) {
-    view.getRootElement().removeFromParent();
+    if (view.getRootElement() != null) {
+      view.getRootElement().removeFromParent();
+    }
   }
 
   protected Presenter<? extends View<? extends Element>> getCurrentPresenter() {
@@ -204,26 +206,25 @@ public class Mvp {
           if (useLoader) {
             Loader.show(loaderId);
           }
-          presenter.getView().loadView(new View.ViewLoadedHandler<E>() {
-            @Override
-            public void onViewLoaded(E rootElement) {
-              if (useLoader) {
-                Loader.hide(loaderId);
-              }
-              // Stop if failed to load the view or presenter has changed in the meantime
-              if (rootElement == null || presenterLoading != currentPresenter) {
-                return;
-              }
-              attachView(currentPresenter.getView());
-              try {
-                currentPresenter.onViewLoaded();
-              } catch (Exception e) {
-                LOG.log(Level.SEVERE, "Call to Presenter.onViewLoaded() failed.", e);
-              }
+          initializedPresenters.add(presenter);
+          presenter.getView().loadView(rootElement -> {
+            if (useLoader) {
+              Loader.hide(loaderId);
+            }
+            // Stop if failed to load the view or presenter has changed in the meantime
+            if (rootElement == null || presenterLoading != currentPresenter) {
+              return;
+            }
+            attachView(presenterLoading.getView());
+            try {
+              presenterLoading.onViewLoaded();
+            } catch (Exception e) {
+              LOG.log(Level.SEVERE, "Call to Presenter.onViewLoaded() failed.", e);
+            }
+            if (presenterLoading == currentPresenter) { // The current presenter may have been changed in Presenter.onViewLoaded()
               invokeOnPresenterShow(groups);
             }
           });
-          initializedPresenters.add(currentPresenter);
           return; // We'll continue in the handler callback method
         } else if (currentPresenter.getView().getRootElement() != null) {
           attachView(currentPresenter.getView());
