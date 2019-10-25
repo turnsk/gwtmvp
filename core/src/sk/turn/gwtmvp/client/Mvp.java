@@ -14,6 +14,7 @@
 package sk.turn.gwtmvp.client;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -248,10 +249,14 @@ public class Mvp {
     } catch (Exception e) {
       LOG.log(Level.SEVERE, "Call to Presenter.onShow(String...) failed.", e);
     }
-    // Call onShow on all controls
-    for (Control<? extends View<? extends Element>> ctrl : currentPresenter.getView().getControls()) {
+    invokeOnControlShow(currentPresenter.getView().getControls());
+  }
+
+  private void invokeOnControlShow(Collection<Control<?>> controls) {
+    for (Control<? extends View<? extends Element>> ctrl : controls) {
       try {
         ctrl.onShow();
+        invokeOnControlShow(ctrl.view.getControls());
       } catch (Exception e) {
         LOG.log(Level.SEVERE, "Call to Control.onShow() failed.", e);
       }
@@ -259,14 +264,7 @@ public class Mvp {
   }
 
   private void invokeOnPresenterHide() {
-    // Call onHide on all controls
-    for (Control<? extends View<? extends Element>> ctrl : currentPresenter.getView().getControls()) {
-      try {
-        ctrl.onHide();
-      } catch (Exception e) {
-        LOG.log(Level.SEVERE, "Call to Control.onHide() failed.", e);
-      }
-    }
+    invokeOnControlHide(currentPresenter.getView().getControls());
     // Call onHide on the current presenter
     try {
       if (currentPresenter instanceof BasePresenter) {
@@ -276,6 +274,17 @@ public class Mvp {
       }
     } catch (Exception e) {
       LOG.log(Level.SEVERE, "Call to Presenter.onHide() failed.", e);
+    }
+  }
+
+  private void invokeOnControlHide(Collection<Control<?>> controls) {
+    for (Control<? extends View<? extends Element>> ctrl : controls) {
+      try {
+        invokeOnControlHide(ctrl.view.getControls());
+        ctrl.onHide();
+      } catch (Exception e) {
+        LOG.log(Level.SEVERE, "Call to Control.onHide() failed.", e);
+      }
     }
   }
 

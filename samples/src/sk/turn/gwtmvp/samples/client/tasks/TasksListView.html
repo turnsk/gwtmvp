@@ -20,20 +20,115 @@ public class TasksListPresenter extends BasePresenter&lt;TasksListPresenter.Task
     @HtmlElement Element getTasksContainer();
   }
 
+  interface TasksListItemView extends HandlerView&lt;Element, TaskViewHolder&gt; {
+    @HtmlElement DivElement getRoot();
+    @HtmlElement InputElement getCheck();
+    @HtmlElement DivElement getName();
+    @HtmlElement InputElement getNameInput();
+    @HtmlElement AnchorElement getEditButton();
+    @HtmlElement AnchorElement getRemoveButton();
+  }
+
+  class TaskViewHolder extends ViewHolderAdapter.ViewHolder&lt;Task, TasksListItemView&gt; {
+    private boolean mouseOver = false;
+
+    public TaskViewHolder() {
+      super(GWT.create(TasksListItemView.class));
+      view.setHandler(this);
+    }
+
+    @Override
+    protected void bind(Task item, int position) {
+      view.getCheck().setChecked(item.isFinished());
+      view.getName().setInnerText(item.getName());
+      if (item.isFinished()) {
+        view.getName().addClassName("finished");
+        view.getEditButton().addClassName("hidden");
+      } else {
+        view.getName().removeClassName("finished");
+        view.getName().removeClassName("hidden");
+        view.getNameInput().addClassName("hidden");
+        view.getEditButton().addClassName("hidden");
+        view.getRemoveButton().addClassName("hidden");
+        if (editingIndex == position) {
+          view.getName().addClassName("hidden");
+          view.getNameInput().removeClassName("hidden");
+          view.getNameInput().setValue(item.getName());
+          view.getNameInput().focus();
+        } else if (mouseOver) {
+          view.getEditButton().removeClassName("hidden");
+          view.getRemoveButton().removeClassName("hidden");
+        }
+      }
+    }
+
+    @HtmlHandler("root")
+    void onMouseOver(MouseOverEvent event) {
+      mouseOver = true;
+      int index = taskAdapter.getItemIndexFromEvent(event);
+      if (editingIndex != index) {
+        taskAdapter.reload(index);
+      }
+    }
+
+    @HtmlHandler("root")
+    void onMouseOut(MouseOutEvent event) {
+      mouseOver = false;
+      int index = taskAdapter.getItemIndexFromEvent(event);
+      if (editingIndex != index) {
+        taskAdapter.reload(index);
+      }
+    }
+
+    @HtmlHandler("check")
+    void onCheckChange(ChangeEvent event) {
+      int index = taskAdapter.getItemIndexFromEvent(event);
+      taskAdapter.getItem(index).setFinished(view.getCheck().isChecked());
+      rearrangeTasks();
+    }
+
+    @HtmlHandler("nameInput")
+    void onNameKeyUp(KeyUpEvent event) {
+      if (event.getNativeKeyCode() == KeyCodes.KEY_ENTER || event.getNativeKeyCode() == KeyCodes.KEY_ESCAPE) {
+        finishEdit(taskAdapter.getItemIndexFromEvent(event), event.getNativeKeyCode() == KeyCodes.KEY_ENTER);
+      }
+    }
+
+    @HtmlHandler("nameInput")
+    void onNameBlur(BlurEvent event) {
+      finishEdit(taskAdapter.getItemIndexFromEvent(event), true);
+    }
+
+    @HtmlHandler("editButton")
+    void onEditClick(ClickEvent event) {
+      editingIndex = taskAdapter.getItemIndexFromEvent(event);
+      taskAdapter.notifyDataSetChanged();
+    }
+
+    @HtmlHandler("removeButton")
+    void onClick(ClickEvent event) {
+      removeTask(taskAdapter.getItemIndexFromEvent(event));
+    }
+  }
+
   private static final Dictionary dict = GWT.create(Dictionary.class);
 
   public TasksListPresenter() {
     super("^tasks/list$", (TasksListView) GWT.create(TasksListView.class));
   }
 
-  private TaskAdapter taskAdapter;
+  private ViewHolderAdapter&lt;Task, TaskViewHolder&gt; taskAdapter;
+  private int editingIndex = -1;
 
   @Override
   public void onViewLoaded() {
     view.setHandler(this);
     Dao.addOnUserChangedHandler(this);
     onUserChanged(Dao.getUsername());
-    taskAdapter = new TaskAdapter(view.getTasksContainer());
+    taskAdapter = new ViewHolderAdapter&lt;Task, TaskViewHolder&gt;(view.getTasksContainer()) {
+      @Override
+      protected TaskViewHolder createViewHolder() { return new TaskViewHolder(); }
+    };
   }
 
   @Override
@@ -48,7 +143,13 @@ public class TasksListPresenter extends BasePresenter&lt;TasksListPresenter.Task
 
   @HtmlHandler("addButton")
   void onAddTask(ClickEvent event) {
-    taskAdapter.addTask();
+    Task task = Task.createObject().&lt;Task&gt;cast();
+    task.setName("");
+    JsArrayIterable&lt;Task&gt; tasks = Dao.getTasks();
+    tasks.push(task);
+    Dao.setTasks(tasks);
+    editingIndex = taskAdapter.getCount();
+    taskAdapter.addItem(task);
   }
 
   @HtmlHandler("logout")
@@ -59,137 +160,19 @@ public class TasksListPresenter extends BasePresenter&lt;TasksListPresenter.Task
     }
   }
 
-}</pre>
-  </div>
-  <div class="col-md-12">
-    <h2><small><a href="https://github.com/turnsk/gwtmvp/blob/master/samples/src/sk/turn/gwtmvp/samples/client/tasks/Task.java" target="_blank">Task.java</a></small></h2>
-    <pre>
-public class Task extends JavaScriptObject {
-  protected Task() { }
-
-  public final native String getName() /*-{ return this.name; }-*/;
-  public final native void setName(String name) /*-{ this.name = name; }-*/;
-  public final native boolean isFinished() /*-{ return this.finished; }-*/;
-  public final native void setFinished(boolean finished) /*-{ this.finished = finished; }-*/;
-}</pre>
-  </div>
-  <div class="col-md-12">
-    <h2><small><a href="https://github.com/turnsk/gwtmvp/blob/master/samples/src/sk/turn/gwtmvp/samples/client/tasks/TaskAdapter.java" target="_blank">TaskAdapter.java</a></small></h2>
-    <pre class="pre-scrollable" style="max-height: 500px;">
-public class TaskAdapter extends ViewAdapter&lt;Task, TaskAdapter.TaskAdapterView&gt; {
-
-  interface TaskAdapterView extends HandlerView&lt;Element, TaskAdapter&gt; {
-    @HtmlElement DivElement getRoot();
-    @HtmlElement InputElement getCheck();
-    @HtmlElement DivElement getName();
-    @HtmlElement InputElement getNameInput();
-    @HtmlElement AnchorElement getEditButton();
-    @HtmlElement AnchorElement getRemoveButton();
-  }
-
-  public TaskAdapter(Element parentElement) {
-    super(parentElement);
-  }
-
-  public void addTask() {
-    JsArrayIterable&lt;Task&gt; tasks = Dao.getTasks();
-    tasks.push(Task.createObject().&lt;Task&gt;cast());
-    Dao.setTasks(tasks);
-    setItems(tasks);
-    startEdit(tasks.length() - 1);
-  }
-
-  @Override
-  protected TaskAdapterView createView() {
-    TaskAdapterView view = GWT.create(TaskAdapterView.class);
-    view.setHandler(this);
-    return view;
-  }
-
-  @Override
-  protected void setViewData(TaskAdapterView view, Task item, int position) {
-    view.getCheck().setChecked(item.isFinished());
-    view.getName().setInnerText(item.getName());
-    if (item.isFinished()) {
-      view.getName().addClassName("finished");
-      view.getEditButton().addClassName("hidden");
-    } else {
-      view.getName().removeClassName("finished");
-      view.getEditButton().removeClassName("hidden");
-    }
-  }
-
-  @HtmlHandler("root")
-  void onMouseOver(MouseOverEvent event) {
-    TaskAdapterView view = getItemView(getItemIndexFromEvent(event));
-    view.getEditButton().getStyle().setVisibility(Visibility.VISIBLE);
-    view.getRemoveButton().getStyle().setVisibility(Visibility.VISIBLE);
-  }
-
-  @HtmlHandler("root")
-  void onMouseOut(MouseOutEvent event) {
-    TaskAdapterView view = getItemView(getItemIndexFromEvent(event));
-    view.getEditButton().getStyle().setVisibility(Visibility.HIDDEN);
-    view.getRemoveButton().getStyle().setVisibility(Visibility.HIDDEN);
-  }
-
-  @HtmlHandler("check")
-  void onCheckChange(ChangeEvent event) {
-    int index = getItemIndexFromEvent(event);
-    getItem(index).setFinished(getItemView(index).getCheck().isChecked());
-    rearrangeTasks();
-  }
-
-  @HtmlHandler("nameInput")
-  void onNameKeyUp(KeyUpEvent event) {
-    if (event.getNativeKeyCode() == KeyCodes.KEY_ENTER || event.getNativeKeyCode() == KeyCodes.KEY_ESCAPE) {
-      finishEdit(event, event.getNativeKeyCode() == KeyCodes.KEY_ENTER);
-    }
-  }
-
-  @HtmlHandler("nameInput")
-  void onNameBlur(BlurEvent event) {
-    finishEdit(event, true);
-  }
-
-  private void finishEdit(DomEvent&lt;?&gt; event, boolean save) {
-    int index = getItemIndexFromEvent(event);
-    Task task = getItem(index);
-    TaskAdapterView view = getItemView(index);
+  private void finishEdit(int index, boolean save) {
+    Task task = taskAdapter.getItem(index);
+    TasksListItemView view = taskAdapter.getItemViewHolder(index).getView();
     if (save) {
       if (view.getNameInput().getValue().trim().length() == 0) {
         removeTask(index);
       } else {
         task.setName(view.getNameInput().getValue());
-        view.getName().setInnerText(task.getName());
         Dao.onTasksChanged();
       }
     }
-    view.getEditButton().removeClassName("hidden");
-    view.getRemoveButton().removeClassName("hidden");
-    view.getName().removeClassName("hidden");
-    view.getNameInput().addClassName("hidden");
-  }
-
-  @HtmlHandler("editButton")
-  void onEditClick(ClickEvent event) {
-    startEdit(getItemIndexFromEvent(event));
-  }
-
-  private void startEdit(int index) {
-    Task task = getItem(index);
-    TaskAdapterView view = getItemView(index);
-    view.getEditButton().addClassName("hidden");
-    view.getRemoveButton().addClassName("hidden");
-    view.getName().addClassName("hidden");
-    view.getNameInput().removeClassName("hidden");
-    view.getNameInput().setValue(task.getName());
-    view.getNameInput().focus();
-  }
-
-  @HtmlHandler("removeButton")
-  void onClick(ClickEvent event) {
-    removeTask(getItemIndexFromEvent(event));
+    editingIndex = -1;
+    taskAdapter.reload(index);
   }
 
   private void removeTask(int index) {
@@ -202,7 +185,7 @@ public class TaskAdapter extends ViewAdapter&lt;Task, TaskAdapter.TaskAdapterVie
       }
     }
     Dao.setTasks(newTasks);
-    setItems(newTasks);
+    taskAdapter.setItems(newTasks);
   }
 
   private void rearrangeTasks() {
@@ -219,9 +202,21 @@ public class TaskAdapter extends ViewAdapter&lt;Task, TaskAdapter.TaskAdapterVie
       }
     }
     Dao.setTasks(newTasks);
-    setItems(newTasks);
+    taskAdapter.setItems(newTasks);
   }
 
+}</pre>
+  </div>
+  <div class="col-md-12">
+    <h2><small><a href="https://github.com/turnsk/gwtmvp/blob/master/samples/src/sk/turn/gwtmvp/samples/client/tasks/Task.java" target="_blank">Task.java</a></small></h2>
+    <pre>
+public class Task extends JavaScriptObject {
+  protected Task() { }
+
+  public final native String getName() /*-{ return this.name; }-*/;
+  public final native void setName(String name) /*-{ this.name = name; }-*/;
+  public final native boolean isFinished() /*-{ return this.finished; }-*/;
+  public final native void setFinished(boolean finished) /*-{ this.finished = finished; }-*/;
 }</pre>
   </div>
   <div class="col-md-12">
