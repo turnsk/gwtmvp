@@ -28,6 +28,9 @@ import sk.turn.gwtmvp.client.View;
  * Anytime you need to show repetitive views (e.g. table rows, (un)ordered lists, etc.) ViewAdapter
  * allows you to remove the complexity and make the task effectively.
  * <p>
+ * If you need to hold some data against individual views (adapter itself does not hold any kind of view-related 
+ * data) using {@link ViewHolderAdapter} is recommended.
+ * <p>
  * Example:
  * <pre><code>// Assuming we have a "TableElement tableElement" and "List&lt;Person&gt; people" variables defined
  *ViewAdapter&lt;Person, PersonView&gt; personAdapter = new ViewAdapter&lt;Person, PersonView&gt;(tableElement) {
@@ -61,10 +64,7 @@ import sk.turn.gwtmvp.client.View;
  * 
  * @param <T> Type of the object being displayed.
  * @param <V> Type of the view able to show one instance of class {@code T}
- * 
- * @deprecated This class is deprecated and will be eventually removed in favor of {@link ViewHolderAdapter}.
  */
-@Deprecated
 public abstract class ViewAdapter<T, V extends View<? extends Element>> extends ViewHolderAdapter<T, ViewAdapter.ViewHolder<T, V>> implements Iterable<ViewAdapter.ItemView<T, V>> {
 
   public interface ItemView<T, V extends View<? extends Element>> {
@@ -165,6 +165,7 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> extends 
    *        if you're not using filters this parameter doesn't make a difference.
    * @return The item at the specified index or null if out of bounds.
    */
+  @SuppressWarnings("deprecation")
   public T getItem(int index, boolean inFiltered) {
     return (index < 0 ? null : inFiltered ? getItem(index) : (index < getFullList().size() ? getFullList().get(index) : null));
   }

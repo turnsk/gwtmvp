@@ -25,7 +25,6 @@ import com.google.gwt.event.dom.client.DomEvent;
 
 import sk.turn.gwtmvp.client.View;
 
-// TODO Revise documentation
 /**
  * Helper class to provide support for lists of reusable {@link View}s bundled in a {@link ViewHolderAdapter.ViewHolder}. 
  * Similar to Android's RecyclerView concept, this class is reusing detached views and only updating the content per
@@ -33,6 +32,8 @@ import sk.turn.gwtmvp.client.View;
  * <p>
  * Anytime you need to show repetitive views (e.g. table rows, (un)ordered lists, etc.) ViewHolderAdapter
  * allows you to remove the complexity and make the task effectively.
+ * <p>
+ * If you only need a simple adapter without the need to hold view-related data, consider using {@link ViewAdapter} instead.
  * <p>
  * Example:
  * <pre><code>// Assuming we have a "TableElement tableElement" and "List&lt;Person&gt; people" variables defined
