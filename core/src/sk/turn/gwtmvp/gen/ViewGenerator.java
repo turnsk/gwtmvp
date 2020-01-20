@@ -282,8 +282,9 @@ public class ViewGenerator extends IncrementalGenerator {
       }
       // Load the view HTML
       w.println("    Element tempElem = Document.get().create" + (
-          rootElementType.equals("com.google.gwt.dom.client.TableRowElement") ? "TBody" :
-            rootElementType.equals("com.google.gwt.dom.client.TableCellElement") ? "TR" : "Div") + "Element();");
+          rootElementType.equals("com.google.gwt.dom.client.TableSectionElement") ? "Table" :
+              rootElementType.equals("com.google.gwt.dom.client.TableRowElement") ? "TBody" :
+                  rootElementType.equals("com.google.gwt.dom.client.TableCellElement") ? "TR" : "Div") + "Element();");
       w.println("    tempElem.setInnerHTML(html);");
       w.println("    rootElement = (" + rootElementType + ") tempElem.getFirstChild();");
       if (dictClassName != null) {
