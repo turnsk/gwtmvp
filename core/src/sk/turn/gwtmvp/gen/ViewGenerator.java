@@ -72,10 +72,11 @@ public class ViewGenerator extends IncrementalGenerator {
       }
       JParameterizedType superType = null;
       JClassType handlerType = null;
-      for (JClassType intfc : viewType.getImplementedInterfaces()) {
-        if (intfc.getQualifiedSourceName().equals(View.class.getName()) || intfc.getQualifiedSourceName().equals(HandlerView.class.getName())) {
+      for (JClassType intfc : viewType.getFlattenedSupertypeHierarchy()) {
+        String interfaceSourceName = intfc.getQualifiedSourceName();
+        if (interfaceSourceName.equals(View.class.getName()) || interfaceSourceName.equals(HandlerView.class.getName())) {
           superType = intfc.isParameterized();
-          if (intfc.getQualifiedSourceName().equals(HandlerView.class.getName())) {
+          if (interfaceSourceName.equals(HandlerView.class.getName())) {
             handlerType = superType.getTypeArgs()[1];
           }
           break;
