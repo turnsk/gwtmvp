@@ -98,37 +98,39 @@ public class ViewGenerator extends IncrementalGenerator {
       Map<String, JMethod> fieldsMap = new LinkedHashMap<>();
       // elemId -> { com.google.gwt.event.dom.client.???Handler -> JMethod, ... }, ...
       Map<String, Map<String, JMethod>> handlersMap = new LinkedHashMap<>();
-      for (JMethod method : viewType.getMethods()) {
-        // Check element mapping
-        HtmlElement elemAnn = method.getAnnotation(HtmlElement.class);
-        if (elemAnn != null) {
-          if (method.getParameters().length > 0) {
-            throw new Exception("Method " + typeName + "." + method.getName() + "() must have zero parameters (has " + method.getParameters().length + ").");
-          }
-          String id = elemAnn.value();
-          if (id.equals("")) {
-            id = method.getName();
-            if (id.startsWith("get") && id.length() > 3) {
-              id = id.substring(3, 4).toLowerCase() + id.substring(4);
+      for (JClassType currentViewType : viewType.getFlattenedSupertypeHierarchy()) {
+        for (JMethod method : currentViewType.getMethods()) {
+          // Check element mapping
+          HtmlElement elemAnn = method.getAnnotation(HtmlElement.class);
+          if (elemAnn != null) {
+            if (method.getParameters().length > 0) {
+              throw new Exception("Method " + typeName + "." + method.getName() + "() must have zero parameters (has " + method.getParameters().length + ").");
             }
-          }
-          fieldsMap.put(id, method);
-        }
-        // Check handler mapping
-        HtmlHandler handlerAnn = method.getAnnotation(HtmlHandler.class);
-        if (handlerAnn != null) {
-          JParameter param = (method.getParameters().length == 1 ? method.getParameters()[0] : null);
-          JClassType paramType = (param != null ? param.getType().isInterface() : null);
-          if (paramType == null || !paramType.isAssignableTo(typeOracle.getType(EventHandler.class.getName()))) {
-            throw new Exception("Method " + typeName + "." + method.getName() + "() must have exactly one parameter of an EventHandler subinterface (has "
-                + (paramType == null ? "none" : paramType.getQualifiedSourceName()) + ").");
-          }
-          for (String val : handlerAnn.value()) {
-            Map<String, JMethod> methods = handlersMap.computeIfAbsent(val, k -> new LinkedHashMap<>());
-            if (methods.containsKey(paramType.getQualifiedSourceName())) {
-              throw new Exception("Element \"" + val + "\" already has a " + paramType.getName() + " defined.");
+            String id = elemAnn.value();
+            if (id.equals("")) {
+              id = method.getName();
+              if (id.startsWith("get") && id.length() > 3) {
+                id = id.substring(3, 4).toLowerCase() + id.substring(4);
+              }
             }
-            methods.put(paramType.getQualifiedSourceName(), method);
+            fieldsMap.put(id, method);
+          }
+          // Check handler mapping
+          HtmlHandler handlerAnn = method.getAnnotation(HtmlHandler.class);
+          if (handlerAnn != null) {
+            JParameter param = (method.getParameters().length == 1 ? method.getParameters()[0] : null);
+            JClassType paramType = (param != null ? param.getType().isInterface() : null);
+            if (paramType == null || !paramType.isAssignableTo(typeOracle.getType(EventHandler.class.getName()))) {
+              throw new Exception("Method " + typeName + "." + method.getName() + "() must have exactly one parameter of an EventHandler subinterface (has "
+                      + (paramType == null ? "none" : paramType.getQualifiedSourceName()) + ").");
+            }
+            for (String val : handlerAnn.value()) {
+              Map<String, JMethod> methods = handlersMap.computeIfAbsent(val, k -> new LinkedHashMap<>());
+              if (methods.containsKey(paramType.getQualifiedSourceName())) {
+                throw new Exception("Element \"" + val + "\" already has a " + paramType.getName() + " defined.");
+              }
+              methods.put(paramType.getQualifiedSourceName(), method);
+            }
           }
         }
       }
