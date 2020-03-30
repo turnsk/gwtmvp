@@ -67,7 +67,7 @@ import sk.turn.gwtmvp.client.View;
  *&lt;/tr&gt;</code></pre>
  * 
  * @param <T> Type of the object being displayed.
- * @param <V> Type of the view able to show one instance of class {@code T}
+ * @param <VH> Type of the view holder able to show one instance of class {@code T}
  */
 public abstract class ViewHolderAdapter<T, VH extends ViewHolderAdapter.ViewHolder<T, ? extends View<? extends Element>>> {
 
@@ -122,8 +122,9 @@ public abstract class ViewHolderAdapter<T, VH extends ViewHolderAdapter.ViewHold
   private final List<T> fullList = new ArrayList<>();
   private final List<Filter<T>> filters = new ArrayList<>();
   private List<T> filteredList = new ArrayList<>();
-  private final List<VH> usedViewHolders = new ArrayList<>();
-  private final List<VH> availableViewHolders = new ArrayList<>();
+  private final ArrayList<Integer> usedViewTypes = new ArrayList<>();
+  private final ArrayList<VH> usedViewHolders = new ArrayList<>();
+  private final HashMap<Integer, ArrayList<VH>> availableViewHolders = new HashMap<>();
   private final Map<Element, Integer> rootElementsToIndexMap = new HashMap<>();
   private boolean notifyOnChange = true;
   private int viewCacheSize = 100;
@@ -290,6 +291,15 @@ public abstract class ViewHolderAdapter<T, VH extends ViewHolderAdapter.ViewHold
   }
 
   /**
+   * This overridable method allows you to use more than one view type for this adapter.
+   *
+   * @return The type of the view at the specific position.
+   */
+  public int getItemViewType(int position) {
+    return 0;
+  }
+
+  /**
    * Removes all the items/views from this adapter.
    * @return This instance for easy method call chaining
    */
@@ -333,16 +343,25 @@ public abstract class ViewHolderAdapter<T, VH extends ViewHolderAdapter.ViewHold
       filter.applyFilter(filteredList);
     }
     for (int i = 0; i < filteredList.size(); i++) {
+      int viewType = getItemViewType(i);
       if (i < usedViewHolders.size()) {
-        safeSetViewData(usedViewHolders.get(i), filteredList.get(i), i);
-      } else if (availableViewHolders.size() > 0) {
+        if (usedViewTypes.get(i) == viewType) {
+          safeSetViewData(usedViewHolders.get(i), filteredList.get(i), i);
+          continue;
+        } else {
+          recycleViewHolder(i);
+        }
+      }
+      ArrayList<VH> availableViewHolders = this.availableViewHolders.get(viewType);
+      if (availableViewHolders != null && availableViewHolders.size() > 0) {
         VH viewHolder = availableViewHolders.remove(0);
         usedViewHolders.add(viewHolder);
+        usedViewTypes.add(viewType);
         parentElement.appendChild(viewHolder.view.getRootElement());
         rootElementsToIndexMap.put(viewHolder.view.getRootElement(), i);
         safeSetViewData(viewHolder, filteredList.get(i), i);
       } else {
-        final VH viewHolder = createViewHolder();
+        final VH viewHolder = createViewHolder(viewType);
         final int index = i;
         final T item = filteredList.get(i);
         viewHolder.view.loadView(new View.ViewLoadedHandler() {
@@ -353,6 +372,7 @@ public abstract class ViewHolderAdapter<T, VH extends ViewHolderAdapter.ViewHold
             // Make sure the list hasn't changed in the meantime
             if (index < filteredList.size() && filteredList.get(index) == item) {
               usedViewHolders.add(viewHolder);
+              usedViewTypes.add(viewType);
               parentElement.appendChild(viewHolder.view.getRootElement());
               rootElementsToIndexMap.put(viewHolder.view.getRootElement(), index);
               safeSetViewData(viewHolder, item, index);
@@ -365,13 +385,13 @@ public abstract class ViewHolderAdapter<T, VH extends ViewHolderAdapter.ViewHold
     }
     // Detach and mark for reuse all excessive views
     while (usedViewHolders.size() > filteredList.size()) {
-      VH viewHolder = usedViewHolders.remove(filteredList.size());
-      viewHolder.view.getRootElement().removeFromParent();
-      availableViewHolders.add(viewHolder);
+      recycleViewHolder(filteredList.size());
     }
     // Keep max viewCacheSize views for later reuse
-    while (availableViewHolders.size() > viewCacheSize) {
-      availableViewHolders.remove(0);
+    for (ArrayList<VH> availableViewHolders : this.availableViewHolders.values()) {
+      while (availableViewHolders.size() > viewCacheSize) {
+        availableViewHolders.remove(0);
+      }
     }
     return this;
   }
@@ -474,13 +494,14 @@ public abstract class ViewHolderAdapter<T, VH extends ViewHolderAdapter.ViewHold
   }
 
   /**
-   * Override this method to return a {@link ViewHolderAdapter.ViewHolder} instance representing a single adapter item. 
-   * This method will not be called if there is a currently unused view holder that will be reused. For any one-time 
-   * initialization of the contained view override the {@link ViewHolderAdapter.ViewHolder#onViewLoaded(View)} method.
-   * 
-   * @return Instance of a {@link View} sub-interface.
+   * Override this method to return a {@link ViewHolderAdapter.ViewHolder} instance representing a single adapter item.
+   * This method will not be called if there is a currently unused view holder that will be reused. For any one-time
+   * initialization of the contained view override the {@link ViewHolderAdapter.ViewHolder#onViewLoaded()} method.
+   *
+   * @param viewType The type of the view to create the view holder for, see {@link ViewHolderAdapter#getItemViewType(int)}
+   * @return Instance of a {@link ViewHolder} sub-interface.
    */
-  protected abstract VH createViewHolder();
+  protected abstract VH createViewHolder(int viewType);
 
   private void safeSetViewData(VH viewHolder, T item, int position) {
     try {
@@ -490,4 +511,15 @@ public abstract class ViewHolderAdapter<T, VH extends ViewHolderAdapter.ViewHold
     }
   }
 
+  private void recycleViewHolder(int usedIndex) {
+    int viewType = usedViewTypes.remove(usedIndex);
+    ArrayList<VH> availableViewHolders = this.availableViewHolders.get(viewType);
+    if (availableViewHolders == null) {
+      availableViewHolders = new ArrayList<>();
+      this.availableViewHolders.put(viewType, availableViewHolders);
+    }
+    VH viewHolder = usedViewHolders.remove(usedIndex);
+    viewHolder.view.getRootElement().removeFromParent();
+    availableViewHolders.add(viewHolder);
+  }
 }

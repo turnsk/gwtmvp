@@ -94,7 +94,7 @@ public abstract class TableRowAdapter<T> extends ViewAdapter<T, TableRowAdapter.
    * Creates a table row view and appends all the columns (TDs).
    */
   @Override
-  public TableRowView createView() {
+  public TableRowView createView(int viewType) {
     return GWT.create(TableRowView.class);
   }
 

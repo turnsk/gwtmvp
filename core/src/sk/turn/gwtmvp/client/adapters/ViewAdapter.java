@@ -182,18 +182,19 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> extends 
   }
 
   @Override
-  protected final ViewAdapter.ViewHolder<T, V> createViewHolder() {
-    return new ViewHolder<T, V>(createView(), this);
+  protected final ViewAdapter.ViewHolder<T, V> createViewHolder(int viewType) {
+    return new ViewHolder<T, V>(createView(viewType), this);
   }
 
   /**
    * Override this method to return a {@link View} instance representing a single adapter item. This
    * method will not be called if there is a currently unused view that will be reused. For any one-time 
    * initialization of the view override the {@link #onViewLoaded(View)} method.
-   * 
+   *
+   * @param viewType The type of the view to create, see {@link ViewHolderAdapter#getItemViewType(int)}
    * @return Instance of a {@link View} sub-interface.
    */
-  protected abstract V createView();
+  protected abstract V createView(int viewType);
 
   /**
    * Override this method to do one-time initialization of the created view. This method is called 

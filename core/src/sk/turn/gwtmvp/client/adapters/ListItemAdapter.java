@@ -37,7 +37,7 @@ public class ListItemAdapter<T> extends ViewAdapter<T, ListItemAdapter.ListItemV
   }
 
   @Override
-  protected ListItemView createView() {
+  protected ListItemView createView(int viewType) {
     return GWT.create(ListItemView.class);
   }
 

@@ -127,7 +127,7 @@ public class TasksListPresenter extends BasePresenter&lt;TasksListPresenter.Task
     onUserChanged(Dao.getUsername());
     taskAdapter = new ViewHolderAdapter&lt;Task, TaskViewHolder&gt;(view.getTasksContainer()) {
       @Override
-      protected TaskViewHolder createViewHolder() { return new TaskViewHolder(); }
+      protected TaskViewHolder createViewHolder(int viewType) { return new TaskViewHolder(); }
     };
   }
 

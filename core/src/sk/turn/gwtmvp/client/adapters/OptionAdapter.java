@@ -42,7 +42,7 @@ public class OptionAdapter<T> extends ViewAdapter<Map.Entry<String, T>, OptionAd
   }
 
   @Override
-  protected OptionView createView() {
+  protected OptionView createView(int viewType) {
     return GWT.create(OptionView.class);
   }
 

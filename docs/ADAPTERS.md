@@ -19,7 +19,7 @@ class PersonAdapter extends ViewAdapter<PersonAdapter.PersonView, Person> {
     super(parentElement);
   }
   @Override
-  protected PersonView createView() {
+  protected PersonView createView(int viewType) {
     PersonView view = GWT.create(PersonView.class);
     view.setHandler(this);
     return view;
@@ -97,7 +97,7 @@ class PersonAdapter extends ViewHolderAdapter<Person, PersonAdapter.PersonViewHo
     super(parentElement);
   }
   @Override
-  protected PersonViewHolder createViewHolder() {
+  protected PersonViewHolder createViewHolder(int viewType) {
     return new PersonViewHolder();
   }
 }

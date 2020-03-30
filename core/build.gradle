@@ -27,7 +27,7 @@ jar {
   manifest {
     attributes 'Implementation-Version': version
   }
-  from sourceSets.main.output.classesDir
+  from sourceSets.main.output.classesDirs
   from sourceSets.main.java.srcDirs
 }
 
