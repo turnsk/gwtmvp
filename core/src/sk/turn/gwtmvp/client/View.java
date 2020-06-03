@@ -72,7 +72,7 @@ public interface View<E extends Element> {
     @Override
     public <E2 extends Element> E2 getElement(String mvpId) { return null; }
     @Override
-    public <C extends Control<?>> Collection<C> getControls() { return Collections.emptyList(); }
+    public Collection<Control<?>> getControls() { return Collections.emptyList(); }
   };
 
   /**
@@ -106,5 +106,5 @@ public interface View<E extends Element> {
    * Returns a collection of {@link Control}s that are included in this {@code View}.
    * @return The collection of {@link Control}s that are included in this {@code View}, is never {@code null}.
    */
-  <C extends Control<?>> Collection<C> getControls();
+  Collection<Control<?>> getControls();
 }
