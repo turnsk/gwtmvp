@@ -41,11 +41,13 @@ task myJavadoc(type: Javadoc) {
 }
 
 task sourcesJar(type: Jar) {
+  archiveBaseName.set('gwtmvp')
   archiveClassifier.set('sources')
   from sourceSets.main.java.srcDirs
 }
 
 task javadocJar(type: Jar, dependsOn: myJavadoc) {
+  archiveBaseName.set('gwtmvp')
   archiveClassifier.set('javadoc')
   from javadoc.destinationDir
 }
@@ -53,4 +55,13 @@ task javadocJar(type: Jar, dependsOn: myJavadoc) {
 artifacts {
   archives sourcesJar
   archives javadocJar
+}
+
+publishing {
+  publications {
+    maven(MavenPublication) {
+      artifactId = 'gwtmvp'
+      from components.java
+    }
+  }
 }
