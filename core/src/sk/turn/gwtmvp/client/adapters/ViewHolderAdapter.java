@@ -67,7 +67,7 @@ import sk.turn.gwtmvp.client.View;
  *&lt;/tr&gt;</code></pre>
  * 
  * @param <T> Type of the object being displayed.
- * @param <VH> Type of the view handler able to show one instance of class {@code T}
+ * @param <VH> Type of the view holder able to show one instance of class {@code T}
  */
 public abstract class ViewHolderAdapter<T, VH extends ViewHolderAdapter.ViewHolder<T, ? extends View<? extends Element>>> {
 
