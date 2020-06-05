@@ -9,7 +9,7 @@ repositories {
 
 sourceCompatibility = 1.8
 group = 'sk.turn'
-version = '1.8.0'
+version = '1.8.1'
 
 sourceSets {
   main.java {
@@ -52,16 +52,13 @@ task javadocJar(type: Jar, dependsOn: myJavadoc) {
   from javadoc.destinationDir
 }
 
-artifacts {
-  archives sourcesJar
-  archives javadocJar
-}
-
 publishing {
   publications {
     maven(MavenPublication) {
       artifactId = 'gwtmvp'
       from components.java
+      artifact tasks.sourcesJar
+      artifact tasks.javadocJar
     }
   }
 }
