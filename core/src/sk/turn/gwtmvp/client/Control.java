@@ -72,7 +72,7 @@ public class Control<V extends View<? extends Element>> {
 
   /**
    * This method is internal and should not be used.
-   * @param view
+   * @param view View to set
    */
   public void setView(V view) {
     this.view = view;

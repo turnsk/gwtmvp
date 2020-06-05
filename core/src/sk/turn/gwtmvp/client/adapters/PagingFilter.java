@@ -74,7 +74,7 @@ public class PagingFilter<T> extends ViewAdapter.Filter<T> {
    * Initializes the filter with a fixed number of items per page. The page size cannot be changed later.
    * @param pageSize The maximum number of items to show per page.
    */
-  public <V extends View<? extends Element>> PagingFilter(int pageSize) {
+  public PagingFilter(int pageSize) {
     this.pageSize = pageSize;
   }
 
@@ -127,7 +127,7 @@ public class PagingFilter<T> extends ViewAdapter.Filter<T> {
 
   /**
    * Sets the current page index and refilters the view adapter to update the UI.
-   * @param page
+   * @param page page index to set
    */
   public void setPage(int page) {
     if (page != this.page && page >= 0 && page < getPageCount()) {

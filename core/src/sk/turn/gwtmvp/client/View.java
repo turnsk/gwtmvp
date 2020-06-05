@@ -54,13 +54,13 @@ import com.google.gwt.dom.client.Element;
  * @param <E> The element class that matches the root element in the corresponding .html file.
  */
 public interface View<E extends Element> {
-  public interface ViewLoadedHandler<E extends Element> {
+  interface ViewLoadedHandler<E extends Element> {
     void onViewLoaded(E rootElement);
   }
   /**
    * An empty view made of a single empty {@code div} element.
    */
-  public static final View<Element> EMPTY = new View<Element>() {
+  View<Element> EMPTY = new View<Element>() {
     private Element root;
     @Override
     public void loadView(ViewLoadedHandler<Element> viewLoadedHandler) {
@@ -72,7 +72,7 @@ public interface View<E extends Element> {
     @Override
     public <E2 extends Element> E2 getElement(String mvpId) { return null; }
     @Override
-    public <C extends Control<?>> Collection<C> getControls() { return Collections.emptyList(); }
+    public Collection<Control<?>> getControls() { return Collections.emptyList(); }
   };
 
   /**
@@ -97,6 +97,7 @@ public interface View<E extends Element> {
    * Tries to find an element with a specific {@code data-mvp-id} and returns it. We strongly encourage 
    * you to define the element in the View, though for one-time element usage this may help code brevity.
    * @param mvpId The ID of the element to find
+   * @param <E2> The element class that matches the returned element in the corresponding .html file.
    * @return The found Element or null if no such element exists in the HTML file
    */
   <E2 extends Element> E2 getElement(String mvpId);
@@ -105,5 +106,5 @@ public interface View<E extends Element> {
    * Returns a collection of {@link Control}s that are included in this {@code View}.
    * @return The collection of {@link Control}s that are included in this {@code View}, is never {@code null}.
    */
-  <C extends Control<?>> Collection<C> getControls();
+  Collection<Control<?>> getControls();
 }

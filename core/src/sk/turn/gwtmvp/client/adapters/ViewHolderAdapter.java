@@ -67,7 +67,7 @@ import sk.turn.gwtmvp.client.View;
  *&lt;/tr&gt;</code></pre>
  * 
  * @param <T> Type of the object being displayed.
- * @param <V> Type of the view able to show one instance of class {@code T}
+ * @param <VH> Type of the view holder able to show one instance of class {@code T}
  */
 public abstract class ViewHolderAdapter<T, VH extends ViewHolderAdapter.ViewHolder<T, ? extends View<? extends Element>>> {
 
@@ -96,6 +96,7 @@ public abstract class ViewHolderAdapter<T, VH extends ViewHolderAdapter.ViewHold
     /**
      * Called automatically by the {@code ViewAdapter} to set reference to itself for later filter-changed notifications.
      * @param adapter {@code ViewAdapter} associated with this filter.
+     * @param <VH> Type of the view handler able to show one instance of class {@code T}
      */
     protected <VH extends ViewHolder<T, ? extends View<? extends Element>>> void setAdapter(ViewHolderAdapter<T, VH> adapter) {
       this.adapter = adapter;
@@ -121,7 +122,7 @@ public abstract class ViewHolderAdapter<T, VH extends ViewHolderAdapter.ViewHold
   private final Element parentElement;
   private final List<T> fullList = new ArrayList<>();
   private final List<Filter<T>> filters = new ArrayList<>();
-  private List<T> filteredList = new ArrayList<>();
+  private final List<T> filteredList = new ArrayList<>();
   private final List<VH> usedViewHolders = new ArrayList<>();
   private final List<VH> availableViewHolders = new ArrayList<>();
   private final Map<Element, Integer> rootElementsToIndexMap = new HashMap<>();
@@ -157,6 +158,8 @@ public abstract class ViewHolderAdapter<T, VH extends ViewHolderAdapter.ViewHold
 
   /**
    * Calls {@code removeAt(index, true)}
+   * @param index index to remove in filtered result
+   * @return The object removed or {@code null} if the index is out of bounds.
    */
   public T removeAt(int index) {
     return removeAt(index, true);
@@ -459,7 +462,7 @@ public abstract class ViewHolderAdapter<T, VH extends ViewHolderAdapter.ViewHold
    * @param viewCacheSize The view cache size to use.
    */
   public void setViewCacheSize(int viewCacheSize) {
-    this.viewCacheSize = (viewCacheSize >= 0 ? viewCacheSize : 0);
+    this.viewCacheSize = Math.max(viewCacheSize, 0);
     while (availableViewHolders.size() > viewCacheSize) {
       availableViewHolders.remove(0);
     }
@@ -467,6 +470,7 @@ public abstract class ViewHolderAdapter<T, VH extends ViewHolderAdapter.ViewHold
 
   /**
    * @deprecated Will be removed in future version, only here for ViewHolder's back compatibility
+   * @return Unfiltered list of items
    */
   @Deprecated
   protected List<T> getFullList() {
@@ -476,7 +480,7 @@ public abstract class ViewHolderAdapter<T, VH extends ViewHolderAdapter.ViewHold
   /**
    * Override this method to return a {@link ViewHolderAdapter.ViewHolder} instance representing a single adapter item. 
    * This method will not be called if there is a currently unused view holder that will be reused. For any one-time 
-   * initialization of the contained view override the {@link ViewHolderAdapter.ViewHolder#onViewLoaded(View)} method.
+   * initialization of the contained view override the {@link ViewHolder#onViewLoaded()} method.
    * 
    * @return Instance of a {@link View} sub-interface.
    */

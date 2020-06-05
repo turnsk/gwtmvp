@@ -186,7 +186,7 @@ public class ViewGenerator extends IncrementalGenerator {
       w.println();
       w.println("  private " + rootElementType + " rootElement = null;");
       w.println("  private final Map<String, Element> elementsMap = new HashMap<>();");
-      w.println("  private final Map<String, Control> controlsMap = new HashMap<>();");
+      w.println("  private final Map<String, Control<?>> controlsMap = new HashMap<>();");
       if (handlerType != null) {
         w.println("  private " + handlerType.getQualifiedSourceName() + " handler;");
       }
@@ -365,8 +365,8 @@ public class ViewGenerator extends IncrementalGenerator {
       w.println("  }");
       w.println();
       w.println("  @Override");
-      w.println("  public <C extends Control<?>> java.util.Collection<C> getControls() {");
-      w.println("    return (java.util.Collection<C>) controlsMap.values();");
+      w.println("  public java.util.Collection<Control<?>> getControls() {");
+      w.println("    return controlsMap.values();");
       w.println("  }");
       if (handlerType != null) {
         w.println();
@@ -417,7 +417,7 @@ public class ViewGenerator extends IncrementalGenerator {
       w.println("    }");
       w.println("    element.removeAttribute(attrName);");
       w.println("    if (element.getTagName().equalsIgnoreCase(\"object\")) {");
-      w.println("      Control control = controlsMap.get(mvpId);");
+      w.println("      Control<?> control = controlsMap.get(mvpId);");
       w.println("      if (control == null) {");
       w.println("        LOG.severe(\"Control \" + mvpId + \" is not declared in " + typeName + "\");");
       w.println("        return;");
