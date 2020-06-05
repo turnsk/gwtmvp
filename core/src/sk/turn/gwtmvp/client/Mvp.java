@@ -67,7 +67,7 @@ public class Mvp {
    * Enables a specific loader to show when loading views asynchronously. Note, that {@code null} is a valid value.
    * The loader does not need to be initialized at the time of calling this method, but should be before calling {@code start()}.
    * 
-   * @param loaderId
+   * @param loaderId Identifier of the loader to use
    * @return This object for easy method chaining.
    */
   public Mvp setLoader(String loaderId) {

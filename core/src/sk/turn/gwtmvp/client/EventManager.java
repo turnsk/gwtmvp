@@ -34,6 +34,7 @@ public class EventManager {
 
   /**
    * Sets an event handler for an {@code Element}. All previous event handlers of this type of event are removed.
+   * @param <H> Class of {@linkplain EventHandler} that will handle the event
    * @param element The element to bind the event handler for
    * @param eventType The event type (e.g. {@code ClickEvent.getType()})
    * @param handler The handler that handler the event
@@ -61,6 +62,7 @@ public class EventManager {
 
   /**
    * Clears all event handlers of a specific event type from an element.
+   * @param <H> Class of {@linkplain EventHandler} that will be removed
    * @param element The element to clear the event handlers from
    * @param eventType The event type
    */

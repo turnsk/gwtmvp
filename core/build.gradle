@@ -1,5 +1,7 @@
-apply plugin: 'java'
-apply plugin: 'maven'
+plugins {
+  id 'java-library'
+  id 'maven-publish'
+}
 
 repositories {
   mavenCentral()
@@ -7,47 +9,59 @@ repositories {
 
 sourceCompatibility = 1.8
 group = 'sk.turn'
-version = '1.7.2'
+version = '1.8.0'
 
 sourceSets {
-  main {
-    java {
-      srcDirs = ['src']
-    }
+  main.java {
+    srcDirs = ['src']
   }
 }
 
 dependencies {
-  compile 'com.google.gwt:gwt-user:2.8.2'
-  compile 'com.google.gwt:gwt-dev:2.8.2'
+  implementation 'com.google.gwt:gwt-user:2.9.0'
+  compileOnly 'com.google.gwt:gwt-dev:2.9.0'
 }
 
 jar {
-  baseName 'gwtmvp'
+  archiveBaseName.set('gwtmvp')
   manifest {
-    attributes 'Implementation-Version': version
+    attributes 'Implementation-Version': archiveVersion.get()
   }
-  from sourceSets.main.output.classesDir
   from sourceSets.main.java.srcDirs
 }
 
 task myJavadoc(type: Javadoc) {
   title 'GWT MVP Library'
-  source 'src/sk/turn/gwtmvp/client'
+  classpath = sourceSets.main.runtimeClasspath
+  options.addStringOption("sourcepath", "")
+  options.addStringOption("link", "http://www.gwtproject.org/javadoc/latest/")
+  source sourceSets.main.java.srcDirs
+  include '**/gwtmvp/client/**'
   exclude '**/*.html'
 }
 
 task sourcesJar(type: Jar) {
-  classifier = 'sources'
+  archiveBaseName.set('gwtmvp')
+  archiveClassifier.set('sources')
   from sourceSets.main.java.srcDirs
 }
 
 task javadocJar(type: Jar, dependsOn: myJavadoc) {
-  classifier = 'javadoc'
+  archiveBaseName.set('gwtmvp')
+  archiveClassifier.set('javadoc')
   from javadoc.destinationDir
 }
 
 artifacts {
   archives sourcesJar
   archives javadocJar
+}
+
+publishing {
+  publications {
+    maven(MavenPublication) {
+      artifactId = 'gwtmvp'
+      from components.java
+    }
+  }
 }
