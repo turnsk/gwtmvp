@@ -26,7 +26,7 @@ public class Html5HistoryAgent extends HistoryAgent {
   }-*/;
 
   private static final RegExp EXTERNAL_LINK_HREF = RegExp.compile("^([a-z0-9_\\-]+:)?\\/\\/.+", "i");
-  private static final RegExp SPECIAL_LINK_HREF = RegExp.compile("^(javascript|blob):", "i");
+  private static final RegExp SPECIAL_LINK_HREF = RegExp.compile("^([a-z]+:).+", "i");
 
   private String pathToRoot;
   private JavaScriptObject popStateHandler;
