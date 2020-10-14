@@ -18,7 +18,7 @@ import sk.turn.gwtmvp.client.ViewHtml;
 public class OptionAdapter<T> extends ViewAdapter<Map.Entry<String, T>, OptionAdapter.OptionView> {
 
   @ViewHtml("<option></option>")
-  interface OptionView extends View<OptionElement> {
+  public interface OptionView extends View<OptionElement> {
   }
 
   /**

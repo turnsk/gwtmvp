@@ -13,17 +13,10 @@
  */
 package sk.turn.gwtmvp.client.adapters;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.event.dom.client.DomEvent;
 
 import sk.turn.gwtmvp.client.View;
 
@@ -34,6 +27,9 @@ import sk.turn.gwtmvp.client.View;
  * <p>
  * Anytime you need to show repetitive views (e.g. table rows, (un)ordered lists, etc.) ViewAdapter
  * allows you to remove the complexity and make the task effectively.
+ * <p>
+ * If you need to hold some data against individual views (adapter itself does not hold any kind of view-related
+ * data) using {@link ViewHolderAdapter} is recommended.
  * <p>
  * Example:
  * <pre><code>// Assuming we have a "TableElement tableElement" and "List&lt;Person&gt; people" variables defined
@@ -69,11 +65,28 @@ import sk.turn.gwtmvp.client.View;
  * @param <T> Type of the object being displayed.
  * @param <V> Type of the view able to show one instance of class {@code T}
  */
-public abstract class ViewAdapter<T, V extends View<? extends Element>> implements Iterable<ViewAdapter.ItemView<T, V>> {
+public abstract class ViewAdapter<T, V extends View<? extends Element>> extends ViewHolderAdapter<T, ViewAdapter.ViewHolder<T, V>> implements Iterable<ViewAdapter.ItemView<T, V>> {
 
   public interface ItemView<T, V extends View<? extends Element>> {
     T getItem();
     V getView();
+  }
+
+  public static final class ViewHolder<T, V extends View<? extends Element>> extends ViewHolderAdapter.ViewHolder<T, V> {
+    private final ViewAdapter<T, V> adapter;
+    public ViewHolder(V view, ViewAdapter<T, V> adapter) {
+      super(view);
+      this.adapter = adapter;
+    }
+    @Override
+    protected void onViewLoaded() {
+      super.onViewLoaded();
+      adapter.onViewLoaded(view);
+    }
+    @Override
+    protected void bind(T item, int position) {
+      adapter.setViewData(view, item, position);
+    }
   }
 
   /**
@@ -81,30 +94,7 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> implemen
    *
    * @param <T> Type of the object to filter.
    */
-  public abstract static class Filter<T> {
-    private ViewAdapter<T, ? extends View<? extends Element>> adapter;
-    /**
-     * Called automatically by the {@code ViewAdapter} to set reference to itself for later filter-changed notifications.
-     * @param adapter {@code ViewAdapter} associated with this filter.
-     */
-    protected <V extends View<? extends Element>> void setAdapter(ViewAdapter<T, V> adapter) {
-      this.adapter = adapter;
-    }
-    /**
-     * Call this method when this filter parameters have changed in order to re-filter the associated {@code ViewAdapter}.
-     */
-    protected void notifyFilterChanged() {
-      if (adapter != null) {
-        adapter.notifyDataSetChanged();
-      }
-    }
-    /**
-     * Method that should do the actual filtering, e.g. changing the order, removing some items, etc.
-     *
-     * @param items The list to apply the filter on, the filter must change items within this list.
-     */
-    protected abstract void applyFilter(List<T> items);
-  }
+  public abstract static class Filter<T> extends ViewHolderAdapter.Filter<T> { }
 
   private static class Entry<T, V extends View<? extends Element>> implements ItemView<T, V> {
     private T item;
@@ -121,7 +111,7 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> implemen
     private int index;
     @Override
     public boolean hasNext() {
-      return (index < filteredList.size());
+      return (index < getCount());
     }
     @Override
     public ItemView<T, V> next() {
@@ -129,24 +119,13 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> implemen
         throw new NoSuchElementException();
       }
       int i = index++;
-      return new Entry<T, V>(filteredList.get(i), usedViews.get(i));
+      return new Entry<T, V>(getItem(i), getItemViewHolder(i).view);
     }
     @Override
     public void remove() {
       throw new UnsupportedOperationException();
     }
   }
-
-  private static final Logger LOG = Logger.getLogger(ViewAdapter.class.getName());
-
-  private final Element parentElement;
-  private final List<T> fullList = new ArrayList<>();
-  private final List<Filter<T>> filters = new ArrayList<>();
-  private List<T> filteredList = new ArrayList<>();
-  private final List<V> usedViews = new ArrayList<>();
-  private final List<V> availableViews = new ArrayList<>();
-  private final Map<Element, Integer> rootElementsToIndexMap = new HashMap<>();
-  private boolean notifyOnChange = true;
 
   /**
    * Creates a new instance of ViewAdapter with a specific parent element for all the sub-views.
@@ -156,7 +135,7 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> implemen
    * @param parentElement Element that all the sub-views will be attached under.
    */
   public ViewAdapter(Element parentElement) {
-    this.parentElement = parentElement;
+    super(parentElement);
   }
 
   /**
@@ -170,149 +149,12 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> implemen
   }
 
   /**
-   * Adds a single item to the adapter, either creating a new view or reusing an old one and
-   * immediately attaching the view to the parent.
-   * @param item Item to add.
-   * @return This instance for easy method call chaining
-   */
-  public ViewAdapter<T, V> addItem(final T item) {
-    if (item != null) {
-      fullList.add(item);
-      if (notifyOnChange) {
-        notifyDataSetChanged();
-      }
-    }
-    return this;
-  }
-
-  /**
-   * Calls {@code removeAt(index, true)}
-   */
-  public T removeAt(int index) {
-    return removeAt(index, true);
-  }
-
-  /**
-   * Removes an item at the specified index and return the instance. The corresponding view is also
-   * removed from the DOM tree.
-   *
-   * @param index Zero-based index of the item to remove.
-   * @param inFiltered Whether the index points to the filtered or full list of items, 
-   *        if you're not using filters this parameter doesn't make a difference.
-   * @return The object removed or {@code null} if the index is out of bounds.
-   */
-  public T removeAt(int index, boolean inFiltered) {
-    if (index < 0 || (inFiltered && index >= fullList.size()) || (!inFiltered && index >= filteredList.size())) {
-      return null;
-    }
-    T item;
-    if (inFiltered) {
-      item = filteredList.get(index);
-      removeItem(item);
-    } else {
-      item = fullList.remove(index);
-      if (notifyOnChange) {
-        notifyDataSetChanged();
-      }
-    }
-    return item;
-  }
-
-  /**
-   * Removes a specific item from the adapter and also the corresponding view from the DOM tree.
-   *
-   * @param item Item to remove.
-   * @return True if the item/view has been removed, false if the item was not found in the current
-   *         list.
-   */
-  public boolean removeItem(T item) {
-    if (item == null) {
-      return false;
-    }
-    if (fullList.remove(item)) {
-      if (notifyOnChange) {
-        notifyDataSetChanged();
-      }
-      return true;
-    }
-    return false;
-  }
-
-  /**
-   * Replaces all the items in the adapter and updates the views as necessary.
-   * @param items List of items to set to the adapter.
-   * @return This instance for easy method call chaining
-   */
-  public ViewAdapter<T, V> setItems(Iterable<T> items) {
-    fullList.clear();
-    for (T item : items) {
-      fullList.add(item);
-    }
-    if (notifyOnChange) {
-      notifyDataSetChanged();
-    }
-    return this;
-  }
-
-  /**
-   * Replaces the specific item in the adapter and updates the view as necessary.
-   * @param index The filtered index at which the item should be replaced. The method does nothing if the value is negative
-   *        and calls {@code addItem(T)} if exceeds the current (filtered) items count.
-   * @param item The new item.
-   * @return Previous item that was on this position
-   */
-  public T setItem(int index, T item) {
-    T prev = null;
-    if (index >= filteredList.size()) {
-      addItem(item);
-    } else if (index >= 0 && item != null) {
-      prev = filteredList.get(index);
-      filteredList.set(index, item);
-      // Replace the item in the full list as well
-      for (int i = 0; i < fullList.size(); i++) {
-        if (fullList.get(i) == prev) {
-          fullList.set(i, item);
-        }
-      }
-      if (notifyOnChange) {
-        reload(index);
-      }
-    }
-    return prev;
-  }
-
-  /**
-   * Returns the count of the (filtered) items in the adapter.
-   *
-   * @return Count of the filtered items.
-   */
-  public int getCount() {
-    return getFilteredCount();
-  }
-
-  /**
-   * Returns the count of all the items in the adapter (including the ones filtered out).
-   *
-   * @return Count of all the items.
-   */
-  public int getTotalCount() {
-    return fullList.size();
-  }
-
-  /**
    * Returns the count of the filtered items in the adapter.
    *
    * @return Count of the filtered items.
    */
   public int getFilteredCount() {
-    return filteredList.size();
-  }
-
-  /**
-   * Calls {@code getItem(index, true)}
-   */
-  public T getItem(int index) {
-    return getItem(index, true);
+    return getCount();
   }
 
   /**
@@ -323,10 +165,9 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> implemen
    *        if you're not using filters this parameter doesn't make a difference.
    * @return The item at the specified index or null if out of bounds.
    */
+  @SuppressWarnings("deprecation")
   public T getItem(int index, boolean inFiltered) {
-    return (index < 0 ? null :
-            inFiltered ? (index < filteredList.size() ? filteredList.get(index) : null) :
-                    (index < fullList.size() ? fullList.get(index) : null));
+    return (index < 0 ? null : inFiltered ? getItem(index) : (index < getFullList().size() ? getFullList().get(index) : null));
   }
 
   /**
@@ -336,162 +177,13 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> implemen
    * @return The view at the specified index or null if out of bounds.
    */
   public V getItemView(int index) {
-    return (index >= 0 && index < usedViews.size() ? usedViews.get(index) : null);
+    ViewHolder<T, V> viewHolder = getItemViewHolder(index);
+    return (viewHolder != null ? viewHolder.view : null);
   }
 
-  /**
-   * Removes all the items/views from this adapter.
-   * @return This instance for easy method call chaining
-   */
-  public ViewAdapter<T, V> clear() {
-    fullList.clear();
-    if (notifyOnChange) {
-      notifyDataSetChanged();
-    }
-    return this;
-  }
-
-  /**
-   * Reloads the views in the adapter, optionally selecting specifying indices to reload.
-   *
-   * @param indices A list of indices to reload in the list, leave empty to reload all items.
-   */
-  public void reload(int... indices) {
-    if (indices.length == 0) {
-      notifyDataSetChanged();
-    } else {
-      for (int i : indices) {
-        if (i < usedViews.size()) {
-          safeSetViewData(usedViews.get(i), filteredList.get(i), i);
-        }
-      }
-    }
-  }
-
-  /**
-   * Reloads the views in the adapter.
-   * @return This instance for easy method call chaining
-   */
-  @SuppressWarnings({"rawtypes", "unchecked"})
-  public ViewAdapter<T, V> notifyDataSetChanged() {
-    if (!notifyOnChange) {
-      notifyOnChange = true;
-    }
-    filteredList.clear();
-    filteredList.addAll(fullList);
-    for (Filter<T> filter : filters) {
-      filter.applyFilter(filteredList);
-    }
-    for (int i = 0; i < filteredList.size(); i++) {
-      if (i < usedViews.size()) {
-        safeSetViewData(usedViews.get(i), filteredList.get(i), i);
-      } else if (availableViews.size() > 0) {
-        V view = availableViews.remove(0);
-        usedViews.add(view);
-        parentElement.appendChild(view.getRootElement());
-        rootElementsToIndexMap.put(view.getRootElement(), i);
-        safeSetViewData(view, filteredList.get(i), i);
-      } else {
-        final V view = createView();
-        final int index = i;
-        final T item = filteredList.get(i);
-        view.loadView(new View.ViewLoadedHandler() {
-          @Override
-          public void onViewLoaded(Element rootElement) {
-            // Allow the implementor to do any one-time initialization
-            ViewAdapter.this.onViewLoaded(view);
-            // Make sure the list hasn't changed in the meantime
-            if (index < filteredList.size() && filteredList.get(index) == item) {
-              usedViews.add(view);
-              parentElement.appendChild(view.getRootElement());
-              rootElementsToIndexMap.put(view.getRootElement(), index);
-              safeSetViewData(view, item, index);
-            } else {
-              availableViews.add(view); // Let's not put the view to waste
-            }
-          }
-        });
-      }
-    }
-    // Detach and mark for reuse all excessive views
-    while (usedViews.size() > filteredList.size()) {
-      V view = usedViews.remove(filteredList.size());
-      view.getRootElement().removeFromParent();
-      availableViews.add(view);
-    }
-    return this;
-  }
-
-  /**
-   * Control whether methods that change the list (add, remove, removeAt, clear) automatically call {@link #notifyDataSetChanged()}.
-   * If set to false, caller must manually call notifyDataSetChanged() to have the changes reflected in the attached view.
-   * The default is true, and calling notifyDataSetChanged() resets the flag to true.
-   *
-   * @param notifyOnChange If true, modifications to the list will automatically call {@link #notifyDataSetChanged()}
-   * @return This instance for easy method call chaining
-   */
-  public ViewAdapter<T, V> setNotifyOnChange(boolean notifyOnChange) {
-    if (this.notifyOnChange != notifyOnChange) {
-      this.notifyOnChange = notifyOnChange;
-      if (notifyOnChange) {
-        notifyDataSetChanged();
-      }
-    }
-    return this;
-  }
-
-  /**
-   * Adds a new filter to the local filter chain. Filters are evaluated linearly in the order they were added,
-   * where the next filter gets only the filtered items from the previous one.
-   * @param filter Filter to add to the chain
-   * @return This instance for easy method call chaining
-   */
-  public ViewAdapter<T, V> addFilter(Filter<T> filter) {
-    if (!filters.contains(filter)) {
-      filter.setAdapter(this);
-      filters.add(filter);
-    }
-    return this;
-  }
-
-  /**
-   * Returns the list of current filters, may be empty. Note that you are responsible for refreshing the view adapter
-   * when you change the filters or update an individual filter.
-   * <p>
-   * You can chain more filters in a linear manner, the filters will be applied in the order as they are in the list.
-   * @return List of filters for this view adapter
-   */
-  public List<Filter<T>> getFilters() {
-    return filters;
-  }
-
-  /**
-   * Returns the item index that is related to an event fired from within an item view. If the event is not
-   * fired from a sub-view of the item or the view is no longer attached in the hierarchy, it returns -1.
-   * @param event The event from the event handler.
-   * @return The item index associated with the event or -1 if the event was not fired from this {@code ViewAdapter}.
-   */
-  public int getItemIndexFromEvent(DomEvent<?> event) {
-    Element e = event.getNativeEvent().getCurrentEventTarget().cast();
-    while (e != null && e.getParentElement() != parentElement) {
-      e = e.getParentElement();
-    }
-    if (e == null) {
-      return -1;
-    }
-    Integer index = rootElementsToIndexMap.get(e);
-    return (index == null ? -1 : index);
-  }
-
-  /**
-   * Returns the item that is related to an event fired from within an item view. If the event is not
-   * fired from a sub-view of the item or the view is no longer attached in the hierarchy, it returns null.
-   * @param event The event from the event handler.
-   * @return The item associated with the event or null if the event was not fired from this {@code ViewAdapter}.
-   */
-  public T getItemFromEvent(DomEvent<?> event) {
-    int index = getItemIndexFromEvent(event);
-    return (index == -1 ? null : getItem(index));
+  @Override
+  protected final ViewAdapter.ViewHolder<T, V> createViewHolder() {
+    return new ViewHolder<T, V>(createView(), this);
   }
 
   /**
@@ -534,14 +226,6 @@ public abstract class ViewAdapter<T, V extends View<? extends Element>> implemen
    */
   protected void setViewData(V view, T item, int position) {
     setViewData(view, item);
-  }
-
-  private void safeSetViewData(V view, T item, int position) {
-    try {
-      setViewData(view, item, position);
-    } catch (Exception e) {
-      LOG.log(Level.SEVERE, "Call to ViewAdapter.setViewData(V, T) failed.", e);
-    }
   }
 
 }

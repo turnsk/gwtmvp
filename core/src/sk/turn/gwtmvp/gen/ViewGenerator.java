@@ -1,11 +1,11 @@
 /*
  * Copyright 2016 Turn s.r.o.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License
  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
  * or implied. See the License for the specific language governing permissions and limitations under
@@ -14,6 +14,7 @@
 package sk.turn.gwtmvp.gen;
 
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -32,8 +33,6 @@ import com.google.gwt.core.ext.typeinfo.JClassType;
 import com.google.gwt.core.ext.typeinfo.JMethod;
 import com.google.gwt.core.ext.typeinfo.JParameter;
 import com.google.gwt.core.ext.typeinfo.JParameterizedType;
-import com.google.gwt.core.ext.typeinfo.JType;
-import com.google.gwt.core.ext.typeinfo.NotFoundException;
 import com.google.gwt.core.ext.typeinfo.TypeOracle;
 import com.google.gwt.dev.resource.Resource;
 import com.google.gwt.dev.util.Util;
@@ -53,7 +52,7 @@ public class ViewGenerator extends IncrementalGenerator {
 
   @Override
   public long getVersionId() {
-    return 7;
+    return 9;
   }
 
   @Override
@@ -72,12 +71,13 @@ public class ViewGenerator extends IncrementalGenerator {
         return new RebindResult(RebindMode.USE_ALL_CACHED, packageName + "." + generatedClassName);
       }
       JParameterizedType superType = null;
-      String handlerType = null;
-      for (JClassType intfc : viewType.getImplementedInterfaces()) {
-        if (intfc.getQualifiedSourceName().equals(View.class.getName()) || intfc.getQualifiedSourceName().equals(HandlerView.class.getName())) {
+      JClassType handlerType = null;
+      for (JClassType intfc : viewType.getFlattenedSupertypeHierarchy()) {
+        String interfaceSourceName = intfc.getQualifiedSourceName();
+        if (interfaceSourceName.equals(View.class.getName()) || interfaceSourceName.equals(HandlerView.class.getName())) {
           superType = intfc.isParameterized();
-          if (intfc.getQualifiedSourceName().equals(HandlerView.class.getName())) {
-            handlerType = superType.getTypeArgs()[1].getQualifiedSourceName();
+          if (interfaceSourceName.equals(HandlerView.class.getName())) {
+            handlerType = superType.getTypeArgs()[1];
           }
           break;
         }
@@ -98,37 +98,39 @@ public class ViewGenerator extends IncrementalGenerator {
       Map<String, JMethod> fieldsMap = new LinkedHashMap<>();
       // elemId -> { com.google.gwt.event.dom.client.???Handler -> JMethod, ... }, ...
       Map<String, Map<String, JMethod>> handlersMap = new LinkedHashMap<>();
-      for (JMethod method : viewType.getMethods()) {
-        // Check element mapping
-        HtmlElement elemAnn = method.getAnnotation(HtmlElement.class);
-        if (elemAnn != null) {
-          if (method.getParameters().length > 0) {
-            throw new Exception("Method " + typeName + "." + method.getName() + "() must have zero parameters (has " + method.getParameters().length + ").");
-          }
-          String id = elemAnn.value();
-          if (id.equals("")) {
-            id = method.getName();
-            if (id.startsWith("get") && id.length() > 3) {
-              id = id.substring(3, 4).toLowerCase() + id.substring(4);
+      for (JClassType currentViewType : viewType.getFlattenedSupertypeHierarchy()) {
+        for (JMethod method : currentViewType.getMethods()) {
+          // Check element mapping
+          HtmlElement elemAnn = method.getAnnotation(HtmlElement.class);
+          if (elemAnn != null) {
+            if (method.getParameters().length > 0) {
+              throw new Exception("Method " + typeName + "." + method.getName() + "() must have zero parameters (has " + method.getParameters().length + ").");
             }
-          }
-          fieldsMap.put(id, method);
-        }
-        // Check handler mapping
-        HtmlHandler handlerAnn = method.getAnnotation(HtmlHandler.class);
-        if (handlerAnn != null) {
-          JParameter param = (method.getParameters().length == 1 ? method.getParameters()[0] : null);
-          JClassType paramType = (param != null ? param.getType().isInterface() : null);
-          if (paramType == null || !paramType.isAssignableTo(typeOracle.getType(EventHandler.class.getName()))) {
-            throw new Exception("Method " + typeName + "." + method.getName() + "() must have exactly one parameter of an EventHandler subinterface (has "
-                + (paramType == null ? "none" : paramType.getQualifiedSourceName()) + ").");
-          }
-          for (String val : handlerAnn.value()) {
-            Map<String, JMethod> methods = handlersMap.computeIfAbsent(val, k -> new LinkedHashMap<>());
-            if (methods.containsKey(paramType.getQualifiedSourceName())) {
-              throw new Exception("Element \"" + val + "\" already has a " + paramType.getName() + " defined.");
+            String id = elemAnn.value();
+            if (id.equals("")) {
+              id = method.getName();
+              if (id.startsWith("get") && id.length() > 3) {
+                id = id.substring(3, 4).toLowerCase() + id.substring(4);
+              }
             }
-            methods.put(paramType.getQualifiedSourceName(), method);
+            fieldsMap.put(id, method);
+          }
+          // Check handler mapping
+          HtmlHandler handlerAnn = method.getAnnotation(HtmlHandler.class);
+          if (handlerAnn != null) {
+            JParameter param = (method.getParameters().length == 1 ? method.getParameters()[0] : null);
+            JClassType paramType = (param != null ? param.getType().isInterface() : null);
+            if (paramType == null || !paramType.isAssignableTo(typeOracle.getType(EventHandler.class.getName()))) {
+              throw new Exception("Method " + typeName + "." + method.getName() + "() must have exactly one parameter of an EventHandler subinterface (has "
+                      + (paramType == null ? "none" : paramType.getQualifiedSourceName()) + ").");
+            }
+            for (String val : handlerAnn.value()) {
+              Map<String, JMethod> methods = handlersMap.computeIfAbsent(val, k -> new LinkedHashMap<>());
+              if (methods.containsKey(paramType.getQualifiedSourceName())) {
+                throw new Exception("Element \"" + val + "\" already has a " + paramType.getName() + " defined.");
+              }
+              methods.put(paramType.getQualifiedSourceName(), method);
+            }
           }
         }
       }
@@ -184,9 +186,9 @@ public class ViewGenerator extends IncrementalGenerator {
       w.println();
       w.println("  private " + rootElementType + " rootElement = null;");
       w.println("  private final Map<String, Element> elementsMap = new HashMap<>();");
-      w.println("  private final Map<String, Control> controlsMap = new HashMap<>();");
+      w.println("  private final Map<String, Control<?>> controlsMap = new HashMap<>();");
       if (handlerType != null) {
-        w.println("  private " + handlerType + " handler;");
+        w.println("  private " + handlerType.getQualifiedSourceName() + " handler;");
       }
       w.println();
       w.println("  @Override");
@@ -229,16 +231,23 @@ public class ViewGenerator extends IncrementalGenerator {
         w.println("    Object dictEntry;");
         dictMatcher = Pattern.compile("\\{mvpDict\\.([^}]+)\\}").matcher(html);
         Set<String> replacedEntries = new HashSet<>();
+        ArrayList<String> dictMethods = new ArrayList<String>();
+        for (JMethod method : dictClass.getMethods()) {
+          dictMethods.add(method.getName());
+        }
         while (dictMatcher.find()) {
-          String dictEntry = dictMatcher.group(1);
+          String dictEntry = dictMatcher.group(1).replace("&quot;", "\"").replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&");
+          int braceIndex = dictEntry.indexOf('(');
+          String dictMethod = (braceIndex != -1 ? dictEntry.substring(0, braceIndex) : dictEntry);
           if (!replacedEntries.contains(dictEntry)) {
-            try {
-              dictClass.getMethod(dictEntry, new JType[] { });
-            } catch (NotFoundException e) {
-              throw new Exception("Localization method " + dictClassName + "." + dictEntry + "() does not exist.");
+            if (!dictMethods.contains(dictMethod)) {
+              throw new Exception("Localization method " + dictClassName + "." + dictMethod + "() does not exist.");
             }
-            w.println("    dictEntry = dict." + dictEntry + "();");
-            w.println("    html = html.replace(\"" + dictMatcher.group(0) + "\", dictEntry instanceof com.google.gwt.safehtml.shared.SafeHtml ? ((com.google.gwt.safehtml.shared.SafeHtml)dictEntry).asString() : dictEntry.toString());");
+            w.println("    dictEntry = dict." + dictEntry + (braceIndex != -1 ? "" : "()") + ";");
+            w.println("    if (!(dictEntry instanceof com.google.gwt.safehtml.shared.SafeHtml)) {");
+            w.println("      dictEntry = new com.google.gwt.safehtml.shared.SafeHtmlBuilder().appendEscaped(dictEntry.toString()).toSafeHtml();");
+            w.println("    }");
+            w.println("    html = html.replace(\"" + dictMatcher.group(0).replace("\\", "\\\\").replace("\"", "\\\"") + "\", ((com.google.gwt.safehtml.shared.SafeHtml)dictEntry).asString());");
             replacedEntries.add(dictEntry);
           }
         }
@@ -251,21 +260,18 @@ public class ViewGenerator extends IncrementalGenerator {
             w.println("    Control ctrl;");
             controlDefined = true;
           }
-
           // Search for Control View class
-          JClassType controlViewClass = null;
           JClassType superControlClass = entry.getValue().getReturnType().isClass();
-          while (superControlClass.getSuperclass() != null) {
-            if (superControlClass.getQualifiedSourceName().equals("sk.turn.gwtmvp.client.Control")) {
-              controlViewClass = superControlClass.isParameterized().getTypeArgs()[0];
-              break;
-            }
+          while (superControlClass != null && !superControlClass.getQualifiedSourceName().equals("sk.turn.gwtmvp.client.Control")) {
             superControlClass = superControlClass.getSuperclass();
           }
+          if (superControlClass == null || superControlClass.isParameterized() == null) {
+            throw new IllegalArgumentException(entry.getValue().getName() + " does not inherit from " + controlClassType.getQualifiedSourceName());
+          }
+          JClassType controlViewClass = superControlClass.isParameterized().getTypeArgs()[0];
           if (controlViewClass == null) {
             throw new IllegalArgumentException("No View class found for " + entry.getValue().getName());
           }
-          
           // Show compiler warning when controlViewClass is annotated with @AsyncView
           if (controlViewClass.isAnnotationPresent(AsyncView.class)) {
             logger.log(TreeLogger.Type.WARN, entry.getValue().getReturnType().getQualifiedSourceName() + ".onShow() or .onHide() may be called before .onViewLoaded() for async control views.");
@@ -279,8 +285,9 @@ public class ViewGenerator extends IncrementalGenerator {
       }
       // Load the view HTML
       w.println("    Element tempElem = Document.get().create" + (
-          rootElementType.equals("com.google.gwt.dom.client.TableRowElement") ? "TBody" :
-            rootElementType.equals("com.google.gwt.dom.client.TableCellElement") ? "TR" : "Div") + "Element();");
+          rootElementType.equals("com.google.gwt.dom.client.TableSectionElement") ? "Table" :
+              rootElementType.equals("com.google.gwt.dom.client.TableRowElement") ? "TBody" :
+                  rootElementType.equals("com.google.gwt.dom.client.TableCellElement") ? "TR" : "Div") + "Element();");
       w.println("    tempElem.setInnerHTML(html);");
       w.println("    rootElement = (" + rootElementType + ") tempElem.getFirstChild();");
       if (dictClassName != null) {
@@ -306,8 +313,7 @@ public class ViewGenerator extends IncrementalGenerator {
       }
       if (handlerType != null) {
         // Map @HtmlHandlers of enclosing class
-        JClassType enclosingType = viewType.getEnclosingType();
-        JMethod[] methods = (enclosingType != null ? enclosingType.getMethods() : new JMethod[] { });
+        JMethod[] methods = handlerType.getMethods();
         JClassType baseEventHandlerType = typeOracle.getType(EventHandler.class.getName());
         for (JMethod method : methods) {
           HtmlHandler handlerAnnotation = method.getAnnotation(HtmlHandler.class);
@@ -336,9 +342,9 @@ public class ViewGenerator extends IncrementalGenerator {
             w.println("      public void " + handlerMethod.getName() + "(" + eventType.getQualifiedSourceName() + " event) {");
             w.println("        if (handler != null) {");
             w.println("          try { handler." + method.getName() + "(event); }");
-            w.println("          catch (Exception e) { LOG.log(Level.SEVERE, \"Invoke of " + enclosingType.getName() + "." + method.getName() + " failed\", e); }");
+            w.println("          catch (Exception e) { LOG.log(Level.SEVERE, \"Invoke of " + handlerType.getName() + "." + method.getName() + " failed\", e); }");
             w.println("        } else {");
-            w.println("          LOG.severe(\"Ignoring " + enclosingType.getName() + "." + method.getName() + " - no HandlerView.handler set\");");
+            w.println("          LOG.severe(\"Ignoring " + handlerType.getName() + "." + method.getName() + " - no HandlerView.handler set\");");
             w.println("        }");
             w.println("      }");
             w.println("    });");
@@ -359,13 +365,13 @@ public class ViewGenerator extends IncrementalGenerator {
       w.println("  }");
       w.println();
       w.println("  @Override");
-      w.println("  public <C extends Control<?>> java.util.Collection<C> getControls() {");
-      w.println("    return (java.util.Collection<C>) controlsMap.values();");
+      w.println("  public java.util.Collection<Control<?>> getControls() {");
+      w.println("    return controlsMap.values();");
       w.println("  }");
       if (handlerType != null) {
         w.println();
         w.println("  @Override");
-        w.println("  public void setHandler(" + handlerType + " handler) {");
+        w.println("  public void setHandler(" + handlerType.getQualifiedSourceName() + " handler) {");
         w.println("    this.handler = handler;");
         w.println("  }");
       }
@@ -411,7 +417,7 @@ public class ViewGenerator extends IncrementalGenerator {
       w.println("    }");
       w.println("    element.removeAttribute(attrName);");
       w.println("    if (element.getTagName().equalsIgnoreCase(\"object\")) {");
-      w.println("      Control control = controlsMap.get(mvpId);");
+      w.println("      Control<?> control = controlsMap.get(mvpId);");
       w.println("      if (control == null) {");
       w.println("        LOG.severe(\"Control \" + mvpId + \" is not declared in " + typeName + "\");");
       w.println("        return;");
