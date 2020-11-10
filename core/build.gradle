@@ -9,7 +9,7 @@ repositories {
 
 sourceCompatibility = 1.8
 group = 'sk.turn'
-version = '1.8.1'
+version = '1.8.3'
 
 sourceSets {
   main.java {

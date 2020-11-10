@@ -337,6 +337,7 @@ public abstract class ViewHolderAdapter<T, VH extends ViewHolderAdapter.ViewHold
     }
     for (int i = 0; i < filteredList.size(); i++) {
       if (i < usedViewHolders.size()) {
+        rootElementsToIndexMap.put(usedViewHolders.get(i).view.getRootElement(), i);
         safeSetViewData(usedViewHolders.get(i), filteredList.get(i), i);
       } else if (availableViewHolders.size() > 0) {
         VH viewHolder = availableViewHolders.remove(0);

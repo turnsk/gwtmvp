@@ -74,9 +74,6 @@ public class Loader {
    *          global (general) loader.
    */
   public static void unregister(String tag) {
-    if (!entries.containsKey(tag)) {
-      return;
-    }
     entries.remove(tag);
   }
 
