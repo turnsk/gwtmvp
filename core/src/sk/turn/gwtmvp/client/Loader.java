@@ -67,6 +67,18 @@ public class Loader {
     entry.showedCounter = (isCounted ? 0 : -1);
     entries.put(tag, entry);
   }
+  /**
+   * Unregisters a specific loader.
+   * 
+   * @param tag The tag that represents this loader, note that {@code null} is reserved for the
+   *          global (general) loader.
+   */
+  public static void unregister(String tag) {
+    if (!entries.containsKey(tag)) {
+      return;
+    }
+    entries.remove(tag);
+  }
 
   /**
    * Shows a loader if it hasn't been already visible before. For counted loaders this also
