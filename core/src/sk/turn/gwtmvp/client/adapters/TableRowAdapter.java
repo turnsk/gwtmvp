@@ -131,6 +131,9 @@ public abstract class TableRowAdapter<T> extends ViewAdapter<T, TableRowAdapter.
       setTableCell(column, elem, item);
     } else if (content instanceof SafeHtml) {
       elem.setInnerSafeHtml((SafeHtml) content);
+    } else if (content instanceof Element) {
+      elem.removeAllChildren();
+      elem.appendChild((Element) content);
     } else {
       elem.setInnerText(content != null ? content.toString() : "");
     }
@@ -171,7 +174,7 @@ public abstract class TableRowAdapter<T> extends ViewAdapter<T, TableRowAdapter.
    * @param row The row index of the table cell (0-based)
    * @param column The column index of the table cell (0-based)
    * @param item The item for this row
-   * @return Either {@code String} or {@code SafeHtml} that should be populated into the table cell
+   * @return Either {@code String}, {@code SafeHtml} or {@code Element} that should be populated into the table cell
    */
   protected Object getCellContent(int row, int column, T item) {
     return getCellContent(column, item);
