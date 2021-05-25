@@ -10,7 +10,7 @@ repositories {
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 group = 'sk.turn'
-version = '1.8.4'
+version = '1.8.5'
 archivesBaseName = 'gwtmvp'
 description = 'GWT MVP Library'
 
