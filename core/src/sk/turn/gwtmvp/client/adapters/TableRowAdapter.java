@@ -131,9 +131,9 @@ public abstract class TableRowAdapter<T> extends ViewAdapter<T, TableRowAdapter.
       setTableCell(column, elem, item);
     } else if (content instanceof SafeHtml) {
       elem.setInnerSafeHtml((SafeHtml) content);
-		} else if (content instanceof Element) {
-			elem.removeAllChildren();
-			elem.appendChild((Element) content);
+    } else if (content instanceof Element) {
+      elem.removeAllChildren();
+      elem.appendChild((Element) content);
     } else {
       elem.setInnerText(content != null ? content.toString() : "");
     }
